@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Badge, BoutonFlottant, ErreurChargement, LigneListe, Pastilles, Recherche, Vide } from '@/components/ui';
+import { Badge, BoutonFlottant, useMargeOnglets, ErreurChargement, LigneListe, Pastilles, Recherche, Vide } from '@/components/ui';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useEquipe } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
@@ -21,6 +21,7 @@ export default function Ventes() {
   const [type, setType] = useState<TypeDocument>('facture');
   const [vue, setVue] = useState<Vue>('tout');
   const [recherche, setRecherche] = useState('');
+  const margeOnglets = useMargeOnglets();
   const r = useDeferredValue(recherche);
   const symbole = parametres?.symbole_devise ?? 'FCFA';
 
@@ -45,7 +46,7 @@ export default function Ventes() {
         <FlatList
           data={donnees ?? []}
           keyExtractor={(d) => d.id}
-          contentContainerStyle={styles.liste}
+          contentContainerStyle={[styles.liste, { paddingBottom: 120 + margeOnglets }]}
           keyboardShouldPersistTaps="handled"
           refreshControl={<RefreshControl refreshing={false} onRefresh={recharger} />}
           ListHeaderComponent={

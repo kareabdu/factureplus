@@ -14,12 +14,12 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 import { Icone, type NomIcone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Rayons, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 // ---------------------------------------------------------------------------
@@ -438,12 +438,22 @@ export function BoutonIcone({ icone, onPress, libelle, couleur }: { icone: NomIc
   );
 }
 
-/** Bouton d'action flottant (ajout). */
+/**
+ * Hauteur masquée par la barre d'onglets native. Sur iOS elle se superpose au contenu (effet translucide) :
+ * barre (BottomTabInset) + zone sûre basse. Sur Android, le contenu s'arrête au-dessus de la barre.
+ */
+export function useMargeOnglets(): number {
+  const { bottom } = useSafeAreaInsets();
+  return Platform.OS === 'ios' ? bottom + BottomTabInset : 0;
+}
+
+/** Bouton d'action flottant (ajout), placé au-dessus de la barre d'onglets. */
 export function BoutonFlottant({ onPress, libelle, icone = 'ajouter' }: { onPress: () => void; libelle: string; icone?: NomIcone }) {
   const theme = useTheme();
+  const marge = useMargeOnglets();
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={libelle}
-      style={({ pressed }) => [styles.flottant, { backgroundColor: theme.primary, transform: [{ scale: pressed ? 0.95 : 1 }] }]}>
+      style={({ pressed }) => [styles.flottant, { bottom: marge + Spacing.four, backgroundColor: theme.primary, transform: [{ scale: pressed ? 0.95 : 1 }] }]}>
       <Icone nom={icone} taille={26} couleur={theme.onPrimary} />
     </Pressable>
   );

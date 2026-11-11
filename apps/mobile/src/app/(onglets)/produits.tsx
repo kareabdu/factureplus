@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Badge, BoutonFlottant, ErreurChargement, Pastilles, Recherche, Vide } from '@/components/ui';
+import { Badge, BoutonFlottant, useMargeOnglets, ErreurChargement, Pastilles, Recherche, Vide } from '@/components/ui';
 import { MaxContentWidth, Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { signalerErreur } from '@/lib/confirmer';
@@ -23,6 +23,7 @@ export default function Produits() {
   const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
   const [recherche, setRecherche] = useState('');
+  const margeOnglets = useMargeOnglets();
   const [filtre, setFiltre] = useState<Filtre>('tous');
   const [categorie, setCategorie] = useState<string>('toutes');
   const r = useDeferredValue(recherche);
@@ -54,7 +55,7 @@ export default function Produits() {
         <FlatList
           data={donnees ?? []}
           keyExtractor={(p) => p.id}
-          contentContainerStyle={styles.liste}
+          contentContainerStyle={[styles.liste, { paddingBottom: 120 + margeOnglets }]}
           keyboardShouldPersistTaps="handled"
           refreshControl={<RefreshControl refreshing={false} onRefresh={recharger} />}
           ListHeaderComponent={

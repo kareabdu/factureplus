@@ -10,6 +10,7 @@ Tout est en **français** : code (noms de variables, fonctions, tables), interfa
 - Windows, PowerShell. Si `pnpm` est refusé (politique d'exécution), utiliser `pnpm.cmd` / `npx.cmd`.
 - Variables (non versionnées) : `apps/web/.env.local` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
   et `apps/mobile/.env` (`EXPO_PUBLIC_…`).
+- Dépôt : https://github.com/kareabdu/stocktracker, branche `main`.
 - Supabase : projet « stocktracker », id `munketogvbztfvoiryeh` (organisation AppliKare, eu-west-1).
 - iOS se compile via EAS (`eas build -p ios`) : pas de build iOS local sous Windows.
 

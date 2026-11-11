@@ -1,5 +1,5 @@
 import {
-  formaterMontant, LIBELLES_TYPE_DOCUMENT, listerDocuments, resteAPayer, statutAffiche, type Document, type TypeDocument,
+  chargerResume, formaterMontant, LIBELLES_TYPE_DOCUMENT, listerDocuments, resteAPayer, statutAffiche, type Document, type TypeDocument,
 } from '@stocktracker/core';
 import { useDonnees } from '@stocktracker/core/react';
 import { router, useFocusEffect } from 'expo-router';
@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Badge, BoutonFlottant, useMargeOnglets, ErreurChargement, LigneListe, Pastilles, Recherche, Vide } from '@/components/ui';
+import { Badge, BoutonFlottant, Carte, useMargeOnglets, ErreurChargement, LigneListe, Pastilles, Recherche, Vide } from '@/components/ui';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useEquipe } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
@@ -32,7 +32,14 @@ export default function Ventes() {
     }),
     [equipeId, type, vue, r],
   );
-  useFocusEffect(useCallback(() => { void recharger(); }, [recharger]));
+  // Total des factures validées (émises ou payées) de l'année en cours, calculé par la base
+  const annee = new Date().getFullYear();
+  const totalAnnee = useDonnees(() => chargerResume(supabase, equipeId, `${annee}-01-01`), [equipeId, annee]);
+  const rechargerTotal = totalAnnee.recharger;
+  useFocusEffect(useCallback(() => {
+    void recharger();
+    void rechargerTotal();
+  }, [recharger, rechargerTotal]));
 
   const vues: { code: Vue; libelle: string }[] = type === 'facture'
     ? [{ code: 'tout', libelle: 'Toutes' }, { code: 'impayes', libelle: 'À encaisser' }, { code: 'brouillons', libelle: 'Brouillons' }]
@@ -56,6 +63,17 @@ export default function Ventes() {
                 valeur={type} onChange={(t) => { setType(t); setVue('tout'); }} />
               <Recherche valeur={recherche} onChange={setRecherche} placeholder="Numéro ou client…" />
               <Pastilles options={vues} valeur={vue} onChange={setVue} />
+              {type === 'facture' && vue === 'tout' && totalAnnee.donnees && (
+                <Carte>
+                  <ThemedText type="small" themeColor="textSecondary">Total des factures {annee}</ThemedText>
+                  <ThemedText type="smallBold" style={{ fontSize: 22, lineHeight: 28 }}>
+                    {formaterMontant(totalAnnee.donnees.ventes_periode, symbole)}
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {totalAnnee.donnees.nb_factures_periode} facture{totalAnnee.donnees.nb_factures_periode > 1 ? 's' : ''} validée{totalAnnee.donnees.nb_factures_periode > 1 ? 's' : ''}, hors brouillons et annulées
+                  </ThemedText>
+                </Carte>
+              )}
               {type === 'facture' && vue === 'impayes' && total > 0 && (
                 <ThemedText type="small" themeColor="textSecondary">Reste à encaisser : {formaterMontant(total, symbole)}</ThemedText>
               )}

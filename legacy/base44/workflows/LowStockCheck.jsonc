@@ -1,0 +1,45 @@
+{
+  "description": "V\u00e9rifie les produits sous le seuil de r\u00e9approvisionnement, cr\u00e9e des alertes et notifie le propri\u00e9taire par email",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "low_stock_check",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "check_low_stock": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "checkLowStockAlerts",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "V\u00e9rifier le stock bas",
+            "description": "Cr\u00e9e les alertes + email propri\u00e9taires"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 */6 * * *",
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "name": "V\u00e9rification stock bas"
+}

@@ -1,0 +1,61 @@
+{
+  "name": "ActivityLog",
+  "type": "object",
+  "properties": {
+    "action_type": {
+      "type": "string",
+      "description": "Type d'action (create, update, sent, payment, delete, accept, refuse, duplicate, import)"
+    },
+    "entity_type": {
+      "type": "string",
+      "description": "Type d'entit\u00e9 (invoice, proforma, product, stock)"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "Identifiant de l'entit\u00e9 concern\u00e9e"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description lisible de l'action"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Donn\u00e9es suppl\u00e9mentaires (num\u00e9ro, montant, etc.)"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Nom de l'auteur"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "action_type",
+    "entity_type"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

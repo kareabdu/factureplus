@@ -1,0 +1,134 @@
+{
+  "name": "BankTransaction",
+  "type": "object",
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence compte bancaire"
+    },
+    "account_name": {
+      "type": "string",
+      "description": "Nom du compte (snapshot)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "credit",
+        "debit"
+      ],
+      "description": "Cr\u00e9dit (entr\u00e9e) ou d\u00e9bit (sortie)"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Montant",
+      "default": 0
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de l'op\u00e9ration"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description",
+      "maxLength": 1000
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "virement",
+        "especes",
+        "cheque",
+        "frais_bancaire",
+        "salaire",
+        "vente",
+        "achat",
+        "impot",
+        "pret",
+        "autre"
+      ],
+      "default": "autre",
+      "description": "Cat\u00e9gorie d'op\u00e9ration"
+    },
+    "reference": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence (n\u00b0 ch\u00e8que, n\u00b0 transaction)"
+    },
+    "balance_after": {
+      "type": "number",
+      "description": "Solde apr\u00e8s op\u00e9ration",
+      "default": 0
+    },
+    "reconciled": {
+      "type": "boolean",
+      "description": "Op\u00e9ration point\u00e9e au relev\u00e9 bancaire",
+      "default": false
+    },
+    "reconciled_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date du pointage"
+    },
+    "matched_type": {
+      "type": "string",
+      "enum": [
+        "none",
+        "invoice",
+        "expense"
+      ],
+      "default": "none",
+      "description": "Type de document rapproch\u00e9"
+    },
+    "matched_id": {
+      "type": "string",
+      "description": "Identifiant du document rapproch\u00e9"
+    },
+    "matched_label": {
+      "type": "string",
+      "description": "Libell\u00e9 du document rapproch\u00e9 (snapshot)"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "account_id",
+    "type",
+    "amount",
+    "date"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

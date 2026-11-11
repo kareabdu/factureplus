@@ -1,0 +1,58 @@
+{
+  "name": "Category",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Category name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Category description"
+    },
+    "color": {
+      "type": "string",
+      "description": "Color code for category"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

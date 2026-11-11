@@ -1,0 +1,100 @@
+{
+  "name": "Referral",
+  "type": "object",
+  "properties": {
+    "referrer_id": {
+      "type": "string",
+      "description": "Parrain (identifiant utilisateur)"
+    },
+    "referrer_email": {
+      "type": "string",
+      "description": "Email du parrain (snapshot)"
+    },
+    "referred_user_id": {
+      "type": "string",
+      "description": "Filleul (identifiant utilisateur)"
+    },
+    "referred_email": {
+      "type": "string",
+      "description": "Email du filleul (snapshot)"
+    },
+    "referral_code": {
+      "type": "string",
+      "description": "Code de parrainage utilis\u00e9"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "commissioned",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Statut du parrainage (pending \u00e0 l'inscription, commissioned \u00e0 l'abonnement)"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid"
+      ],
+      "default": "pending",
+      "description": "Statut du versement de la commission (manuel)"
+    },
+    "commission_amount": {
+      "type": "number",
+      "description": "Commission due au parrain (5%)",
+      "default": 0
+    },
+    "plan": {
+      "type": "string",
+      "description": "Plan d'abonnement souscrit par le filleul"
+    },
+    "commissioned_date": {
+      "type": "string",
+      "description": "Date de la commission"
+    },
+    "paid_date": {
+      "type": "string",
+      "description": "Date du versement manuel de la commission"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "referrer_id",
+    "referred_user_id",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.referrer_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

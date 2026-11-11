@@ -1,0 +1,222 @@
+{
+  "name": "Settings",
+  "type": "object",
+  "properties": {
+    "company_name": {
+      "type": "string",
+      "description": "Nom de l'entreprise"
+    },
+    "company_address": {
+      "type": "string",
+      "description": "Adresse"
+    },
+    "company_phone": {
+      "type": "string",
+      "description": "T\u00e9l\u00e9phone"
+    },
+    "company_phone2": {
+      "type": "string",
+      "description": "T\u00e9l\u00e9phone secondaire"
+    },
+    "company_email": {
+      "type": "string",
+      "description": "Email"
+    },
+    "company_website": {
+      "type": "string",
+      "description": "Site web"
+    },
+    "company_tax_id": {
+      "type": "string",
+      "description": "N\u00b0 fiscal / NINEA (legacy, affich\u00e9 sur facture et devis)"
+    },
+    "company_rcm": {
+      "type": "string",
+      "description": "N\u00b0 RCM (affich\u00e9 sur facture et devis)"
+    },
+    "company_ninea": {
+      "type": "string",
+      "description": "NINEA (affich\u00e9 sur facture et devis)"
+    },
+    "invoice_prefix": {
+      "type": "string",
+      "description": "Pr\u00e9fixe facture",
+      "default": "FAC-"
+    },
+    "invoice_next_number": {
+      "type": "number",
+      "description": "Prochain N\u00b0",
+      "default": 1
+    },
+    "invoice_number_format": {
+      "type": "string",
+      "description": "Format: {PREFIX}{YYYY}-{N:04d}",
+      "default": "{PREFIX}{YYYY}-{N:04d}"
+    },
+    "proforma_prefix": {
+      "type": "string",
+      "description": "Pr\u00e9fixe proforma",
+      "default": "PRO-"
+    },
+    "proforma_next_number": {
+      "type": "number",
+      "description": "Prochain N\u00b0 proforma",
+      "default": 1
+    },
+    "bl_prefix": {
+      "type": "string",
+      "description": "Pr\u00e9fixe bon de livraison",
+      "default": "BL-"
+    },
+    "bl_next_number": {
+      "type": "number",
+      "description": "Prochain N\u00b0 bon de livraison",
+      "default": 1
+    },
+    "product_ref_prefix": {
+      "type": "string",
+      "description": "Pr\u00e9fixe r\u00e9f\u00e9rence article",
+      "default": "ART-"
+    },
+    "product_ref_next_number": {
+      "type": "number",
+      "description": "Prochain N\u00b0 de r\u00e9f\u00e9rence article",
+      "default": 1
+    },
+    "product_ref_format": {
+      "type": "string",
+      "description": "Format de r\u00e9f\u00e9rence article ({PREFIX}, {N:04d}, {N}, {NAME})",
+      "default": "{NAME}"
+    },
+    "product_ref_auto": {
+      "type": "boolean",
+      "description": "G\u00e9n\u00e9rer automatiquement la r\u00e9f\u00e9rence article \u00e0 la cr\u00e9ation",
+      "default": true
+    },
+    "currency": {
+      "type": "string",
+      "description": "Code devise",
+      "default": "XOF"
+    },
+    "currency_symbol": {
+      "type": "string",
+      "description": "Symbole devise",
+      "default": "CFA"
+    },
+    "invoice_footer": {
+      "type": "string",
+      "description": "Pied de page facture"
+    },
+    "default_terms": {
+      "type": "string",
+      "description": "Conditions par d\u00e9faut",
+      "default": "\u00c0 payer d\u00e8s r\u00e9ception"
+    },
+    "company_logo_url": {
+      "type": "string",
+      "description": "URL du logo de l'entreprise"
+    },
+    "logo_size": {
+      "type": "string",
+      "enum": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "default": "medium",
+      "description": "Taille du logo sur la facture"
+    },
+    "invoice_template": {
+      "type": "string",
+      "description": "Mod\u00e8le de facture (classic, compact, clean, sharp)",
+      "default": "classic"
+    },
+    "invoice_color": {
+      "type": "string",
+      "description": "Couleur principale de la facture (hex)",
+      "default": ""
+    },
+    "signature_url": {
+      "type": "string",
+      "description": "URL de l'image de signature ajout\u00e9e aux factures"
+    },
+    "default_unit": {
+      "type": "string",
+      "description": "Unit\u00e9 s\u00e9lectionn\u00e9e par d\u00e9faut dans les articles",
+      "default": "Pcs"
+    },
+    "tax_type": {
+      "type": "string",
+      "enum": [
+        "none",
+        "total",
+        "deduction",
+        "per_item"
+      ],
+      "default": "none",
+      "description": "Type de taxe (aucune, sur le total, d\u00e9duction, par article)"
+    },
+    "tax_name": {
+      "type": "string",
+      "description": "Nom de la taxe (ex : TVA)"
+    },
+    "tax_rate": {
+      "type": "number",
+      "description": "Taux de taxe en pourcentage",
+      "default": 0
+    },
+    "tax_inclusive": {
+      "type": "boolean",
+      "description": "La taxe est d\u00e9j\u00e0 incluse dans le prix",
+      "default": false
+    },
+    "description": {
+      "type": "string",
+      "description": "Description",
+      "maxLength": 1000
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "company_name",
+    "currency"
+  ],
+  "rls": {
+    "create": {
+      "data.team_id": "{{user.data.team_id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

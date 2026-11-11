@@ -1,0 +1,81 @@
+{
+  "name": "TeamInvitation",
+  "type": "object",
+  "properties": {
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe invitante"
+    },
+    "inviter_id": {
+      "type": "string",
+      "description": "Propri\u00e9taire invitant"
+    },
+    "inviter_name": {
+      "type": "string",
+      "description": "Nom de l'invitant (snapshot)"
+    },
+    "invitee_email": {
+      "type": "string",
+      "description": "E-mail de l'invit\u00e9"
+    },
+    "token": {
+      "type": "string",
+      "description": "Jeton d'acceptation unique"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected",
+        "expired"
+      ],
+      "default": "pending",
+      "description": "Statut de l'invitation"
+    },
+    "expires_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date d'expiration de l'invitation"
+    }
+  },
+  "required": [
+    "team_id",
+    "inviter_id",
+    "invitee_email",
+    "token",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.inviter_id": "{{user.id}}"
+        },
+        {
+          "data.invitee_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

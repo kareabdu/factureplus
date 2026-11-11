@@ -1,0 +1,94 @@
+{
+  "name": "BankAccount",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nom du compte (ex: Compte courant)"
+    },
+    "bank_name": {
+      "type": "string",
+      "description": "Nom de la banque"
+    },
+    "account_number": {
+      "type": "string",
+      "description": "Num\u00e9ro de compte"
+    },
+    "iban": {
+      "type": "string",
+      "description": "IBAN"
+    },
+    "initial_balance": {
+      "type": "number",
+      "description": "Solde initial",
+      "default": 0
+    },
+    "currency": {
+      "type": "string",
+      "description": "Code devise",
+      "default": "XOF"
+    },
+    "currency_symbol": {
+      "type": "string",
+      "description": "Symbole devise",
+      "default": "CFA"
+    },
+    "statement_balance": {
+      "type": "number",
+      "description": "Solde du dernier relev\u00e9 rapproch\u00e9",
+      "default": 0
+    },
+    "statement_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de fin du dernier relev\u00e9 rapproch\u00e9"
+    },
+    "last_reconciled_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date du dernier rapprochement cl\u00f4tur\u00e9"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "data.team_id": "{{user.data.team_id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

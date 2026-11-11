@@ -1,0 +1,128 @@
+{
+  "name": "StockCount",
+  "type": "object",
+  "properties": {
+    "reference": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence inventaire (INV-XXXXXX)"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de l'inventaire"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "completed"
+      ],
+      "default": "completed",
+      "description": "Statut de l'inventaire"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes facultatives",
+      "maxLength": 2000
+    },
+    "items": {
+      "type": "array",
+      "description": "Articles compt\u00e9s lors de l'inventaire",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "R\u00e9f\u00e9rence produit"
+          },
+          "product_name": {
+            "type": "string",
+            "description": "Nom du produit (snapshot)"
+          },
+          "theoretical_qty": {
+            "type": "number",
+            "description": "Quantit\u00e9 th\u00e9orique avant comptage",
+            "default": 0
+          },
+          "counted_qty": {
+            "type": "number",
+            "description": "Quantit\u00e9 r\u00e9ellement compt\u00e9e",
+            "default": 0
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit\u00e9 (snapshot)"
+          },
+          "gap": {
+            "type": "number",
+            "description": "\u00c9cart (compt\u00e9 - th\u00e9orique)",
+            "default": 0
+          }
+        },
+        "required": [
+          "product_name",
+          "theoretical_qty",
+          "counted_qty"
+        ]
+      }
+    },
+    "gaps_count": {
+      "type": "number",
+      "description": "Nombre d'\u00e9carts constat\u00e9s",
+      "default": 0
+    },
+    "location_id": {
+      "type": "string",
+      "description": "Emplacement concern\u00e9 (inventaire par emplacement)"
+    },
+    "location_name": {
+      "type": "string",
+      "description": "Nom de l'emplacement (snapshot)"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Auteur de l'inventaire"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "reference",
+    "date"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "name": "LivreurStock",
+  "type": "object",
+  "properties": {
+    "livreur_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence livreur"
+    },
+    "livreur_name": {
+      "type": "string",
+      "description": "Nom du livreur (snapshot)"
+    },
+    "product_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence produit"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Nom du produit (snapshot)"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Stock actuel chez le livreur",
+      "default": 0
+    },
+    "initial_quantity": {
+      "type": "number",
+      "description": "Stock initial confi\u00e9 au livreur",
+      "default": 0
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unit\u00e9 (snapshot)",
+      "default": "Pcs"
+    },
+    "location_id": {
+      "type": "string",
+      "description": "Emplacement d'origine (produit) dont le stock a \u00e9t\u00e9 d\u00e9duit"
+    },
+    "location_name": {
+      "type": "string",
+      "description": "Nom de l'emplacement d'origine (snapshot)"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "livreur_id",
+    "product_id"
+  ],
+  "rls": {
+    "create": {
+      "data.team_id": "{{user.data.team_id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

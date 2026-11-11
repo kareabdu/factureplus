@@ -1,0 +1,157 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "sku": {
+      "type": "string",
+      "description": "Stock Keeping Unit"
+    },
+    "barcode": {
+      "type": "string",
+      "description": "Product barcode"
+    },
+    "category_id": {
+      "type": "string",
+      "description": "Reference to category"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Current stock quantity",
+      "default": 0
+    },
+    "reorder_level": {
+      "type": "number",
+      "description": "Minimum quantity before reorder alert",
+      "default": 10
+    },
+    "unit_price": {
+      "type": "number",
+      "description": "Price per unit"
+    },
+    "cost_price": {
+      "type": "number",
+      "description": "Cost price per unit"
+    },
+    "supplier": {
+      "type": "string",
+      "description": "Fournisseur principal (legacy, snapshot du premier de suppliers)"
+    },
+    "supplier_reference": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence fournisseur principal (legacy)"
+    },
+    "suppliers": {
+      "type": "array",
+      "description": "Fournisseurs du produit (plusieurs possibles), li\u00e9s \u00e0 la fiche Fournisseur",
+      "items": {
+        "type": "object",
+        "properties": {
+          "supplier_id": {
+            "type": "string",
+            "description": "R\u00e9f\u00e9rence \u00e0 la fiche Fournisseur"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nom du fournisseur (snapshot)"
+          },
+          "reference": {
+            "type": "string",
+            "description": "R\u00e9f\u00e9rence fournisseur"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    },
+    "description": {
+      "type": "string",
+      "description": "Product description"
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unit of measurement (free text)",
+      "default": "Pcs"
+    },
+    "location": {
+      "type": "string",
+      "description": "Storage location (legacy, free text)"
+    },
+    "location_ids": {
+      "type": "array",
+      "description": "Emplacements de stockage (r\u00e9f\u00e9rences Location) - legacy",
+      "items": {
+        "type": "string"
+      }
+    },
+    "locations": {
+      "type": "array",
+      "description": "Stock par emplacement (emplacement + quantit\u00e9)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "location_id": {
+            "type": "string",
+            "description": "R\u00e9f\u00e9rence emplacement"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Quantit\u00e9 dans cet emplacement",
+            "default": 0
+          }
+        },
+        "required": [
+          "location_id"
+        ]
+      }
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Product image URL"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

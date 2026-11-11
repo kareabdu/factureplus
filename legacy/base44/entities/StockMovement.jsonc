@@ -1,0 +1,87 @@
+{
+  "name": "StockMovement",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "Reference to product"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Product name snapshot"
+    },
+    "movement_type": {
+      "type": "string",
+      "enum": [
+        "in",
+        "out",
+        "adjustment"
+      ],
+      "description": "Type of stock movement"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantity moved"
+    },
+    "previous_quantity": {
+      "type": "number",
+      "description": "Stock quantity before movement"
+    },
+    "new_quantity": {
+      "type": "number",
+      "description": "Stock quantity after movement"
+    },
+    "location_id": {
+      "type": "string",
+      "description": "Emplacement concern\u00e9 par le mouvement"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for movement"
+    },
+    "reference": {
+      "type": "string",
+      "description": "Reference number (PO, invoice, etc.)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Auteur du mouvement"
+    }
+  },
+  "required": [
+    "product_id",
+    "movement_type",
+    "quantity"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

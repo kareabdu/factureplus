@@ -1,0 +1,73 @@
+{
+  "name": "Livreur",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nom du livreur"
+    },
+    "phone": {
+      "type": "string",
+      "description": "T\u00e9l\u00e9phone"
+    },
+    "address": {
+      "type": "string",
+      "description": "Adresse / zone de livraison"
+    },
+    "contact_person": {
+      "type": "string",
+      "description": "Personne de contact"
+    },
+    "is_relay": {
+      "type": "boolean",
+      "description": "Fait office de point de relais (g\u00e8re un stock)",
+      "default": true
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "data.team_id": "{{user.data.team_id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

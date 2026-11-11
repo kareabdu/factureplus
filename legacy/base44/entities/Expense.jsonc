@@ -1,0 +1,99 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "merchant_name": {
+      "type": "string",
+      "description": "Nom du commer\u00e7ant"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Montant",
+      "default": 0
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de la d\u00e9pense"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "loyer",
+        "salaire",
+        "fournitures",
+        "transport",
+        "facture",
+        "impot",
+        "autre"
+      ],
+      "default": "autre",
+      "description": "Cat\u00e9gorie de d\u00e9pense"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description"
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "URL de l'image du re\u00e7u"
+    },
+    "payment_method": {
+      "type": "string",
+      "description": "M\u00e9thode de paiement"
+    },
+    "currency": {
+      "type": "string",
+      "description": "Devise",
+      "default": "XOF"
+    },
+    "currency_symbol": {
+      "type": "string",
+      "description": "Symbole devise",
+      "default": "CFA"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "merchant_name",
+    "amount"
+  ],
+  "rls": {
+    "create": {
+      "data.team_id": "{{user.data.team_id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

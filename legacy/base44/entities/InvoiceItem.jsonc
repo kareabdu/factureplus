@@ -1,0 +1,113 @@
+{
+  "name": "InvoiceItem",
+  "type": "object",
+  "properties": {
+    "invoice_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence facture"
+    },
+    "product_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence produit"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Nom du produit"
+    },
+    "unit_price": {
+      "type": "number",
+      "description": "Prix unitaire"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantit\u00e9"
+    },
+    "total_price": {
+      "type": "number",
+      "description": "Prix total"
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unit\u00e9",
+      "default": "Pcs"
+    },
+    "taxable": {
+      "type": "boolean",
+      "description": "Article soumis \u00e0 la taxe",
+      "default": true
+    },
+    "location_id": {
+      "type": "string",
+      "description": "Emplacement choisi (legacy : emplacement unique)"
+    },
+    "allocations": {
+      "type": "array",
+      "description": "R\u00e9partition de la quantit\u00e9 sur plusieurs emplacements",
+      "items": {
+        "type": "object",
+        "properties": {
+          "location_id": {
+            "type": "string",
+            "description": "Emplacement"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Quantit\u00e9 pr\u00e9lev\u00e9e sur cet emplacement",
+            "default": 0
+          }
+        },
+        "required": [
+          "location_id"
+        ]
+      }
+    },
+    "description": {
+      "type": "string",
+      "description": "Description",
+      "maxLength": 1000
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "invoice_id",
+    "product_name",
+    "unit_price",
+    "quantity"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

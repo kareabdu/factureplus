@@ -1,0 +1,56 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "trial",
+        "pending",
+        "active",
+        "expired",
+        "none"
+      ],
+      "default": "none",
+      "description": "Statut d'abonnement"
+    },
+    "trial_end_date": {
+      "type": "string",
+      "description": "Date de fin de p\u00e9riode d'essai"
+    },
+    "subscription_plan": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual",
+        "none"
+      ],
+      "default": "none",
+      "description": "Plan d'abonnement"
+    },
+    "subscription_end_date": {
+      "type": "string",
+      "description": "Date de fin d'abonnement"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "Identifiant de l'\u00e9quipe ( = id du propri\u00e9taire du compte)"
+    },
+    "referral_code": {
+      "type": "string",
+      "description": "Code de parrainage personnel de l'utilisateur"
+    },
+    "referred_by_code": {
+      "type": "string",
+      "description": "Code de parrainage utilis\u00e9 lors de l'inscription"
+    },
+    "deleted_at": {
+      "type": "string",
+      "description": "Date de demande de suppression du compte (soft delete). R\u00e9cup\u00e9rable en se reconnectant sous 30 jours."
+    }
+  },
+  "required": [
+    "trial_end_date",
+    "subscription_end_date"
+  ]
+}

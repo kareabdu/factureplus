@@ -1,0 +1,99 @@
+{
+  "name": "SubscriptionPayment",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Utilisateur concern\u00e9"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email utilisateur (snapshot)"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "weekly",
+        "monthly",
+        "annual"
+      ],
+      "description": "Plan choisi"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Montant en XOF",
+      "default": 0
+    },
+    "is_team_member": {
+      "type": "boolean",
+      "description": "Paiement au tarif membre d'\u00e9quipe (r\u00e9duit)",
+      "default": false
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "wave",
+        "orange_qr",
+        "orange_maxit"
+      ],
+      "description": "M\u00e9thode de paiement UnitechPay"
+    },
+    "reference": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence UnitechPay"
+    },
+    "transaction_id": {
+      "type": "string",
+      "description": "ID transaction UnitechPay"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "failed",
+        "cancelled"
+      ],
+      "default": "pending",
+      "description": "Statut du paiement"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description",
+      "maxLength": 1000
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "user_id",
+    "plan",
+    "amount",
+    "method"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "name": "Invoice",
+  "type": "object",
+  "properties": {
+    "invoice_number": {
+      "type": "string",
+      "description": "Num\u00e9ro de document"
+    },
+    "date": {
+      "type": "string",
+      "description": "Date du document"
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "Nom du client"
+    },
+    "customer_phone": {
+      "type": "string",
+      "description": "T\u00e9l\u00e9phone client"
+    },
+    "billing_address": {
+      "type": "string",
+      "description": "Adresse de facturation / livraison"
+    },
+    "total_amount": {
+      "type": "number",
+      "description": "Montant total",
+      "default": 0
+    },
+    "balance_due": {
+      "type": "number",
+      "description": "Solde d\u00fb",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "sent",
+        "paid",
+        "overdue",
+        "cancelled",
+        "refused",
+        "accepted"
+      ],
+      "default": "draft",
+      "description": "Statut"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "invoice",
+        "proforma",
+        "bl",
+        "return"
+      ],
+      "default": "invoice",
+      "description": "Type de document (facture, devis, bon de livraison, bon de retour)"
+    },
+    "deposit_amount": {
+      "type": "number",
+      "description": "Montant de l'acompte",
+      "default": 0
+    },
+    "deposit_percentage": {
+      "type": "number",
+      "description": "Pourcentage acompte",
+      "default": 0
+    },
+    "payment_terms": {
+      "type": "string",
+      "description": "Conditions de paiement"
+    },
+    "due_date": {
+      "type": "string",
+      "description": "Date d'\u00e9ch\u00e9ance"
+    },
+    "payment_date": {
+      "type": "string",
+      "description": "Date de paiement (legacy)"
+    },
+    "payment_method": {
+      "type": "string",
+      "description": "M\u00e9thode de paiement (legacy)"
+    },
+    "payments": {
+      "type": "array",
+      "description": "Historique des paiements",
+      "items": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "currency": {
+      "type": "string",
+      "description": "Devise",
+      "default": "XOF"
+    },
+    "currency_symbol": {
+      "type": "string",
+      "description": "Symbole devise",
+      "default": "CFA"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes"
+    },
+    "images": {
+      "type": "array",
+      "description": "Images attach\u00e9es (bons de livraison)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "stock_deducted": {
+      "type": "boolean",
+      "description": "Stock d\u00e9j\u00e0 d\u00e9duit \u00e0 l'envoi/livraison",
+      "default": false
+    },
+    "livreur_id": {
+      "type": "string",
+      "description": "Livreur assign\u00e9 (bons de livraison)"
+    },
+    "livreur_name": {
+      "type": "string",
+      "description": "Nom du livreur (snapshot)"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "customer_name"
+  ],
+  "rls": {
+    "create": {
+      "data.team_id": "{{user.data.team_id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

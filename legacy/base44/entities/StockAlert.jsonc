@@ -1,0 +1,84 @@
+{
+  "name": "StockAlert",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence produit"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Nom du produit (snapshot)"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantit\u00e9 au moment de l'alerte",
+      "default": 0
+    },
+    "reorder_level": {
+      "type": "number",
+      "description": "Seuil de r\u00e9approvisionnement",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "resolved"
+      ],
+      "default": "active",
+      "description": "Statut de l'alerte"
+    },
+    "notified": {
+      "type": "boolean",
+      "description": "Propri\u00e9taire notifi\u00e9 par email",
+      "default": false
+    },
+    "description": {
+      "type": "string",
+      "description": "Description",
+      "maxLength": 1000
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "product_id",
+    "product_name"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

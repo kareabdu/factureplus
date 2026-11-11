@@ -1,0 +1,95 @@
+{
+  "name": "PurchaseTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nom du mod\u00e8le d'achat"
+    },
+    "supplier_id": {
+      "type": "string",
+      "description": "Fournisseur (r\u00e9f\u00e9rence)"
+    },
+    "supplier_name": {
+      "type": "string",
+      "description": "Nom du fournisseur (snapshot)"
+    },
+    "items": {
+      "type": "array",
+      "description": "Articles du mod\u00e8le",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "R\u00e9f\u00e9rence produit"
+          },
+          "product_name": {
+            "type": "string",
+            "description": "Nom du produit (snapshot)"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit\u00e9 (snapshot)"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Quantit\u00e9",
+            "default": 0
+          },
+          "unit_price": {
+            "type": "number",
+            "description": "Prix unitaire",
+            "default": 0
+          }
+        },
+        "required": [
+          "product_name",
+          "quantity"
+        ]
+      }
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "data.team_id": "{{user.data.team_id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

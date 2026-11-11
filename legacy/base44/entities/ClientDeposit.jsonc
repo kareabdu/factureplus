@@ -1,0 +1,94 @@
+{
+  "name": "ClientDeposit",
+  "type": "object",
+  "properties": {
+    "customer_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence client"
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "Nom du client (snapshot)"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Montant de l'acompte vers\u00e9",
+      "default": 0
+    },
+    "used_amount": {
+      "type": "number",
+      "description": "Montant d\u00e9j\u00e0 utilis\u00e9 (imput\u00e9 aux factures)",
+      "default": 0
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de l'acompte"
+    },
+    "payment_method": {
+      "type": "string",
+      "description": "M\u00e9thode de paiement"
+    },
+    "reference": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence (re\u00e7u, n\u00b0 transaction)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "used",
+        "cancelled"
+      ],
+      "default": "active",
+      "description": "Statut de l'acompte"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "customer_id",
+    "customer_name",
+    "amount",
+    "date"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

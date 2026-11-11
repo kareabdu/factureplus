@@ -1,0 +1,102 @@
+{
+  "name": "BankReconciliation",
+  "type": "object",
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "Compte bancaire rapproch\u00e9"
+    },
+    "account_name": {
+      "type": "string",
+      "description": "Nom du compte (snapshot)"
+    },
+    "statement_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de fin du relev\u00e9"
+    },
+    "statement_balance": {
+      "type": "number",
+      "description": "Solde du relev\u00e9 bancaire",
+      "default": 0
+    },
+    "book_balance": {
+      "type": "number",
+      "description": "Solde comptable \u00e0 la date du relev\u00e9",
+      "default": 0
+    },
+    "pointed_balance": {
+      "type": "number",
+      "description": "Solde des op\u00e9rations point\u00e9es",
+      "default": 0
+    },
+    "difference": {
+      "type": "number",
+      "description": "\u00c9cart de rapprochement (relev\u00e9 - point\u00e9)",
+      "default": 0
+    },
+    "unreconciled_count": {
+      "type": "number",
+      "description": "Op\u00e9rations non point\u00e9es restantes",
+      "default": 0
+    },
+    "unreconciled_balance": {
+      "type": "number",
+      "description": "Montant net des op\u00e9rations non point\u00e9es",
+      "default": 0
+    },
+    "notes": {
+      "type": "string",
+      "description": "Justification de l'\u00e9cart / commentaire",
+      "maxLength": 1000
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Auteur du rapprochement"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "\u00c9quipe propri\u00e9taire"
+    }
+  },
+  "required": [
+    "account_id",
+    "statement_date",
+    "statement_balance"
+  ],
+  "rls": {
+    "create": {
+      "data.team_id": "{{user.data.team_id}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_id": "{{user.data.team_id}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

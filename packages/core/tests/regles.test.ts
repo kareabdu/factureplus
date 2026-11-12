@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { formaterMontant, formaterQuantite, lireMontant, lireQuantite } from "../src/montants.ts";
 import { calculerTotaux } from "../src/taxe.ts";
 import { formaterNumero } from "../src/numeros.ts";
+import { numeroWhatsApp } from "../src/whatsapp.ts";
 import { joursDePeriode, libellePeriode, periodePersonnalisee, periodePredefinie } from "../src/periodes.ts";
 
 test("montants", () => {
@@ -62,4 +63,13 @@ test("périodes personnalisées", () => {
   assert.deepEqual(joursDePeriode({ debut: "2026-02-27", fin: "2026-03-02" }), ["2026-02-27", "2026-02-28", "2026-03-01", "2026-03-02"]);
   assert.equal(joursDePeriode(periodePredefinie("cette_annee", new Date(2024, 5, 1))).length, 366);
   assert.match(libellePeriode(periodePersonnalisee("2026-11-01", "2026-11-30")), /^1 nov\.? – 30 nov\.? 2026$/);
+});
+
+test("numéro WhatsApp international", () => {
+  assert.equal(numeroWhatsApp("77 833 97 71", "+221 33 800 00 00"), "221778339771");
+  assert.equal(numeroWhatsApp("+221 77 833 97 71", "+225 07 00 00 00"), "221778339771");
+  assert.equal(numeroWhatsApp("00221778339771"), "221778339771");
+  assert.equal(numeroWhatsApp("0707070707", "+225 27 22 00 00"), "225707070707");
+  assert.equal(numeroWhatsApp("221778339771", "+221 33 800 00 00"), "221778339771");
+  assert.equal(numeroWhatsApp("778339771"), "778339771");
 });

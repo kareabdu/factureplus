@@ -12,7 +12,7 @@ import { Badge, Bouton, BoutonIcone, Carte, ChargementPlein, Ecran, ErreurCharge
 import { Spacing } from '@/constants/theme';
 import { confirmer, signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe } from '@/lib/espace';
-import { ecrireWhatsApp, imprimer, messagePartage, partagerPdf } from '@/lib/pdf';
+import { envoyerSurWhatsApp, imprimer, partagerPdf } from '@/lib/pdf';
 import { supabase } from '@/lib/supabase';
 
 /** Document validé : consultation, règlements, PDF, BL, conversion, annulation. */
@@ -105,7 +105,8 @@ export default function VoirDocument() {
           <Bouton titre={`Modifier ${d.type === 'bl' ? 'le bon' : 'la ' + libelle.toLowerCase()}`} icone="modifier" variante="secondaire"
             onPress={() => router.push({ pathname: '/document/editer', params: { id: d.id, type: d.type } })} />
           {d.client_telephone && (
-            <Bouton titre="Écrire sur WhatsApp" variante="secondaire" onPress={() => executer('wa', () => ecrireWhatsApp(d.client_telephone!, messagePartage(d, parametres)))} />
+            <Bouton titre="Envoyer sur WhatsApp (avec PDF)" variante="secondaire" chargement={occupe === 'wa'}
+              onPress={() => executer('wa', () => envoyerSurWhatsApp(d.id, parametres))} />
           )}
           {d.type === 'proforma' && d.statut === 'emis' && (
             <View style={{ flexDirection: 'row', gap: Spacing.two }}>

@@ -7,7 +7,11 @@ import { fileURLToPath } from "node:url";
 
 const dossier = join(dirname(fileURLToPath(import.meta.url)), "..", "migrations");
 
-export async function creerBase() {
+/**
+ * @param {{ stockage?: boolean }} [options] stockage : imite le schéma « storage » de Supabase
+ *   (compartiments, fichiers avec RLS, storage.foldername) pour tester les règles d'accès aux fichiers.
+ */
+export async function creerBase({ stockage = false } = {}) {
   const db = new PGlite();
   await db.exec(`
     create role anon nologin;
@@ -33,6 +37,27 @@ export async function creerBase() {
     alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
     alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
   `);
+  if (stockage) {
+    await db.exec(`
+      create schema storage;
+      grant usage on schema storage to anon, authenticated;
+      create table storage.buckets (id text primary key, name text not null, public boolean not null default false);
+      create table storage.objects (
+        id uuid primary key default gen_random_uuid(),
+        bucket_id text references storage.buckets (id),
+        name text not null,
+        owner uuid default auth.uid(),
+        unique (bucket_id, name)
+      );
+      alter table storage.objects enable row level security;
+      grant select, insert, update, delete on storage.objects to authenticated;
+      grant select on storage.buckets to authenticated;
+      -- Dossiers d'un chemin « a/b/fichier.pdf » → {a,b}
+      create function storage.foldername(name text) returns text[] language sql immutable as $$
+        select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;
+      grant execute on function storage.foldername(text) to authenticated;
+    `);
+  }
   for (const f of readdirSync(dossier).filter((f) => f.endsWith(".sql")).sort()) {
     await db.exec(readFileSync(join(dossier, f), "utf8"));
   }

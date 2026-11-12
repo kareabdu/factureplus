@@ -11,5 +11,6 @@ export * from "./ventes";
 export * from "./achats";
 export * from "./resume";
 export * from "./periodes";
+export * from "./whatsapp";
 export * from "./impression";
 export * from "./design";

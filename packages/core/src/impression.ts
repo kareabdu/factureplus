@@ -1,3 +1,6 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { traduireErreur } from "./erreurs";
 import { LIBELLES_MODE_PAIEMENT, LIBELLES_TYPE_DOCUMENT, resteAPayer } from "./libelles";
 import { formaterMontant, formaterQuantite } from "./montants";
 import type { Document, LigneDocument, Parametres, Reglement } from "./types";
@@ -116,9 +119,31 @@ export function htmlDocument(args: {
 </body></html>`;
 }
 
-/** Message de partage (WhatsApp, SMS) accompagnant le PDF. */
-export function messagePartage(d: Document, p: Parametres): string {
+/** Message de partage (WhatsApp, SMS), avec le lien de téléchargement du PDF s'il est fourni. */
+export function messagePartage(d: Document, p: Parametres, lienPdf?: string | null): string {
   const type = LIBELLES_TYPE_DOCUMENT[d.type];
   const montant = d.type === "bl" ? "" : ` d'un montant de ${formaterMontant(d.total, p.symbole_devise)}`;
-  return `Bonjour ${d.client_nom}, voici votre ${type.toLowerCase()} ${d.numero ?? ""}${montant}. Merci pour votre confiance. — ${p.nom_entreprise}`;
+  const message = `Bonjour ${d.client_nom}, voici votre ${type.toLowerCase()} ${d.numero ?? ""}${montant}.`;
+  const pdf = lienPdf ? `\n\nTélécharger le PDF : ${lienPdf}` : "";
+  return `${message}${pdf}\n\nMerci pour votre confiance. — ${p.nom_entreprise}`;
+}
+
+/** Durée de validité du lien de téléchargement envoyé au client. */
+export const DUREE_LIEN_PDF_JOURS = 30;
+
+/**
+ * Dépose le PDF d'un document dans l'espace privé « documents » de l'équipe (remplace la version
+ * précédente) et renvoie un lien signé temporaire, à envoyer au client.
+ * Chemin : <equipe>/<document>/<numéro>.pdf — le nom téléchargé est le numéro du document.
+ */
+export async function lienPdfDocument(
+  sb: SupabaseClient, d: Pick<Document, "id" | "equipe_id" | "numero" | "type">, contenu: ArrayBuffer | Blob,
+): Promise<string> {
+  const nom = (d.numero ?? `${LIBELLES_TYPE_DOCUMENT[d.type]}-brouillon`).replace(/[^\w.-]+/g, "-");
+  const chemin = `${d.equipe_id}/${d.id}/${nom}.pdf`;
+  const depot = await sb.storage.from("documents").upload(chemin, contenu, { contentType: "application/pdf", upsert: true });
+  if (depot.error) throw new Error(traduireErreur(depot.error));
+  const lien = await sb.storage.from("documents").createSignedUrl(chemin, DUREE_LIEN_PDF_JOURS * 86_400, { download: `${nom}.pdf` });
+  if (lien.error || !lien.data?.signedUrl) throw new Error(traduireErreur(lien.error ?? "Lien de téléchargement indisponible"));
+  return lien.data.signedUrl;
 }

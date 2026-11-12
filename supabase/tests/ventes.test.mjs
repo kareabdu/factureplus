@@ -121,6 +121,14 @@ await vrai("indicateurs cohérents", async () => {
   return r.nb_produits === 2 && Number(r.ventes_periode) === 24000 && Number(r.impayes) === 24000
     && r.meilleurs_produits.length === 2 && r.ventes_par_jour.length === 1;
 });
+await vrai("total de l'année civile (hors brouillons, annulées et années suivantes)", async () => {
+  const annee = new Date().getFullYear();
+  const f = (await en(A, "select public.enregistrer_document($1,'facture',null,$2,$3) as id", [eA,
+    JSON.stringify({ client_nom: "Futur", date: `${annee + 1}-01-15` }), lignes(1, 1)]))[0].id;
+  await en(A, "select public.valider_document($1)", [f]);
+  const r = (await en(A, "select public.resume_tableau_de_bord($1) as r", [eA]))[0].r;
+  return Number(r.ventes_annee) === 24000 && r.nb_factures_annee === 1;
+});
 await echoue("B ne lit pas le tableau de bord de A", () => en(B, "select public.resume_tableau_de_bord($1)", [eA]), "Accès refusé");
 
 process.exit(bilan() ? 1 : 0);

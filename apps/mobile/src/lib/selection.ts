@@ -43,3 +43,38 @@ export const scannerCode = (titre?: string) =>
 export const choisirProduit = () => attendre<ProduitChoisi>('produit', () => router.push('/choisir/produit'));
 export const choisirClient = () => attendre<ClientChoisi>('client', () => router.push('/choisir/client'));
 export const choisirFournisseur = () => attendre<FournisseurChoisi>('fournisseur', () => router.push('/choisir/fournisseur'));
+
+// ---------------------------------------------------------------------------
+// Écran « Article » : saisie ou modification d'une ligne de facture / proforma
+// ---------------------------------------------------------------------------
+
+/** Ligne éditée (stock connu si elle vient d'un produit). */
+export type LigneEditee = {
+  produit_id: string | null;
+  designation: string;
+  unite: string | null;
+  prix_unitaire: number;
+  quantite: number;
+  taxable: boolean;
+  stock?: number;
+};
+
+export type ResultatArticle = { action: 'enregistrer'; ligne: LigneEditee } | { action: 'supprimer' };
+
+let ligneInitiale: LigneEditee | null = null;
+let controleStock = false;
+
+/** Ligne à pré-remplir dans l'écran Article (lue une seule fois à son ouverture). */
+export function lireLigneInitiale() {
+  return { ligne: ligneInitiale, controleStock };
+}
+
+/**
+ * Ouvre l'écran Article. `ligne` absente = nouvel article.
+ * `stock` : afficher l'alerte de stock insuffisant (factures).
+ */
+export function editerArticle(ligne: LigneEditee | null, stock = false) {
+  ligneInitiale = ligne;
+  controleStock = stock;
+  return attendre<ResultatArticle>('article', () => router.push('/document/article'));
+}

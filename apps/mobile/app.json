@@ -58,7 +58,14 @@
           "cameraPermission": "StockTracker utilise la caméra pour photographier vos produits."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "StockTracker accède à vos contacts pour créer un client à partir d'un contact choisi."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

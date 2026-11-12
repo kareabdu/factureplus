@@ -8,7 +8,7 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Badge, Bouton, Carte, ChargementPlein, Ecran, ErreurChargement, Info, LigneListe, Section } from '@/components/ui';
+import { Badge, Bouton, BoutonIcone, Carte, ChargementPlein, Ecran, ErreurChargement, Info, LigneListe, Section } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { confirmer, signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe } from '@/lib/espace';
@@ -64,7 +64,13 @@ export default function VoirDocument() {
 
   return (
     <>
-      <Stack.Screen options={{ title: d.numero ?? libelle }} />
+      <Stack.Screen options={{
+        title: d.numero ?? libelle,
+        headerRight: () => (
+          <BoutonIcone icone="modifier" libelle="Modifier"
+            onPress={() => router.push({ pathname: '/document/editer', params: { id: d.id, type: d.type } })} />
+        ),
+      }} />
       <Ecran enTete rafraichir={recharger}>
         <View style={{ gap: 4 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
@@ -96,6 +102,8 @@ export default function VoirDocument() {
               onPress={() => executer('pdf', () => partagerPdf(d.id, parametres))} />
             <Bouton titre="Imprimer" icone="imprimer" variante="secondaire" onPress={() => executer('imprimer', () => imprimer(d.id, parametres))} />
           </View>
+          <Bouton titre={`Modifier ${d.type === 'bl' ? 'le bon' : 'la ' + libelle.toLowerCase()}`} icone="modifier" variante="secondaire"
+            onPress={() => router.push({ pathname: '/document/editer', params: { id: d.id, type: d.type } })} />
           {d.client_telephone && (
             <Bouton titre="Écrire sur WhatsApp" variante="secondaire" onPress={() => executer('wa', () => ecrireWhatsApp(d.client_telephone!, messagePartage(d, parametres)))} />
           )}

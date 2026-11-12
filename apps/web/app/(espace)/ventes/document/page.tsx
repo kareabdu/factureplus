@@ -12,7 +12,7 @@ import { Suspense, useState, type FormEvent } from "react";
 
 import { ChoixProduit, ChoixTiers } from "@/components/choix";
 import { Icone } from "@/components/icones";
-import { Alerte, Badge, Bouton, Carte, Champ, ChampMontant, Chargement, EnTetePage, Info, Liste, Modale, Tableau, Zone } from "@/components/ui";
+import { Alerte, Badge, Bouton, Carte, Champ, ChampMontant, Chargement, EnTetePage, Info, LienBouton, Liste, Modale, Tableau, Zone } from "@/components/ui";
 import { useDonnees, useEquipe } from "@/lib/espace";
 import { imprimerDocument } from "@/lib/impression";
 import { supabase } from "@/lib/supabase";
@@ -26,10 +26,12 @@ function Aiguillage() {
   const params = useSearchParams();
   const id = params.get("id");
   const type = (params.get("type") as TypeDocument) || "facture";
-  const { donnees, erreur, recharger } = useDonnees(() => (id ? chargerDocument(supabase, id) : Promise.resolve(null)), [id]);
+  const modifier = params.get("modifier") === "1";
+  // Rechargé aussi en entrant / sortant du mode modification (données à jour après enregistrement)
+  const { donnees, erreur, recharger } = useDonnees(() => (id ? chargerDocument(supabase, id) : Promise.resolve(null)), [id, modifier]);
   if (erreur && !donnees) return <Alerte>{erreur}</Alerte>;
   if (id && !donnees) return <Chargement />;
-  if (!donnees || donnees.document.statut === "brouillon") {
+  if (!donnees || donnees.document.statut === "brouillon" || modifier) {
     return <Editeur key={id ?? "nouveau"} type={donnees?.document.type ?? type} document={donnees?.document ?? null} lignesInitiales={donnees?.lignes ?? []} />;
   }
   return <Consultation document={donnees.document} lignes={donnees.lignes} reglements={donnees.reglements} recharger={recharger} />;
@@ -53,25 +55,30 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
   const [lignes, setLignes] = useState<Ligne[]>(() => lignesInitiales.map((l) => ({ ...l, cle: ++compteur })));
   const [erreur, setErreur] = useState<string | null>(null);
   const [action, setAction] = useState<string | null>(null);
-  const totaux = calculerTotaux(lignes, {
-    taxe_type: parametres?.taxe_type ?? "aucune", taxe_nom: parametres?.taxe_nom ?? "TVA", taxe_taux: parametres?.taxe_taux ?? 0, taxe_incluse: parametres?.taxe_incluse ?? false,
-  });
+  const brouillon = !d || d.statut === "brouillon";
+  // Un brouillon suit les paramètres actuels ; un document validé garde sa taxe d'origine
+  const totaux = calculerTotaux(lignes, d && !brouillon
+    ? { taxe_type: d.taxe_type, taxe_nom: d.taxe_nom, taxe_taux: d.taxe_taux, taxe_incluse: d.taxe_incluse }
+    : { taxe_type: parametres?.taxe_type ?? "aucune", taxe_nom: parametres?.taxe_nom ?? "TVA", taxe_taux: parametres?.taxe_taux ?? 0, taxe_incluse: parametres?.taxe_incluse ?? false });
   const maj = (cle: number, c: Partial<Ligne>) => setLignes((ls) => ls.map((l) => (l.cle === cle ? { ...l, ...c } : l)));
   const libelle = LIBELLES_TYPE_DOCUMENT[type];
 
-  async function enregistrer(valider: boolean) {
+  async function enregistrer(mode: "brouillon" | "valider" | "enregistrer") {
     if (lignes.some((l) => !l.designation.trim() || !(l.quantite > 0))) return setErreur("Chaque ligne doit avoir une désignation et une quantité.");
-    if (valider && !lignes.length) return setErreur("Ajoutez au moins une ligne.");
-    if (valider && !entete.client_nom?.trim()) return setErreur("Indiquez le client.");
-    if (valider && !window.confirm(type === "facture"
-      ? "Valider la facture ? Un numéro sera attribué et le stock déduit. Elle ne pourra plus être modifiée."
+    if (mode !== "brouillon" && !lignes.length) return setErreur("Ajoutez au moins une ligne.");
+    if (mode !== "brouillon" && !entete.client_nom?.trim()) return setErreur("Indiquez le client.");
+    if (mode === "enregistrer" && d && type === "facture" && totaux.total < d.montant_paye) {
+      return setErreur(`Le total ne peut pas être inférieur au montant déjà encaissé (${m(d.montant_paye)}).`);
+    }
+    if (mode === "valider" && !window.confirm(type === "facture"
+      ? "Valider la facture ? Un numéro sera attribué et le stock déduit."
       : `Valider la ${libelle.toLowerCase()} ? Un numéro sera attribué.`)) return;
     setErreur(null);
-    setAction(valider ? "valider" : "brouillon");
+    setAction(mode);
     try {
       const id = await enregistrerDocument(supabase, equipeId, type, d?.id ?? null, entete, lignes);
-      if (valider) await validerDocument(supabase, id);
-      router.replace(valider ? `/ventes/document?id=${id}` : `/ventes?type=${type}`);
+      if (mode === "valider") await validerDocument(supabase, id);
+      router.replace(mode === "brouillon" ? `/ventes?type=${type}` : `/ventes/document?id=${id}`);
     } catch (e) {
       setErreur((e as Error).message);
       setAction(null);
@@ -80,15 +87,19 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
 
   return (
     <>
-      <EnTetePage titre={d ? `${libelle} (brouillon)` : `Nouvelle ${libelle.toLowerCase()}`} retour={`/ventes?type=${type}`}
-        action={<>
+      <EnTetePage titre={!d ? `Nouvelle ${libelle.toLowerCase()}` : brouillon ? `${libelle} (brouillon)` : `Modifier ${d.numero}`}
+        retour={d && !brouillon ? `/ventes/document?id=${d.id}` : `/ventes?type=${type}`}
+        action={brouillon ? <>
           {d && <Bouton variante="danger" icone="supprimer" onClick={async () => {
             if (window.confirm("Supprimer ce brouillon ?")) { await supprimerBrouillon(supabase, d.id); router.replace(`/ventes?type=${type}`); }
           }}>Supprimer</Bouton>}
-          <Bouton variante="secondaire" chargement={action === "brouillon"} disabled={!!action} onClick={() => enregistrer(false)}>Enregistrer le brouillon</Bouton>
-          <Bouton chargement={action === "valider"} disabled={!!action} onClick={() => enregistrer(true)}>Valider</Bouton>
-        </>} />
+          <Bouton variante="secondaire" chargement={action === "brouillon"} disabled={!!action} onClick={() => enregistrer("brouillon")}>Enregistrer le brouillon</Bouton>
+          <Bouton chargement={action === "valider"} disabled={!!action} onClick={() => enregistrer("valider")}>Valider</Bouton>
+        </> : <Bouton chargement={action === "enregistrer"} disabled={!!action} onClick={() => enregistrer("enregistrer")}>Enregistrer les modifications</Bouton>} />
       {erreur && <div className="mb-4"><Alerte>{erreur}</Alerte></div>}
+      {!brouillon && type === "facture" && (
+        <div className="mb-4"><Alerte type="info">Le numéro est conservé. Les quantités modifiées sont reportées sur le stock à l&apos;enregistrement.</Alerte></div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
@@ -202,6 +213,7 @@ function Consultation({ document: d, lignes, reglements, recharger }: {
         description={<span className="flex items-center gap-2">{new Date(`${d.date}T00:00:00`).toLocaleDateString("fr-FR")} <Badge ton={s.ton}>{s.libelle}</Badge></span>}
         action={<>
           {d.type === "facture" && d.statut === "emis" && <Bouton onClick={() => setEncaisser(true)}>Encaisser</Bouton>}
+          <LienBouton href={`/ventes/document?id=${d.id}&modifier=1`} variante="secondaire">Modifier</LienBouton>
           <Bouton variante="secondaire" icone="imprimer" chargement={occupe === "imprimer"} onClick={() => executer("imprimer", () => imprimerDocument(d.id, parametres!))}>Imprimer / PDF</Bouton>
           {d.type === "proforma" && d.statut === "emis" && <>
             <Bouton chargement={occupe === "convertir"} onClick={() => executer("convertir", async () => router.push(`/ventes/document?id=${await convertirProforma(supabase, d.id)}`))}>Accepté → facture</Bouton>

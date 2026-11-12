@@ -83,6 +83,7 @@ function Navigation() {
         <Stack.Screen name="document/[id]" options={{ headerShown: true, title: 'Document' }} />
         <Stack.Screen name="document/editer" options={{ headerShown: true, title: 'Document' }} />
         <Stack.Screen name="document/reglement" options={{ ...modal, title: 'Encaisser' }} />
+        <Stack.Screen name="document/article" options={{ headerShown: true, title: 'Article' }} />
         <Stack.Screen name="achats" options={{ headerShown: true, title: 'Achats' }} />
         <Stack.Screen name="achat/[id]" options={{ headerShown: true, title: 'Achat' }} />
         <Stack.Screen name="achat/editer" options={{ headerShown: true, title: 'Achat' }} />
@@ -99,7 +100,7 @@ function Navigation() {
         <Stack.Screen name="compte" options={{ headerShown: true, title: 'Mon compte' }} />
         <Stack.Screen name="scanner" options={{ presentation: 'fullScreenModal', headerShown: false }} />
         <Stack.Screen name="choisir/produit" options={{ ...modal, title: 'Choisir un produit' }} />
-        <Stack.Screen name="choisir/client" options={{ ...modal, title: 'Choisir un client' }} />
+        <Stack.Screen name="choisir/client" options={{ headerShown: true, title: 'Clients' }} />
         <Stack.Screen name="choisir/fournisseur" options={{ ...modal, title: 'Choisir un fournisseur' }} />
       </Stack.Protected>
     </Stack>

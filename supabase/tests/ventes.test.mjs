@@ -54,8 +54,8 @@ await vrai("numéro FAC-AAAA-0001", async () => {
   return n === `FAC-${new Date().getFullYear()}-0001`;
 });
 await vrai("stock déduit : riz 10 → 8, huile 5 → 4", async () => (await qte(riz)) === 8 && (await qte(huile)) === 4);
-await echoue("facture validée non modifiable", () =>
-  en(A, "select public.enregistrer_document($1,'facture',$2,'{}',$3)", [eA, f1, lignes(1, 1)]), "ne peut plus être modifié");
+await echoue("facture validée : le client reste obligatoire", () =>
+  en(A, "select public.enregistrer_document($1,'facture',$2,'{}',$3)", [eA, f1, lignes(1, 1)]), "Indiquez le client");
 await echoue("facture validée non supprimable", async () => {
   const r = await en(A, "delete from public.documents where id=$1 returning 1", [f1]);
   if (r.length === 0) throw new Error("aucune ligne supprimée");

@@ -1,38 +1,54 @@
 import {
   calculerTotaux, chargerClient, chargerDocument, enregistrerDocument, formaterMontant, formaterQuantite, LIBELLES_TYPE_DOCUMENT,
-  ligneDepuisProduit, lireMontant, lireQuantite, supprimerBrouillon, totalLigne, validerDocument,
-  type EnteteDocument, type LigneDocument, type TypeDocument,
+  statutAffiche, supprimerBrouillon, totalLigne, validerDocument,
+  type Document, type EnteteDocument, type ReglageTaxe, type TypeDocument,
 } from '@stocktracker/core';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { ChampDate, versIso } from '@/components/champ-date';
+import { Icone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Bouton, BoutonIcone, Carte, Champ, ChargementPlein, Ecran, Info, LigneListe, Section } from '@/components/ui';
+import { Alerte, Badge, Bouton, BoutonIcone, ChargementPlein, Ecran } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { confirmer, signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe } from '@/lib/espace';
-import { choisirClient, choisirProduit } from '@/lib/selection';
+import { choisirClient, editerArticle, type LigneEditee } from '@/lib/selection';
 import { supabase } from '@/lib/supabase';
 
-type Ligne = LigneDocument & { cle: string; stock?: number };
+type Ligne = LigneEditee & { cle: number };
 let compteur = 0;
-const cle = () => `l${++compteur}`;
+const aujourdhui = () => versIso(new Date());
+const dansJours = (iso: string, n: number) => {
+  const [a, m, j] = iso.split('-').map(Number);
+  return versIso(new Date(a, m - 1, j + n));
+};
 
-/** Éditeur de brouillon (facture ou proforma) : client, lignes, aperçu des totaux, validation. */
+/**
+ * Création et modification d'une facture ou d'une proforma, quel que soit le statut.
+ * Brouillon : « Brouillon » ou « Valider ». Document validé : « Enregistrer » (numéro conservé,
+ * stock rapproché par la base).
+ */
 export default function EditerDocument() {
   const params = useLocalSearchParams<{ id?: string; type?: TypeDocument; client_id?: string }>();
   const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
   const symbole = parametres?.symbole_devise ?? 'FCFA';
+  const m = (v: number) => formaterMontant(v, symbole);
+
   const [id, setId] = useState<string | null>(params.id ?? null);
   const [type, setType] = useState<TypeDocument>(params.type ?? 'facture');
-  const [entete, setEntete] = useState<EnteteDocument>({ client_nom: '', date: new Date().toISOString().slice(0, 10) });
+  const [existant, setExistant] = useState<Document | null>(null);
+  const [entete, setEntete] = useState<EnteteDocument>(() => {
+    const date = aujourdhui();
+    return { client_nom: '', date, echeance: (params.type ?? 'facture') === 'facture' ? dansJours(date, 7) : null };
+  });
   const [lignes, setLignes] = useState<Ligne[]>([]);
   const [pret, setPret] = useState(!params.id);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [action, setAction] = useState<'brouillon' | 'valider' | null>(null);
+  const [action, setAction] = useState<'brouillon' | 'valider' | 'enregistrer' | null>(null);
 
   // Nouvelle facture depuis la fiche d'un client : client pré-rempli
   useEffect(() => {
@@ -49,68 +65,63 @@ export default function EditerDocument() {
     let actif = true;
     chargerDocument(supabase, params.id).then(({ document: d, lignes: l }) => {
       if (!actif) return;
-      if (d.statut !== 'brouillon') {
-        router.replace(`/document/${d.id}`);
-        return;
-      }
+      setExistant(d);
       setType(d.type);
       setEntete({ client_id: d.client_id, client_nom: d.client_nom, client_telephone: d.client_telephone, client_adresse: d.client_adresse,
         date: d.date, echeance: d.echeance, conditions: d.conditions, notes: d.notes });
-      setLignes(l.map((x) => ({ ...x, cle: cle() })));
+      setLignes(l.map((x) => ({
+        produit_id: x.produit_id, designation: x.designation, unite: x.unite ?? null, prix_unitaire: x.prix_unitaire,
+        quantite: x.quantite, taxable: x.taxable, cle: ++compteur,
+      })));
       setPret(true);
     }).catch((e: Error) => actif && setErreur(e.message));
     return () => { actif = false; };
   }, [params.id]);
 
-  const totaux = calculerTotaux(lignes, {
-    taxe_type: parametres?.taxe_type ?? 'aucune', taxe_nom: parametres?.taxe_nom ?? 'TVA',
-    taxe_taux: parametres?.taxe_taux ?? 0, taxe_incluse: parametres?.taxe_incluse ?? false,
-  });
+  const brouillon = !existant || existant.statut === 'brouillon';
+  // Un brouillon suit les paramètres actuels ; un document validé garde sa taxe d'origine
+  const taxe: ReglageTaxe = existant && !brouillon
+    ? { taxe_type: existant.taxe_type, taxe_nom: existant.taxe_nom, taxe_taux: existant.taxe_taux, taxe_incluse: existant.taxe_incluse }
+    : { taxe_type: parametres?.taxe_type ?? 'aucune', taxe_nom: parametres?.taxe_nom ?? 'TVA', taxe_taux: parametres?.taxe_taux ?? 0,
+        taxe_incluse: parametres?.taxe_incluse ?? false };
+  const totaux = calculerTotaux(lignes, taxe);
+  const dejaPaye = existant?.montant_paye ?? 0;
+  const libelle = LIBELLES_TYPE_DOCUMENT[type];
 
-  async function ajouterProduit() {
-    const p = await choisirProduit();
-    if (!p) return;
-    setLignes((ls) => {
-      // Même produit déjà présent : on augmente la quantité
-      const i = ls.findIndex((l) => l.produit_id === p.id);
-      if (i >= 0) return ls.map((l, j) => (j === i ? { ...l, quantite: l.quantite + 1 } : l));
-      return [...ls, { ...ligneDepuisProduit(p), cle: cle(), stock: p.quantite }];
-    });
+  async function article(ligne?: Ligne) {
+    const r = await editerArticle(ligne ?? null, type === 'facture');
+    if (!r) return;
+    if (r.action === 'supprimer') {
+      if (ligne) setLignes((ls) => ls.filter((l) => l.cle !== ligne.cle));
+      return;
+    }
+    if (ligne) setLignes((ls) => ls.map((l) => (l.cle === ligne.cle ? { ...r.ligne, cle: l.cle } : l)));
+    else setLignes((ls) => [...ls, { ...r.ligne, cle: ++compteur }]);
   }
-
-  const ajouterLibre = () => setLignes((ls) => [...ls, { cle: cle(), produit_id: null, designation: '', prix_unitaire: 0, quantite: 1, taxable: true }]);
-  const majLigne = (k: string, champs: Partial<Ligne>) => setLignes((ls) => ls.map((l) => (l.cle === k ? { ...l, ...champs } : l)));
-  const retirerLigne = (k: string) => setLignes((ls) => ls.filter((l) => l.cle !== k));
 
   async function client() {
     const c = await choisirClient();
     if (c) setEntete((e) => ({ ...e, client_id: c.id, client_nom: c.nom, client_telephone: c.telephone, client_adresse: c.adresse }));
   }
 
-  async function enregistrer(valider: boolean) {
-    const invalides = lignes.filter((l) => !l.designation.trim() || !(l.quantite > 0));
-    if (invalides.length) return setErreur('Chaque ligne doit avoir une désignation et une quantité.');
-    if (valider && !lignes.length) return setErreur('Ajoutez au moins une ligne.');
-    if (valider && !entete.client_nom?.trim()) return setErreur('Indiquez le client.');
+  async function enregistrer(mode: 'brouillon' | 'valider' | 'enregistrer') {
+    if (mode !== 'brouillon' && !lignes.length) return setErreur('Ajoutez au moins un article.');
+    if (mode !== 'brouillon' && !entete.client_nom?.trim()) return setErreur('Indiquez le client.');
+    if (mode === 'enregistrer' && type === 'facture' && totaux.total < dejaPaye) {
+      return setErreur(`Le total ne peut pas être inférieur au montant déjà encaissé (${m(dejaPaye)}).`);
+    }
+    if (mode === 'valider' && !(await confirmer(`Valider la ${libelle.toLowerCase()}`,
+      type === 'facture' ? 'Un numéro sera attribué et le stock sera déduit.' : 'Un numéro sera attribué.', 'Valider'))) return;
     setErreur(null);
-    setAction(valider ? 'valider' : 'brouillon');
+    setAction(mode);
     try {
       const nouvelId = await enregistrerDocument(supabase, equipeId, type, id, entete, lignes);
       setId(nouvelId);
-      if (valider) {
-        if (!(await confirmer(`Valider la ${LIBELLES_TYPE_DOCUMENT[type].toLowerCase()}`,
-          type === 'facture' ? 'Un numéro sera attribué et le stock sera déduit. Une facture validée ne se modifie plus.' : 'Un numéro sera attribué.',
-          'Valider'))) {
-          setAction(null);
-          return;
-        }
-        await validerDocument(supabase, nouvelId);
-        vibrerSucces();
-        router.replace(`/document/${nouvelId}`);
-      } else {
-        vibrerSucces();
-        router.back();
-      }
+      if (mode === 'valider') await validerDocument(supabase, nouvelId);
+      vibrerSucces();
+      if (mode === 'brouillon') router.back();
+      else if (existant && !brouillon) router.back();
+      else router.replace(`/document/${nouvelId}`);
     } catch (e) {
       setErreur((e as Error).message);
       setAction(null);
@@ -128,120 +139,181 @@ export default function EditerDocument() {
   }
 
   if (!pret) return erreur ? <Ecran enTete><Alerte>{erreur}</Alerte></Ecran> : <ChargementPlein />;
-  const libelle = LIBELLES_TYPE_DOCUMENT[type];
+  const statut = existant && !brouillon ? statutAffiche(existant) : null;
 
   return (
     <>
       <Stack.Screen options={{
-        title: id ? `${libelle} (brouillon)` : `Nouvelle ${libelle.toLowerCase()}`,
-        headerRight: id ? () => <BoutonIcone icone="supprimer" libelle="Supprimer le brouillon" couleur={theme.danger} onPress={supprimer} /> : undefined,
+        title: libelle,
+        headerRight: id && brouillon ? () => <BoutonIcone icone="supprimer" libelle="Supprimer le brouillon" couleur={theme.danger} onPress={supprimer} /> : undefined,
       }} />
-      <Ecran enTete pied={
+      <Ecran enTete pied={brouillon ? (
         <>
-          <Bouton titre="Brouillon" variante="secondaire" onPress={() => enregistrer(false)} chargement={action === 'brouillon'} desactive={!!action} />
-          <Bouton titre="Valider" icone="valider" onPress={() => enregistrer(true)} chargement={action === 'valider'} desactive={!!action} style={{ flexGrow: 2 }} />
+          <Bouton titre="Brouillon" variante="secondaire" onPress={() => enregistrer('brouillon')} chargement={action === 'brouillon'} desactive={!!action} />
+          <Bouton titre="Valider" icone="valider" onPress={() => enregistrer('valider')} chargement={action === 'valider'} desactive={!!action} style={{ flexGrow: 2 }} />
         </>
-      }>
+      ) : (
+        <Bouton titre="Enregistrer les modifications" onPress={() => enregistrer('enregistrer')} chargement={action === 'enregistrer'} />
+      )}>
         {erreur && <Alerte>{erreur}</Alerte>}
+        {!brouillon && type === 'facture' && (
+          <Alerte type="info">Les quantités modifiées sont reportées sur le stock à l&apos;enregistrement.</Alerte>
+        )}
 
-        <Section titre="Client">
-          {entete.client_id ? (
-            <LigneListe icone="client" titre={entete.client_nom ?? ''} sousTitre={entete.client_telephone} onPress={client} />
-          ) : (
-            <>
-              <Champ libelle="Nom du client" value={entete.client_nom ?? ''} onChangeText={(client_nom) => setEntete((e) => ({ ...e, client_nom }))}
-                placeholder="Client de passage, ou choisir…" />
-              <Bouton titre="Choisir un client enregistré" icone="client" variante="secondaire" onPress={client} />
-            </>
-          )}
-        </Section>
-
-        <Section titre={`Articles (${lignes.length})`}>
-          {lignes.map((l) => (
-            <LigneEditeur key={l.cle} ligne={l} symbole={symbole} type={type}
-              onChange={(c) => majLigne(l.cle, c)} onRetirer={() => retirerLigne(l.cle)} />
-          ))}
-          <View style={{ flexDirection: 'row', gap: Spacing.two }}>
-            <Bouton titre="Produit" icone="ajouter" onPress={ajouterProduit} />
-            <Bouton titre="Ligne libre" icone="ajouter" variante="secondaire" onPress={ajouterLibre} />
+        {/* En-tête : numéro et date */}
+        <Bloc>
+          <View style={styles.entete}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <ThemedText style={styles.numero} numberOfLines={1} adjustsFontSizeToFit>
+                {existant?.numero ?? `Nouvelle ${libelle.toLowerCase()}`}
+              </ThemedText>
+              {statut ? <Badge libelle={statut.libelle} ton={statut.ton} />
+                : <ThemedText type="small" themeColor="textSecondary">{existant ? 'Brouillon' : parametres?.nom_entreprise}</ThemedText>}
+            </View>
+            <ChampDate libelle="Date du document" discret valeur={entete.date ?? aujourdhui()}
+              onChange={(date) => setEntete((e) => ({ ...e, date }))} />
           </View>
-        </Section>
+        </Bloc>
 
-        <Carte>
-          {totaux.montant_taxe !== 0 && <Info libelle="Sous-total" valeur={formaterMontant(totaux.sous_total, symbole)} />}
-          {totaux.montant_taxe !== 0 && (
-            <Info libelle={`${parametres?.taxe_nom} ${parametres?.taxe_taux} %${parametres?.taxe_incluse ? ' (incluse)' : ''}`}
-              valeur={formaterMontant(totaux.montant_taxe, symbole)} />
+        {/* Client */}
+        <Bloc>
+          <LigneAction onPress={client} libelle={entete.client_nom?.trim() ? `À ${entete.client_nom}` : 'Client'}
+            icone={entete.client_nom?.trim() ? undefined : 'ajouter'} chevron />
+          {!!entete.client_nom?.trim() && (
+            <View style={[styles.sousBloc, { borderTopColor: theme.border }]}>
+              <Pilule valeur={entete.client_telephone ?? ''} placeholder="Téléphone" clavier="phone-pad"
+                onChange={(client_telephone) => setEntete((e) => ({ ...e, client_telephone }))} />
+              <Pilule valeur={entete.client_adresse ?? ''} placeholder="Adresse"
+                onChange={(client_adresse) => setEntete((e) => ({ ...e, client_adresse }))} />
+            </View>
           )}
-          <Info libelle="Total" valeur={formaterMontant(totaux.total, symbole)} fort />
-        </Carte>
+        </Bloc>
 
-        <Section titre="Détails">
-          <Champ libelle="Date" value={entete.date ?? ''} onChangeText={(date) => setEntete((e) => ({ ...e, date }))} placeholder="AAAA-MM-JJ" />
-          {type === 'facture' && (
-            <Champ libelle="Échéance (facultatif)" value={entete.echeance ?? ''} onChangeText={(echeance) => setEntete((e) => ({ ...e, echeance: echeance || null }))}
-              placeholder="AAAA-MM-JJ" />
-          )}
-          <Champ libelle="Notes" value={entete.notes ?? ''} onChangeText={(notes) => setEntete((e) => ({ ...e, notes }))} multiline />
-        </Section>
+        {/* Articles */}
+        <Bloc>
+          {lignes.map((l) => (
+            <Pressable key={l.cle} onPress={() => article(l)} accessibilityRole="button" accessibilityLabel={`Modifier ${l.designation}`}
+              style={({ pressed }) => [styles.ligne, { borderBottomColor: theme.border, backgroundColor: pressed ? theme.backgroundSelected : 'transparent' }]}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <ThemedText type="smallBold" style={{ fontSize: 16 }} numberOfLines={2}>{l.designation}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {formaterQuantite(l.quantite)} {l.unite ?? ''} × {m(l.prix_unitaire)}
+                </ThemedText>
+                {type === 'facture' && l.stock !== undefined && l.quantite > l.stock && (
+                  <ThemedText type="small" style={{ color: theme.warning }}>Stock disponible : {formaterQuantite(l.stock)}</ThemedText>
+                )}
+              </View>
+              <ThemedText type="smallBold" style={{ fontSize: 16 }}>{m(totalLigne(l))}</ThemedText>
+            </Pressable>
+          ))}
+          <LigneAction onPress={() => article()} libelle="Ajouter un article" icone="ajouter" droite={m(totaux.sous_total)} />
+        </Bloc>
+
+        {/* Totaux */}
+        <Bloc>
+          <View style={styles.totaux}>
+            <LigneTotal libelle="Sous-total" valeur={m(totaux.sous_total)} fort />
+            {totaux.montant_taxe !== 0 && (
+              <LigneTotal libelle={`${taxe.taxe_nom} ${taxe.taxe_taux} %${taxe.taxe_incluse ? ' (incluse)' : ''}`} valeur={m(totaux.montant_taxe)} />
+            )}
+            <LigneTotal libelle="Total" valeur={m(totaux.total)} discret />
+            {type === 'facture' && dejaPaye > 0 && <LigneTotal libelle="Déjà encaissé" valeur={m(dejaPaye)} discret />}
+            <View style={[styles.separateur, { backgroundColor: theme.border }]} />
+            <LigneTotal libelle={type === 'facture' ? 'Solde dû' : 'Total à payer'} valeur={m(Math.max(0, totaux.total - dejaPaye))} fort accent />
+          </View>
+        </Bloc>
+
+        {/* Échéance (factures) */}
+        {type === 'facture' && (
+          <View style={styles.echeance}>
+            <ThemedText type="small" themeColor="textSecondary">Date d&apos;échéance</ThemedText>
+            {entete.echeance ? (
+              <>
+                <ChampDate libelle="Date d'échéance" pleineLargeur valeur={entete.echeance}
+                  onChange={(echeance) => setEntete((e) => ({ ...e, echeance }))} />
+                <Pressable onPress={() => setEntete((e) => ({ ...e, echeance: null }))} hitSlop={8} accessibilityRole="button">
+                  <ThemedText type="small" themeColor="textSecondary" style={{ textAlign: 'center' }}>Sans échéance</ThemedText>
+                </Pressable>
+              </>
+            ) : (
+              <Bouton titre="Ajouter une échéance" variante="secondaire"
+                onPress={() => setEntete((e) => ({ ...e, echeance: dansJours(e.date ?? aujourdhui(), 7) }))} />
+            )}
+          </View>
+        )}
+
+        <Bloc>
+          <TextInput value={entete.notes ?? ''} onChangeText={(notes) => setEntete((e) => ({ ...e, notes }))} multiline
+            placeholder="Notes (visibles sur le document)" placeholderTextColor={theme.textSecondary} accessibilityLabel="Notes"
+            style={[styles.notes, { color: theme.text }]} />
+        </Bloc>
       </Ecran>
     </>
   );
 }
 
-function LigneEditeur({ ligne: l, symbole, type, onChange, onRetirer }: {
-  ligne: Ligne; symbole: string; type: TypeDocument; onChange: (c: Partial<Ligne>) => void; onRetirer: () => void;
+// ---------------------------------------------------------------------------
+// Éléments du modèle
+// ---------------------------------------------------------------------------
+
+function Bloc({ children }: { children: ReactNode }) {
+  const theme = useTheme();
+  return <View style={[styles.bloc, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>{children}</View>;
+}
+
+/** Ligne cliquable verte (« + Client », « À Abdou », « + Ajouter un article »). */
+function LigneAction({ libelle, onPress, icone, chevron, droite }: {
+  libelle: string; onPress: () => void; icone?: 'ajouter'; chevron?: boolean; droite?: string;
 }) {
   const theme = useTheme();
-  const [qte, setQte] = useState(formaterQuantite(l.quantite));
-  const [prix, setPrix] = useState(formaterMontant(l.prix_unitaire, null));
-  const depasse = type === 'facture' && l.stock !== undefined && l.quantite > l.stock;
-
-  const pas = (delta: number) => {
-    const q = Math.max(1, Math.round((l.quantite + delta) * 1000) / 1000);
-    onChange({ quantite: q });
-    setQte(formaterQuantite(q));
-  };
-
   return (
-    <View style={[styles.ligne, { backgroundColor: theme.backgroundElement, borderColor: depasse ? theme.warning : theme.border }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
-        {l.produit_id ? (
-          <ThemedText type="smallBold" style={{ flex: 1, fontSize: 15 }} numberOfLines={2}>{l.designation}</ThemedText>
-        ) : (
-          <TextInput value={l.designation} onChangeText={(designation) => onChange({ designation })} placeholder="Désignation (service, frais…)"
-            placeholderTextColor={theme.textSecondary} style={[styles.flex, styles.saisie, { color: theme.text, borderColor: theme.border }]} />
-        )}
-        <BoutonIcone icone="supprimer" libelle="Retirer la ligne" couleur={theme.danger} onPress={onRetirer} />
-      </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
-        <Pressable onPress={() => pas(-1)} style={[styles.pas, { borderColor: theme.border }]} accessibilityLabel="Diminuer la quantité">
-          <ThemedText type="smallBold" style={{ fontSize: 20 }}>−</ThemedText>
-        </Pressable>
-        <TextInput value={qte} keyboardType="decimal-pad" selectTextOnFocus accessibilityLabel="Quantité"
-          onChangeText={(t) => { setQte(t); const q = lireQuantite(t); if (q) onChange({ quantite: q }); }}
-          style={[styles.saisie, { width: 64, textAlign: 'center', color: theme.text, borderColor: theme.border }]} />
-        <Pressable onPress={() => pas(1)} style={[styles.pas, { borderColor: theme.border }]} accessibilityLabel="Augmenter la quantité">
-          <ThemedText type="smallBold" style={{ fontSize: 20 }}>+</ThemedText>
-        </Pressable>
-        <ThemedText type="small" themeColor="textSecondary">×</ThemedText>
-        <TextInput value={prix} keyboardType="number-pad" selectTextOnFocus accessibilityLabel="Prix unitaire"
-          onChangeText={(t) => { setPrix(t); onChange({ prix_unitaire: lireMontant(t) ?? 0 }); }}
-          style={[styles.saisie, styles.flex, { textAlign: 'right', color: theme.text, borderColor: theme.border }]} />
-      </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <ThemedText type="small" style={{ color: depasse ? theme.warning : theme.textSecondary }}>
-          {l.stock !== undefined ? `Stock : ${formaterQuantite(l.stock)}${depasse ? ' — insuffisant' : ''}` : l.unite ?? ''}
-        </ThemedText>
-        <ThemedText type="smallBold">{formaterMontant(totalLigne(l), symbole)}</ThemedText>
-      </View>
+    <Pressable onPress={onPress} accessibilityRole="button"
+      style={({ pressed }) => [styles.action, { backgroundColor: pressed ? theme.backgroundSelected : 'transparent' }]}>
+      {icone && <Icone nom={icone} taille={22} couleur={theme.primary} />}
+      <ThemedText style={[styles.actionTexte, { color: theme.primary }]} numberOfLines={1}>{libelle}</ThemedText>
+      {droite && <ThemedText style={{ color: theme.primary, fontSize: 17 }}>{droite}</ThemedText>}
+      {chevron && <Icone nom="suivant" taille={18} couleur={theme.primary} />}
+    </Pressable>
+  );
+}
+
+function Pilule({ valeur, onChange, placeholder, clavier }: {
+  valeur: string; onChange: (v: string) => void; placeholder: string; clavier?: 'phone-pad';
+}) {
+  const theme = useTheme();
+  return (
+    <TextInput value={valeur} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={theme.textSecondary}
+      keyboardType={clavier} accessibilityLabel={placeholder}
+      style={[styles.pilule, { color: theme.text, backgroundColor: theme.backgroundSelected }]} />
+  );
+}
+
+function LigneTotal({ libelle, valeur, fort, discret, accent }: {
+  libelle: string; valeur: string; fort?: boolean; discret?: boolean; accent?: boolean;
+}) {
+  const theme = useTheme();
+  const style = { fontSize: 18, fontWeight: fort ? ('700' as const) : ('500' as const) };
+  return (
+    <View style={styles.total}>
+      <ThemedText style={[style, { color: discret ? theme.textSecondary : theme.text }]}>{libelle}</ThemedText>
+      <ThemedText style={[style, { color: accent ? theme.primary : theme.text }]}>{valeur}</ThemedText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  ligne: { borderWidth: 1, borderRadius: Rayons.moyen, padding: Spacing.three, gap: Spacing.two },
-  saisie: { height: 42, borderWidth: 1, borderRadius: Rayons.petit, paddingHorizontal: Spacing.two, fontSize: 16 },
-  pas: { width: 42, height: 42, borderRadius: Rayons.petit, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  bloc: { borderRadius: Rayons.grand + 4, borderWidth: 1, overflow: 'hidden' },
+  entete: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.three, padding: Spacing.three + Spacing.one },
+  numero: { fontSize: 24, lineHeight: 30, fontWeight: '700' },
+  action: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.three + Spacing.one, minHeight: 64 },
+  actionTexte: { flex: 1, fontSize: 19, lineHeight: 26, fontWeight: '500' },
+  sousBloc: { borderTopWidth: StyleSheet.hairlineWidth, padding: Spacing.three, gap: Spacing.two },
+  pilule: { minHeight: 48, borderRadius: Rayons.grand + 4, paddingHorizontal: Spacing.three, fontSize: 16 },
+  ligne: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.three + Spacing.one,
+    paddingVertical: Spacing.three, borderBottomWidth: StyleSheet.hairlineWidth },
+  totaux: { padding: Spacing.three + Spacing.one, gap: Spacing.three },
+  total: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: Spacing.three },
+  separateur: { height: StyleSheet.hairlineWidth },
+  echeance: { gap: Spacing.two, paddingHorizontal: Spacing.one },
+  notes: { minHeight: 72, padding: Spacing.three + Spacing.one, fontSize: 16, textAlignVertical: 'top' },
 });

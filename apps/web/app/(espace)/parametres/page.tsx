@@ -1,8 +1,9 @@
 "use client";
 
-import { envoyerImageProduit, formaterNumero, modifierParametres, TYPES_TAXE, type Parametres, type TypeTaxe } from "@stocktracker/core";
+import { envoyerImageProduit, formaterNumero, modifierParametres, TYPES_TAXE, type ModeleDocument, type Parametres, type TypeTaxe } from "@stocktracker/core";
 import { useState, type FormEvent } from "react";
 
+import { ChoixModele } from "@/components/choix-modele";
 import { Alerte, Bouton, Carte, Case, Champ, Chargement, EnTetePage, Liste, Zone } from "@/components/ui";
 import { useEquipe } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
@@ -19,6 +20,8 @@ function Formulaire({ p }: { p: Parametres }) {
   const [prefixe, setPrefixe] = useState(p.prefixe_facture);
   const [format, setFormat] = useState(p.format_numero);
   const [logo, setLogo] = useState(p.logo_url);
+  const [modele, setModele] = useState<ModeleDocument>(p.modele_document ?? "classique");
+  const [couleur, setCouleur] = useState(p.couleur_document);
   const [message, setMessage] = useState<{ type: "erreur" | "succes"; texte: string } | null>(null);
   const [chargement, setChargement] = useState(false);
 
@@ -36,7 +39,7 @@ function Formulaire({ p }: { p: Parametres }) {
         prefixe_ref_produit: String(f.get("prefixe_ref_produit")), ref_produit_auto: f.get("ref_produit_auto") === "on", unite_defaut: String(f.get("unite_defaut")),
         taxe_type: taxe, taxe_nom: String(f.get("taxe_nom") ?? p.taxe_nom), taxe_taux: Number(String(f.get("taxe_taux") ?? "0").replace(",", ".")) || 0,
         taxe_incluse: f.get("taxe_incluse") === "on", conditions_defaut: t("conditions_defaut"), pied_facture: t("pied_facture"),
-        couleur_document: String(f.get("couleur_document")), logo_url: logo,
+        couleur_document: couleur, modele_document: modele, logo_url: logo,
       });
       await rafraichir();
       setMessage({ type: "succes", texte: "Paramètres enregistrés." });
@@ -77,7 +80,6 @@ function Formulaire({ p }: { p: Parametres }) {
             <Champ libelle="NINEA" name="ninea" defaultValue={p.ninea ?? ""} />
             <Champ libelle="RCCM" name="rccm" defaultValue={p.rccm ?? ""} />
             <Champ libelle="Identifiant fiscal (NIF)" name="identifiant_fiscal" defaultValue={p.identifiant_fiscal ?? ""} />
-            <Champ libelle="Couleur des documents" name="couleur_document" type="color" defaultValue={p.couleur_document} />
           </div>
         </Carte>
         <Carte titre="Numérotation">
@@ -103,6 +105,10 @@ function Formulaire({ p }: { p: Parametres }) {
               {taxe !== "deduction" && <div className="sm:col-span-3"><Case libelle="Prix TTC (taxe incluse dans les prix)" name="taxe_incluse" defaultChecked={p.taxe_incluse} /></div>}
             </>}
           </div>
+        </Carte>
+        <Carte titre="Modèle de facture">
+          <ChoixModele modele={modele} couleur={couleur} parametres={{ ...p, logo_url: logo }}
+            onChange={(c) => { if (c.modele) setModele(c.modele); if (c.couleur) setCouleur(c.couleur); }} />
         </Carte>
         <Carte titre="Textes des factures">
           <div className="grid gap-4">

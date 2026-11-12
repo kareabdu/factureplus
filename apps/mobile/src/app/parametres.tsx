@@ -1,5 +1,5 @@
 import {
-  envoyerImageProduit, formaterNumero, modifierParametres, TYPES_TAXE, type ParametresModifiables, type TypeTaxe,
+  envoyerImageProduit, formaterNumero, modifierParametres, TYPES_TAXE, type ModeleDocument, type ParametresModifiables, type TypeTaxe,
 } from '@stocktracker/core';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { ChoixModele } from '@/components/choix-modele';
 import { ThemedText } from '@/components/themed-text';
 import { Alerte, Bouton, Champ, ChargementPlein, Ecran, Interrupteur, Pastilles, Section } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
@@ -103,6 +104,11 @@ export default function Parametres() {
             )}
           </>
         )}
+      </Section>
+
+      <Section titre="Modèle de facture">
+        <ChoixModele modele={(s.modele_document ?? 'classique') as ModeleDocument} couleur={s.couleur_document ?? '#147A2E'}
+          parametres={{ ...parametres, ...s } as typeof parametres} onChange={maj} />
       </Section>
 
       <Section titre="Factures">

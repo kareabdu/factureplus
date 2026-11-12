@@ -4,6 +4,9 @@ import type { TypeTaxe } from "./taxe";
 
 export type RoleEquipe = "proprietaire" | "admin" | "membre";
 
+/** Mise en page des factures, proformas et bons de livraison */
+export type ModeleDocument = "classique" | "bandeau" | "client" | "moderne";
+
 export interface Profil {
   id: string;
   email: string | null;
@@ -51,6 +54,7 @@ export interface Parametres {
   logo_url: string | null;
   signature_url: string | null;
   couleur_document: string;
+  modele_document: ModeleDocument;
 }
 
 export type ParametresModifiables = Partial<Omit<Parametres, "equipe_id">>;

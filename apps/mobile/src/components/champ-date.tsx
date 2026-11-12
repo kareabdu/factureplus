@@ -4,17 +4,10 @@ import { Platform, Pressable, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { dateCourte, versDate, versIso } from '@/lib/dates';
 import { useThemeApp } from '@/lib/theme';
 
-/** « 2026-11-18 » ↔ Date locale (sans décalage de fuseau). */
-export const versDate = (iso: string) => {
-  const [a, m, j] = iso.split('-').map(Number);
-  return new Date(a, m - 1, j);
-};
-export const versIso = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-export const dateCourte = (iso: string) =>
-  versDate(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+export { dateCourte, versDate, versIso };
 
 /**
  * Sélecteur de date natif. iOS : pastille compacte qui ouvre le calendrier en surimpression.

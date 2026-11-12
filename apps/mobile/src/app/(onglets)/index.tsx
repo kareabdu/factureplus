@@ -1,9 +1,13 @@
-import { chargerResume, formaterMontant, joursEssaiRestants, listerAlertes, formaterQuantite } from '@stocktracker/core';
+import {
+  chargerResume, formaterMontant, formaterQuantite, joursDePeriode, joursEssaiRestants, LIBELLES_PERIODES, libellePeriode,
+  listerAlertes, periodePersonnalisee, periodePredefinie, PERIODES_PREDEFINIES, type CodePeriode, type Periode,
+} from '@stocktracker/core';
 import { useDonnees } from '@stocktracker/core/react';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { ChampDate } from '@/components/champ-date';
 import { Icone, type NomIcone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
 import { Alerte, Carte, ChargementPlein, Ecran, ErreurChargement, LigneListe, Section } from '@/components/ui';
@@ -17,13 +21,18 @@ export default function Accueil() {
   const theme = useTheme();
   const symbole = parametres?.symbole_devise ?? 'FCFA';
   const m = (v: number) => formaterMontant(v, symbole);
-  // Instant de référence du graphique (figé au montage de l'écran)
-  const [maintenant] = useState(() => Date.now());
-  const [jourChoisi, setJourChoisi] = useState<string | null>(null);
+  const [periode, setPeriode] = useState<Periode>(lirePeriode);
+  const [barreChoisie, setBarreChoisie] = useState<string | null>(null);
+
+  function changerPeriode(p: Periode) {
+    setPeriode(p);
+    setBarreChoisie(null);
+    memoriserPeriode(p);
+  }
 
   const { donnees, chargement, erreur, recharger } = useDonnees(
-    () => Promise.all([chargerResume(supabase, equipeId), listerAlertes(supabase, equipeId)]),
-    [equipeId],
+    () => Promise.all([chargerResume(supabase, equipeId, periode.debut, periode.fin), listerAlertes(supabase, equipeId)]),
+    [equipeId, periode.debut, periode.fin],
   );
   // Rafraîchit en revenant sur l'onglet (après une vente, un mouvement…)
   useFocusEffect(useCallback(() => { void recharger(); }, [recharger]));
@@ -31,10 +40,19 @@ export default function Accueil() {
   if (chargement && !donnees) return <ChargementPlein />;
   const [r, alertes] = donnees ?? [null, []];
   const essai = profil && profil.abonnement_statut === 'essai' ? joursEssaiRestants(profil) : null;
-  const maxJour = Math.max(1, ...(r?.ventes_par_jour ?? []).map((j) => j.total));
-  const jours30 = Array.from({ length: 30 }, (_, i) => new Date(maintenant - (29 - i) * 86_400_000).toISOString().slice(0, 10));
-  const dernierJourVendu = [...(r?.ventes_par_jour ?? [])].filter((j) => j.total > 0).map((j) => j.jour).sort().pop();
-  const jourAffiche = jourChoisi ?? dernierJourVendu ?? jours30[29];
+  // Graphique : une barre par jour jusqu'à 62 jours, sinon une barre par mois
+  const jours = joursDePeriode(periode);
+  const parMois = jours.length > 62;
+  const barres = (parMois ? [...new Set(jours.map((j) => j.slice(0, 7)))] : jours).map((cle) => ({
+    cle,
+    total: (r?.ventes_jours_periode ?? []).filter((v) => (parMois ? v.jour.slice(0, 7) : v.jour) === cle).reduce((t, v) => t + v.total, 0),
+  }));
+  const maxBarre = Math.max(1, ...barres.map((b) => b.total));
+  const derniereVendue = [...barres].reverse().find((b) => b.total > 0)?.cle;
+  const barreAffichee = barres.find((b) => b.cle === barreChoisie) ?? barres.find((b) => b.cle === derniereVendue) ?? barres[barres.length - 1];
+  const libelleBarre = (cle: string, long = false) => parMois
+    ? new Date(`${cle}-01T00:00:00`).toLocaleDateString('fr-FR', { month: long ? 'long' : 'short', year: 'numeric' })
+    : new Date(`${cle}T00:00:00`).toLocaleDateString('fr-FR', long ? { day: 'numeric', month: 'long' } : { weekday: 'short', day: 'numeric', month: 'short' });
 
   return (
     <Ecran onglets rafraichir={recharger}>
@@ -50,44 +68,40 @@ export default function Accueil() {
       )}
       {erreur && <ErreurChargement message={erreur} reessayer={recharger} />}
 
+      <FiltresPeriode periode={periode} onChange={changerPeriode} />
+
       {r && (
         <>
           <Carte style={{ backgroundColor: theme.primary, borderColor: theme.primary }}>
-            <ThemedText type="small" style={{ color: theme.onPrimary, opacity: 0.85 }}>Ventes du mois</ThemedText>
+            <ThemedText type="small" style={{ color: theme.onPrimary, opacity: 0.85 }}>Ventes · {libellePeriode(periode)}</ThemedText>
             <ThemedText style={{ color: theme.onPrimary, fontSize: 30, lineHeight: 38, fontWeight: 700 }}>{m(r.ventes_periode)}</ThemedText>
             <ThemedText type="small" style={{ color: theme.onPrimary, opacity: 0.85 }}>
               {r.nb_factures_periode} facture{r.nb_factures_periode > 1 ? 's' : ''} · encaissé {m(r.encaisse_periode)}
             </ThemedText>
-            {r.ventes_par_jour.length > 0 && (
+            {barres.length > 1 && barreAffichee && (
               <>
-                {/* Montant du jour choisi (par défaut : dernier jour avec des ventes) */}
+                {/* Montant de la barre choisie (par défaut : la dernière avec des ventes) */}
                 <ThemedText type="smallBold" style={{ color: theme.onPrimary, marginTop: Spacing.two }}>
-                  {new Date(`${jourAffiche}T00:00:00`).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                  {' · '}{m(r.ventes_par_jour.find((j) => j.jour === jourAffiche)?.total ?? 0)}
+                  {libelleBarre(barreAffichee.cle)} · {m(barreAffichee.total)}
                 </ThemedText>
-                <View style={styles.graphe} accessibilityLabel="Ventes des 30 derniers jours : touchez une barre pour voir le montant">
-                  {jours30.map((jour) => {
-                    const v = r.ventes_par_jour.find((j) => j.jour === jour)?.total ?? 0;
-                    const choisi = jour === jourAffiche;
-                    return (
-                      <Pressable key={jour} onPress={() => setJourChoisi(jour)} style={styles.zoneBarre}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${new Date(`${jour}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} : ${m(v)}`}>
-                        <View style={[styles.barre, {
-                          height: `${Math.max(4, (v / maxJour) * 100)}%`, backgroundColor: theme.onPrimary,
-                          opacity: choisi ? 1 : v ? 0.55 : 0.2,
-                        }]} />
-                      </Pressable>
-                    );
-                  })}
+                <View style={styles.graphe} accessibilityLabel="Ventes de la période : touchez une barre pour voir le montant">
+                  {barres.map((b) => (
+                    <Pressable key={b.cle} onPress={() => setBarreChoisie(b.cle)} style={styles.zoneBarre}
+                      accessibilityRole="button" accessibilityLabel={`${libelleBarre(b.cle, true)} : ${m(b.total)}`}>
+                      <View style={[styles.barre, {
+                        height: `${Math.max(4, (b.total / maxBarre) * 100)}%`, backgroundColor: theme.onPrimary,
+                        opacity: b.cle === barreAffichee.cle ? 1 : b.total ? 0.55 : 0.2,
+                      }]} />
+                    </Pressable>
+                  ))}
                 </View>
               </>
             )}
           </Carte>
 
           <View style={styles.grille}>
-            <Tuile icone="tendance" libelle="Marge du mois" valeur={m(r.marge_periode)} />
-            <Tuile icone="paiement" libelle="Impayés" valeur={m(r.impayes)} ton={r.impayes > 0 ? 'attention' : undefined}
+            <Tuile icone="tendance" libelle="Marge" valeur={m(r.marge_periode)} sous={libellePeriode(periode)} />
+            <Tuile icone="paiement" libelle="Impayés" valeur={m(r.impayes)} sous="À ce jour" ton={r.impayes > 0 ? 'attention' : undefined}
               onPress={() => router.navigate('/ventes')} />
             <Tuile icone="produits" libelle="Valeur du stock" valeur={m(r.valeur_stock_achat)} sous={`${r.nb_produits} produits`}
               onPress={() => router.navigate('/produits')} />
@@ -116,7 +130,7 @@ export default function Accueil() {
           )}
 
           {r.meilleurs_produits.length > 0 && (
-            <Section titre="Meilleures ventes du mois">
+            <Section titre={`Meilleures ventes · ${libellePeriode(periode)}`}>
               {r.meilleurs_produits.map((p) => (
                 <LigneListe key={p.produit_id} titre={p.nom} sousTitre={`${formaterQuantite(p.quantite)} vendus`} droite={m(p.chiffre)}
                   onPress={() => router.push(`/produit/${p.produit_id}`)} />
@@ -126,6 +140,60 @@ export default function Accueil() {
         </>
       )}
     </Ecran>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Période : filtres prédéfinis et personnalisés, mémorisés d'une ouverture à l'autre
+// ---------------------------------------------------------------------------
+
+const CLE_PERIODE = 'stocktracker.periode';
+
+function lirePeriode(): Periode {
+  try {
+    const v = JSON.parse(globalThis.localStorage?.getItem(CLE_PERIODE) ?? 'null') as { code?: CodePeriode; debut?: string; fin?: string } | null;
+    if (v?.code === 'personnalisee' && v.debut && v.fin) return periodePersonnalisee(v.debut, v.fin);
+    if (v?.code && v.code !== 'personnalisee' && PERIODES_PREDEFINIES.includes(v.code)) return periodePredefinie(v.code);
+  } catch {
+    // préférence illisible : période par défaut
+  }
+  return periodePredefinie('ce_mois');
+}
+
+function memoriserPeriode(p: Periode) {
+  try {
+    globalThis.localStorage?.setItem(CLE_PERIODE, JSON.stringify(p.code === 'personnalisee' ? p : { code: p.code }));
+  } catch {
+    // stockage indisponible : la période ne sera pas retenue
+  }
+}
+
+function FiltresPeriode({ periode, onChange }: { periode: Periode; onChange: (p: Periode) => void }) {
+  const theme = useTheme();
+  const codes: CodePeriode[] = [...PERIODES_PREDEFINIES, 'personnalisee'];
+  return (
+    <View style={{ gap: Spacing.two }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pastilles}>
+        {codes.map((code) => {
+          const choisi = periode.code === code;
+          return (
+            <Pressable key={code} accessibilityRole="radio" accessibilityState={{ selected: choisi }}
+              onPress={() => onChange(code === 'personnalisee' ? periodePersonnalisee(periode.debut, periode.fin) : periodePredefinie(code))}
+              style={[styles.pastille, { backgroundColor: choisi ? theme.primary : theme.backgroundElement, borderColor: choisi ? theme.primary : theme.border }]}>
+              <ThemedText type="small" style={{ color: choisi ? theme.onPrimary : theme.text }}>{LIBELLES_PERIODES[code]}</ThemedText>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      {periode.code === 'personnalisee' && (
+        <View style={styles.dates}>
+          <ThemedText type="small" themeColor="textSecondary">Du</ThemedText>
+          <ChampDate libelle="Début de la période" valeur={periode.debut} onChange={(d) => onChange(periodePersonnalisee(d, periode.fin))} />
+          <ThemedText type="small" themeColor="textSecondary">au</ThemedText>
+          <ChampDate libelle="Fin de la période" valeur={periode.fin} onChange={(d) => onChange(periodePersonnalisee(periode.debut, d))} />
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -162,4 +230,7 @@ const styles = StyleSheet.create({
   graphe: { flexDirection: 'row', alignItems: 'flex-end', gap: 2, height: 48, marginTop: Spacing.one },
   zoneBarre: { flex: 1, height: '100%', justifyContent: 'flex-end' },
   barre: { width: '100%', borderRadius: 2 },
+  pastilles: { gap: Spacing.two, paddingRight: Spacing.three },
+  pastille: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, borderRadius: Rayons.plein, borderWidth: 1, minHeight: 40, justifyContent: 'center' },
+  dates: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: Spacing.two },
 });

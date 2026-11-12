@@ -10,6 +10,9 @@ export interface ResumeTableauDeBord {
   nb_ruptures: number;
   ventes_periode: number;
   nb_factures_periode: number;
+  /** Factures émises ou payées de l'année civile en cours (1er janvier – 31 décembre) */
+  ventes_annee: number;
+  nb_factures_annee: number;
   encaisse_periode: number;
   impayes: number;
   marge_periode: number;
@@ -26,7 +29,7 @@ export async function chargerResume(sb: SupabaseClient, equipeId: string, debut?
     ...r,
     nb_produits: nb(r.nb_produits), valeur_stock_achat: nb(r.valeur_stock_achat), valeur_stock_vente: nb(r.valeur_stock_vente),
     nb_alertes: nb(r.nb_alertes), nb_ruptures: nb(r.nb_ruptures), ventes_periode: nb(r.ventes_periode),
-    nb_factures_periode: nb(r.nb_factures_periode), encaisse_periode: nb(r.encaisse_periode), impayes: nb(r.impayes),
+    nb_factures_periode: nb(r.nb_factures_periode), ventes_annee: nb(r.ventes_annee), nb_factures_annee: nb(r.nb_factures_annee), encaisse_periode: nb(r.encaisse_periode), impayes: nb(r.impayes),
     marge_periode: nb(r.marge_periode),
     ventes_par_jour: (r.ventes_par_jour ?? []).map((j: { jour: string; total: unknown }) => ({ jour: j.jour, total: nb(j.total) })),
     meilleurs_produits: (r.meilleurs_produits ?? []).map((p: { produit_id: string; nom: string; quantite: unknown; chiffre: unknown }) => ({

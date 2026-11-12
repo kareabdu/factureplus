@@ -164,7 +164,7 @@ export default function EditerDocument() {
         <Bloc>
           <View style={styles.entete}>
             <View style={{ flex: 1, gap: 4 }}>
-              <ThemedText style={styles.numero} numberOfLines={1} adjustsFontSizeToFit>
+              <ThemedText style={styles.numero} numberOfLines={2}>
                 {existant?.numero ?? `Nouvelle ${libelle.toLowerCase()}`}
               </ThemedText>
               {statut ? <Badge libelle={statut.libelle} ton={statut.ton} />
@@ -213,9 +213,15 @@ export default function EditerDocument() {
         <Bloc>
           <View style={styles.totaux}>
             <LigneTotal libelle="Sous-total" valeur={m(totaux.sous_total)} fort />
-            {totaux.montant_taxe !== 0 && (
-              <LigneTotal libelle={`${taxe.taxe_nom} ${taxe.taxe_taux} %${taxe.taxe_incluse ? ' (incluse)' : ''}`} valeur={m(totaux.montant_taxe)} />
-            )}
+            {/* Ligne de taxe toujours visible ; sur un brouillon, un appui ouvre le réglage de la taxe */}
+            <LigneTotal
+              libelle={taxe.taxe_type === 'aucune' || !(Number(taxe.taxe_taux) > 0)
+                ? `${taxe.taxe_nom || 'TVA'} (non appliquée)`
+                : `${taxe.taxe_nom} ${String(taxe.taxe_taux).replace('.', ',')} %${taxe.taxe_incluse ? ' (incluse)' : ''}${taxe.taxe_type === 'deduction' ? ' (retenue)' : ''}`}
+              valeur={m(totaux.montant_taxe)}
+              discret
+              onPress={brouillon ? () => router.push('/parametres') : undefined}
+            />
             <LigneTotal libelle="Total" valeur={m(totaux.total)} discret />
             {type === 'facture' && dejaPaye > 0 && <LigneTotal libelle="Déjà encaissé" valeur={m(dejaPaye)} discret />}
             <View style={[styles.separateur, { backgroundColor: theme.border }]} />
@@ -270,8 +276,9 @@ function LigneAction({ libelle, onPress, icone, chevron, droite }: {
     <Pressable onPress={onPress} accessibilityRole="button"
       style={({ pressed }) => [styles.action, { backgroundColor: pressed ? theme.backgroundSelected : 'transparent' }]}>
       {icone && <Icone nom={icone} taille={22} couleur={theme.primary} />}
-      <ThemedText style={[styles.actionTexte, { color: theme.primary }]} numberOfLines={1}>{libelle}</ThemedText>
-      {droite && <ThemedText style={{ color: theme.primary, fontSize: 17 }}>{droite}</ThemedText>}
+      {/* Sur petit écran, le libellé passe à la ligne plutôt que d'être coupé ; le montant reste entier */}
+      <ThemedText style={[styles.actionTexte, { color: theme.primary }]} numberOfLines={2}>{libelle}</ThemedText>
+      {droite && <ThemedText style={[styles.actionMontant, { color: theme.primary }]} numberOfLines={1}>{droite}</ThemedText>}
       {chevron && <Icone nom="suivant" taille={18} couleur={theme.primary} />}
     </Pressable>
   );
@@ -288,25 +295,34 @@ function Pilule({ valeur, onChange, placeholder, clavier }: {
   );
 }
 
-function LigneTotal({ libelle, valeur, fort, discret, accent }: {
-  libelle: string; valeur: string; fort?: boolean; discret?: boolean; accent?: boolean;
+function LigneTotal({ libelle, valeur, fort, discret, accent, onPress }: {
+  libelle: string; valeur: string; fort?: boolean; discret?: boolean; accent?: boolean; onPress?: () => void;
 }) {
   const theme = useTheme();
   const style = { fontSize: 18, fontWeight: fort ? ('700' as const) : ('500' as const) };
-  return (
-    <View style={styles.total}>
-      <ThemedText style={[style, { color: discret ? theme.textSecondary : theme.text }]}>{libelle}</ThemedText>
+  const contenu = (
+    <>
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.one }}>
+        <ThemedText style={[style, { flexShrink: 1, color: discret ? theme.textSecondary : theme.text }]}>{libelle}</ThemedText>
+        {onPress && <Icone nom="suivant" taille={14} couleur={theme.textSecondary} />}
+      </View>
       <ThemedText style={[style, { color: accent ? theme.primary : theme.text }]}>{valeur}</ThemedText>
-    </View>
+    </>
   );
+  return onPress ? (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${libelle} : régler la taxe`}
+      style={({ pressed }) => [styles.total, { opacity: pressed ? 0.6 : 1 }]}>{contenu}</Pressable>
+  ) : <View style={styles.total}>{contenu}</View>;
 }
 
 const styles = StyleSheet.create({
   bloc: { borderRadius: Rayons.grand + 4, borderWidth: 1, overflow: 'hidden' },
   entete: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.three, padding: Spacing.three + Spacing.one },
   numero: { fontSize: 24, lineHeight: 30, fontWeight: '700' },
-  action: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.three + Spacing.one, minHeight: 64 },
-  actionTexte: { flex: 1, fontSize: 19, lineHeight: 26, fontWeight: '500' },
+  action: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two + Spacing.one, paddingHorizontal: Spacing.three + Spacing.one,
+    paddingVertical: Spacing.two, minHeight: 64 },
+  actionTexte: { flex: 1, flexShrink: 1, fontSize: 18, lineHeight: 24, fontWeight: '500' },
+  actionMontant: { flexShrink: 0, fontSize: 16, lineHeight: 22 },
   sousBloc: { borderTopWidth: StyleSheet.hairlineWidth, padding: Spacing.three, gap: Spacing.two },
   pilule: { minHeight: 48, borderRadius: Rayons.grand + 4, paddingHorizontal: Spacing.three, fontSize: 16 },
   ligne: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.three + Spacing.one,

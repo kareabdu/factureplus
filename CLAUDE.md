@@ -11,6 +11,8 @@ Tout est en **français** : code (noms de variables, fonctions, tables), interfa
 - Variables (non versionnées) : `apps/web/.env.local` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
   et `apps/mobile/.env` (`EXPO_PUBLIC_…`).
 - Dépôt : https://github.com/kareabdu/stocktracker, branche `main`.
+  Toujours le compte GitHub **kareabdu** : remote `https://kareabdu@github.com/…`, identité locale
+  `kareabdu <36815642+kareabdu@users.noreply.github.com>` (vérifier `git config user.name` avant de commiter).
 - Supabase : projet « stocktracker », id `munketogvbztfvoiryeh` (organisation AppliKare, eu-west-1).
 - iOS se compile via EAS (`eas build -p ios`) : pas de build iOS local sous Windows.
 
@@ -27,6 +29,7 @@ pnpm build:web
 ```
 
 Avant chaque commit : `pnpm typecheck`, `pnpm test:core`, `pnpm test:db`, et `pnpm build:web` si le web a changé.
+Après chaque modification : commiter et pousser sur `main` sans demander (vérifications ci-dessus d'abord).
 
 ## Structure
 

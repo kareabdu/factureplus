@@ -32,9 +32,9 @@ export default function Ventes() {
     }),
     [equipeId, type, vue, r],
   );
-  // Total des factures validées (émises ou payées) de l'année en cours, calculé par la base
+  // Total des factures validées (émises ou payées) de l'année civile en cours, calculé par la base (ventes_annee)
   const annee = new Date().getFullYear();
-  const totalAnnee = useDonnees(() => chargerResume(supabase, equipeId, `${annee}-01-01`), [equipeId, annee]);
+  const totalAnnee = useDonnees(() => chargerResume(supabase, equipeId), [equipeId]);
   const rechargerTotal = totalAnnee.recharger;
   useFocusEffect(useCallback(() => {
     void recharger();
@@ -67,10 +67,10 @@ export default function Ventes() {
                 <Carte>
                   <ThemedText type="small" themeColor="textSecondary">Total des factures {annee}</ThemedText>
                   <ThemedText type="smallBold" style={{ fontSize: 22, lineHeight: 28 }}>
-                    {formaterMontant(totalAnnee.donnees.ventes_periode, symbole)}
+                    {formaterMontant(totalAnnee.donnees.ventes_annee, symbole)}
                   </ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    {totalAnnee.donnees.nb_factures_periode} facture{totalAnnee.donnees.nb_factures_periode > 1 ? 's' : ''} validée{totalAnnee.donnees.nb_factures_periode > 1 ? 's' : ''}, hors brouillons et annulées
+                    {totalAnnee.donnees.nb_factures_annee} facture{totalAnnee.donnees.nb_factures_annee > 1 ? 's' : ''} validée{totalAnnee.donnees.nb_factures_annee > 1 ? 's' : ''}, hors brouillons et annulées
                   </ThemedText>
                 </Carte>
               )}

@@ -2,7 +2,7 @@ import { chargerResume, formaterMontant, joursEssaiRestants, listerAlertes, form
 import { useDonnees } from '@stocktracker/core/react';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icone, type NomIcone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
@@ -19,6 +19,7 @@ export default function Accueil() {
   const m = (v: number) => formaterMontant(v, symbole);
   // Instant de référence du graphique (figé au montage de l'écran)
   const [maintenant] = useState(() => Date.now());
+  const [jourChoisi, setJourChoisi] = useState<string | null>(null);
 
   const { donnees, chargement, erreur, recharger } = useDonnees(
     () => Promise.all([chargerResume(supabase, equipeId), listerAlertes(supabase, equipeId)]),
@@ -31,6 +32,9 @@ export default function Accueil() {
   const [r, alertes] = donnees ?? [null, []];
   const essai = profil && profil.abonnement_statut === 'essai' ? joursEssaiRestants(profil) : null;
   const maxJour = Math.max(1, ...(r?.ventes_par_jour ?? []).map((j) => j.total));
+  const jours30 = Array.from({ length: 30 }, (_, i) => new Date(maintenant - (29 - i) * 86_400_000).toISOString().slice(0, 10));
+  const dernierJourVendu = [...(r?.ventes_par_jour ?? [])].filter((j) => j.total > 0).map((j) => j.jour).sort().pop();
+  const jourAffiche = jourChoisi ?? dernierJourVendu ?? jours30[29];
 
   return (
     <Ecran onglets rafraichir={recharger}>
@@ -55,13 +59,29 @@ export default function Accueil() {
               {r.nb_factures_periode} facture{r.nb_factures_periode > 1 ? 's' : ''} · encaissé {m(r.encaisse_periode)}
             </ThemedText>
             {r.ventes_par_jour.length > 0 && (
-              <View style={styles.graphe} accessibilityLabel="Ventes des 30 derniers jours">
-                {Array.from({ length: 30 }, (_, i) => {
-                  const jour = new Date(maintenant - (29 - i) * 86_400_000).toISOString().slice(0, 10);
-                  const v = r.ventes_par_jour.find((j) => j.jour === jour)?.total ?? 0;
-                  return <View key={jour} style={[styles.barre, { height: `${Math.max(4, (v / maxJour) * 100)}%`, backgroundColor: theme.onPrimary, opacity: v ? 0.9 : 0.25 }]} />;
-                })}
-              </View>
+              <>
+                {/* Montant du jour choisi (par défaut : dernier jour avec des ventes) */}
+                <ThemedText type="smallBold" style={{ color: theme.onPrimary, marginTop: Spacing.two }}>
+                  {new Date(`${jourAffiche}T00:00:00`).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  {' · '}{m(r.ventes_par_jour.find((j) => j.jour === jourAffiche)?.total ?? 0)}
+                </ThemedText>
+                <View style={styles.graphe} accessibilityLabel="Ventes des 30 derniers jours : touchez une barre pour voir le montant">
+                  {jours30.map((jour) => {
+                    const v = r.ventes_par_jour.find((j) => j.jour === jour)?.total ?? 0;
+                    const choisi = jour === jourAffiche;
+                    return (
+                      <Pressable key={jour} onPress={() => setJourChoisi(jour)} style={styles.zoneBarre}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${new Date(`${jour}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} : ${m(v)}`}>
+                        <View style={[styles.barre, {
+                          height: `${Math.max(4, (v / maxJour) * 100)}%`, backgroundColor: theme.onPrimary,
+                          opacity: choisi ? 1 : v ? 0.55 : 0.2,
+                        }]} />
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </>
             )}
           </Carte>
 
@@ -139,6 +159,7 @@ function Action({ icone, libelle, onPress }: { icone: NomIcone; libelle: string;
 const styles = StyleSheet.create({
   grille: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two + Spacing.one },
   tuile: { flexBasis: '47%', flexGrow: 1, gap: Spacing.one, borderRadius: Rayons.grand },
-  graphe: { flexDirection: 'row', alignItems: 'flex-end', gap: 2, height: 44, marginTop: Spacing.two },
-  barre: { flex: 1, borderRadius: 2 },
+  graphe: { flexDirection: 'row', alignItems: 'flex-end', gap: 2, height: 48, marginTop: Spacing.one },
+  zoneBarre: { flex: 1, height: '100%', justifyContent: 'flex-end' },
+  barre: { width: '100%', borderRadius: 2 },
 });

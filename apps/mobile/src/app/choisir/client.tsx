@@ -107,7 +107,7 @@ export default function ChoisirClient() {
         <Pressable onPress={importer} disabled={import_} accessibilityRole="button"
           style={({ pressed }) => [styles.importer, { borderColor: theme.primary, backgroundColor: theme.backgroundElement, opacity: pressed || import_ ? 0.7 : 1 }]}>
           <Icone nom="ajouterContact" taille={24} couleur={theme.primary} />
-          <ThemedText style={{ color: theme.primary, fontSize: 18, fontWeight: '700' }}>Importer depuis les contacts</ThemedText>
+          <ThemedText style={{ color: theme.primary, fontSize: 17, fontWeight: '700', flexShrink: 1, textAlign: 'center' }}>Importer depuis les contacts</ThemedText>
         </Pressable>
       </SafeAreaView>
     </ThemedView>
@@ -124,5 +124,5 @@ const styles = StyleSheet.create({
   nouveau: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.three, paddingHorizontal: Spacing.one },
   pied: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: Spacing.three + Spacing.one, paddingBottom: Spacing.three },
   importer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.three, borderWidth: 2,
-    borderRadius: Rayons.plein, minHeight: 60, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
+    borderRadius: Rayons.plein, minHeight: 60, paddingHorizontal: Spacing.three, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
 });

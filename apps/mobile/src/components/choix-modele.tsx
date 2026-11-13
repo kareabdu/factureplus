@@ -3,9 +3,10 @@ import {
 } from '@stocktracker/core';
 import * as Print from 'expo-print';
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icone } from '@/components/icone';
+import { SelecteurCouleur } from '@/components/selecteur-couleur';
 import { ThemedText } from '@/components/themed-text';
 import { Bouton } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
@@ -23,7 +24,6 @@ export function ChoixModele({ modele, couleur, parametres, onChange }: {
   onChange: (c: { modele_document?: ModeleDocument; couleur_document?: string }) => void;
 }) {
   const theme = useTheme();
-  const [saisie, setSaisie] = useState(couleur);
   const [apercu, setApercu] = useState(false);
   const accent = estCouleurValide(couleur) ? couleur : '#147A2E';
 
@@ -65,7 +65,7 @@ export function ChoixModele({ modele, couleur, parametres, onChange }: {
           {COULEURS_DOCUMENT.map((c) => {
             const choisie = c.toLowerCase() === accent.toLowerCase();
             return (
-              <Pressable key={c} onPress={() => { setSaisie(c); onChange({ couleur_document: c }); }}
+              <Pressable key={c} onPress={() => onChange({ couleur_document: c })}
                 accessibilityRole="radio" accessibilityState={{ selected: choisie }} accessibilityLabel={`Couleur ${c}`}
                 style={[styles.pastille, { backgroundColor: c, borderColor: choisie ? theme.text : 'transparent' }]}>
                 {choisie && <Icone nom="valider" taille={16} couleur="#FFFFFF" />}
@@ -73,18 +73,9 @@ export function ChoixModele({ modele, couleur, parametres, onChange }: {
             );
           })}
         </View>
-        <View style={styles.saisieCouleur}>
-          <View style={[styles.temoin, { backgroundColor: accent }]} />
-          <TextInput value={saisie} autoCapitalize="characters" autoCorrect={false} maxLength={7} placeholder="#147A2E"
-            placeholderTextColor={theme.textSecondary} accessibilityLabel="Code couleur personnalisé"
-            onChangeText={(t) => {
-              const v = t.startsWith('#') ? t : `#${t}`;
-              setSaisie(v);
-              if (estCouleurValide(v)) onChange({ couleur_document: v.toUpperCase() });
-            }}
-            style={[styles.champ, { color: theme.text, borderColor: estCouleurValide(saisie) ? theme.border : theme.danger, backgroundColor: theme.backgroundElement }]} />
-          <ThemedText type="small" themeColor="textSecondary" style={{ flex: 1 }}>Couleur personnalisée (code #RRVVBB)</ThemedText>
-        </View>
+        {/* Couleur libre : palette native (iOS) ou grille de couleurs (Android) */}
+        <SelecteurCouleur couleur={accent} onChange={(c) => { if (estCouleurValide(c)) onChange({ couleur_document: c }); }}
+          libelle="Autre couleur" />
       </View>
 
       <Bouton titre="Aperçu d'une facture" icone="document" variante="secondaire" onPress={voirApercu} chargement={apercu} />
@@ -163,7 +154,4 @@ const styles = StyleSheet.create({
   rangee: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 },
   couleurs: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   pastille: { width: 38, height: 38, borderRadius: 19, borderWidth: 3, alignItems: 'center', justifyContent: 'center' },
-  saisieCouleur: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  temoin: { width: 38, height: 38, borderRadius: Rayons.petit },
-  champ: { width: 110, height: 44, borderWidth: 1, borderRadius: Rayons.petit, paddingHorizontal: Spacing.two, fontSize: 16 },
 });

@@ -5,10 +5,11 @@ import {
   LIBELLES_STATUTS_PAIEMENT, listerMesPaiements, MOYENS_PAIEMENT_ABONNEMENT, paiementEnCours, PLANS_ABONNEMENT,
   TONS_ETATS_ACCES, verifierPaiementAbonnement, type MoyenPaiementAbonnement, type PlanAbonnement,
 } from "@factureplus/core";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
-import { Alerte, Badge, Bouton, Carte, Champ, Chargement, EnTetePage, Info, Segments, Tableau } from "@/components/ui";
+import { Alerte, Badge, Bouton, Carte, Champ, Chargement, EnTetePage, Info, Tableau } from "@/components/ui";
 import { useDonnees, useEquipe, useSession } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
@@ -188,8 +189,19 @@ function Abonnement() {
             <div className="mt-5 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <span className="text-sm font-medium">Payer avec</span>
-                <Segments libelle="Moyen de paiement" valeur={moyen} onChange={setMoyen}
-                  options={MOYENS_PAIEMENT_ABONNEMENT.map((x) => ({ valeur: x.code, libelle: x.libelle }))} />
+                <div role="radiogroup" aria-label="Moyen de paiement" className="grid max-w-sm grid-cols-2 gap-3">
+                  {MOYENS_PAIEMENT_ABONNEMENT.map((x) => {
+                    const choisi = moyen === x.code;
+                    return (
+                      <button key={x.code} type="button" role="radio" aria-checked={choisi} onClick={() => setMoyen(x.code)}
+                        className={`flex flex-col items-center gap-1.5 rounded-xl border py-3 text-sm font-medium transition-colors ${
+                          choisi ? "border-primary bg-primary-soft text-primary ring-1 ring-primary" : "border-border hover:border-primary/40"}`}>
+                        <Image src={`/paiement/${x.code === "wave" ? "wave" : "maxit"}.png`} alt="" width={36} height={36} className="size-9 rounded-lg" />
+                        {x.libelle}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               {MOYENS_PAIEMENT_ABONNEMENT.find((x) => x.code === moyen)?.telephone && (
                 <Champ libelle="Numéro Orange Money" type="tel" value={telephone} onChange={(e) => setTelephone(e.target.value)}

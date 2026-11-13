@@ -21,7 +21,7 @@ export const ECONOMIE_ANNUELLE = PLANS_ABONNEMENT.mensuel.montant * 12 - PLANS_A
 
 export const MOYENS_PAIEMENT_ABONNEMENT: { code: MoyenPaiementAbonnement; libelle: string; telephone: boolean }[] = [
   { code: "wave", libelle: "Wave", telephone: false },
-  { code: "orange_maxit", libelle: "Orange Money (Max It)", telephone: true },
+  { code: "orange_maxit", libelle: "Max It", telephone: true },
 ];
 
 /** Bandeau d'avertissement affiché ce nombre de jours avant la fin de l'accès. */

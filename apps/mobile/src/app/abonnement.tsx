@@ -12,12 +12,18 @@ import { AppState, Pressable, View } from 'react-native';
 
 import { Icone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Badge, Bouton, Carte, Champ, ChargementPlein, Ecran, Info, LigneListe, Pastilles, Section } from '@/components/ui';
+import { Alerte, Badge, Bouton, Carte, Champ, ChargementPlein, Ecran, Info, LigneListe, Section } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { vibrerSucces } from '@/lib/confirmer';
 import { useEquipe, useSession } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
+
+/** Logos des moyens de paiement (repris de l'ancienne application) */
+const LOGOS_PAIEMENT: Record<MoyenPaiementAbonnement, number> = {
+  wave: require('@/assets/images/paiement-wave.png'),
+  orange_maxit: require('@/assets/images/paiement-maxit.png'),
+};
 
 /** Abonnement : état de l'accès, choix de la formule et paiement Wave / Orange Money (Unitech Pay). */
 export default function Abonnement() {
@@ -186,7 +192,24 @@ export default function Abonnement() {
           <ThemedText type="small" themeColor="textSecondary">
             Tout inclus : factures, proformas et bons de livraison illimités, stock, achats, dépenses, export PDF.
           </ThemedText>
-          <Pastilles libelle="Payer avec" options={MOYENS_PAIEMENT_ABONNEMENT} valeur={moyen} onChange={setMoyen} />
+          <ThemedText type="smallBold">Payer avec</ThemedText>
+          <View style={{ flexDirection: 'row', gap: Spacing.two }} accessibilityRole="radiogroup">
+            {MOYENS_PAIEMENT_ABONNEMENT.map((x) => {
+              const choisi = moyen === x.code;
+              return (
+                <Pressable key={x.code} onPress={() => setMoyen(x.code)} accessibilityRole="radio" accessibilityState={{ selected: choisi }}
+                  accessibilityLabel={x.libelle}
+                  style={{
+                    flex: 1, alignItems: 'center', gap: Spacing.one, paddingVertical: Spacing.three, borderRadius: Rayons.moyen,
+                    borderWidth: choisi ? 2 : 1, borderColor: choisi ? theme.primary : theme.border,
+                    backgroundColor: choisi ? theme.primarySoft : theme.backgroundElement,
+                  }}>
+                  <Image source={LOGOS_PAIEMENT[x.code]} style={{ width: 36, height: 36, borderRadius: 9 }} contentFit="cover" />
+                  <ThemedText type="smallBold" style={{ color: choisi ? theme.primary : theme.text }}>{x.libelle}</ThemedText>
+                </Pressable>
+              );
+            })}
+          </View>
           {MOYENS_PAIEMENT_ABONNEMENT.find((x) => x.code === moyen)?.telephone && (
             <Champ libelle="Numéro Orange Money" value={telephone} onChangeText={setTelephone} keyboardType="phone-pad"
               autoComplete="tel" placeholder="77 000 00 00" />

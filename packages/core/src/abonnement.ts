@@ -27,7 +27,7 @@ export interface ReponsePaiement {
 
 export const LIBELLES_MOYENS_ABONNEMENT: Record<PaiementAbonnement["moyen"], string> = {
   wave: "Wave",
-  orange_maxit: "Orange Money (Max It)",
+  orange_maxit: "Max It",
   orange_qr: "Orange Money (QR)",
   manuel: "Manuel",
 };

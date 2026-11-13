@@ -26,7 +26,7 @@ export function Logo({ className = "", inverse = false }: { className?: string; 
     <span className={`inline-flex items-center gap-2.5 font-semibold tracking-tight ${className}`}>
       <Monogramme />
       <span className={`text-lg ${inverse ? "text-panneau-texte" : "text-foreground"}`}>
-        Stock<span className={inverse ? "text-accent" : "text-primary"}>Tracker</span>
+        Facture<span className={inverse ? "text-accent" : "text-primary"}>Plus</span>
       </span>
     </span>
   );

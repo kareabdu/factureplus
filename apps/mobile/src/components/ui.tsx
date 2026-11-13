@@ -151,7 +151,7 @@ export function Logo({ taille = 36 }: { taille?: number }) {
     <View style={styles.logo} accessibilityRole="header" accessibilityLabel="FacturePlus">
       <Monogramme taille={taille} />
       <ThemedText style={[t, { color: theme.text }]}>
-        Stock<ThemedText style={[t, { color: theme.primary }]}>Tracker</ThemedText>
+        Facture<ThemedText style={[t, { color: theme.primary }]}>Plus</ThemedText>
       </ThemedText>
     </View>
   );

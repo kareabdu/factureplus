@@ -41,6 +41,7 @@ export default function ChoisirFournisseur() {
         keyExtractor={(f) => f.id}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
+        contentInsetAdjustmentBehavior="automatic"
         keyboardDismissMode="on-drag"
         contentContainerStyle={{ padding: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.six }}
         ListHeaderComponent={<Recherche valeur={recherche} onChange={setRecherche} placeholder="Nom du fournisseur…" />}

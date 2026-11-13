@@ -1,8 +1,8 @@
 import {
   chargerProduit, estStockBas, formaterMontant, formaterQuantite, LIBELLES_MOUVEMENT, listerCategories, listerMouvements,
   modifierProduit, supprimerProduit,
-} from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+} from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { Image } from 'expo-image';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback } from 'react';

@@ -8,7 +8,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "StockTracker", template: "%s · StockTracker" },
+  title: { default: "FacturePlus", template: "%s · FacturePlus" },
   description: "Gestion de stock, factures et achats pour les commerçants.",
 };
 
@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 };
 
 // Thème avant le premier affichage : clair par défaut, sombre si choisi, celui de l'appareil si « automatique ».
-const scriptTheme = `(function(){var t="clair";try{t=localStorage.getItem("stocktracker.theme")||"clair"}catch(e){}if(t!=="auto")document.documentElement.setAttribute("data-theme",t==="sombre"?"sombre":"clair")})()`;
+const scriptTheme = `(function(){var t="clair";try{t=localStorage.getItem("factureplus.theme")||"clair"}catch(e){}if(t!=="auto")document.documentElement.setAttribute("data-theme",t==="sombre"?"sombre":"clair")})()`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

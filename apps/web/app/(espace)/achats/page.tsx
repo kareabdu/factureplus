@@ -1,6 +1,6 @@
 "use client";
 
-import { formaterMontant, LIBELLES_STATUT_ACHAT, listerAchats } from "@stocktracker/core";
+import { formaterMontant, LIBELLES_STATUT_ACHAT, listerAchats } from "@factureplus/core";
 import { useRouter } from "next/navigation";
 
 import { Alerte, Badge, Carte, EnTetePage, LienBouton, Tableau, Vide } from "@/components/ui";

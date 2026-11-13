@@ -1,5 +1,5 @@
-import { creerClient, listerClients, type Client } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { creerClient, listerClients, type Client } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { Contact } from 'expo-contacts';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';

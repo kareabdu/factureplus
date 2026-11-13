@@ -1,6 +1,6 @@
 "use client";
 
-import { lirePreferenceTheme, memoriserPreferenceTheme, type PreferenceTheme } from "@stocktracker/core";
+import { lirePreferenceTheme, memoriserPreferenceTheme, type PreferenceTheme } from "@factureplus/core";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";

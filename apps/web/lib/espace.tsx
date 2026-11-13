@@ -1,11 +1,11 @@
 "use client";
 
-import { EquipeProvider, SessionProvider as Fournisseur, useSession } from "@stocktracker/core/react";
+import { EquipeProvider, SessionProvider as Fournisseur, useSession } from "@factureplus/core/react";
 import type { ReactNode } from "react";
 
 import { supabase } from "./supabase";
 
-export { useEquipe, useSession, useDonnees } from "@stocktracker/core/react";
+export { useEquipe, useSession, useDonnees } from "@factureplus/core/react";
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   return <Fournisseur supabase={supabase}>{children}</Fournisseur>;

@@ -2,7 +2,7 @@
 
 import {
   COULEURS_DOCUMENT, documentExemple, estCouleurValide, htmlDocument, MODELES_DOCUMENT, type ModeleDocument, type Parametres,
-} from "@stocktracker/core";
+} from "@factureplus/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 /**

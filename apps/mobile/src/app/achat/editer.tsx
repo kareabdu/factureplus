@@ -1,7 +1,7 @@
 import {
   chargerAchat, enregistrerAchat, formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, lireMontant, lireQuantite,
   receptionnerAchat, supprimerAchatBrouillon, type EnteteAchat, type LigneAchat, type ModePaiement,
-} from '@stocktracker/core';
+} from '@factureplus/core';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';

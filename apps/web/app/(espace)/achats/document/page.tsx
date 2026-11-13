@@ -3,7 +3,7 @@
 import {
   annulerAchat, chargerAchat, enregistrerAchat, formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_STATUT_ACHAT, lireMontant,
   lireQuantite, receptionnerAchat, supprimerAchatBrouillon, type Achat, type EnteteAchat, type LigneAchat, type ModePaiement,
-} from "@stocktracker/core";
+} from "@factureplus/core";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";

@@ -1,6 +1,6 @@
 "use client";
 
-import { formaterMontant, formaterQuantite, listerClients, listerFournisseurs, listerProduits, type Produit } from "@stocktracker/core";
+import { formaterMontant, formaterQuantite, listerClients, listerFournisseurs, listerProduits, type Produit } from "@factureplus/core";
 import { useDeferredValue, useState } from "react";
 
 import { Recherche } from "@/components/ui";

@@ -1,6 +1,6 @@
 "use client";
 
-import { accesActif, formaterMontant, joursEssaiRestants, modifierProfil, TARIFS, traduireErreur } from "@stocktracker/core";
+import { accesActif, formaterMontant, joursEssaiRestants, modifierProfil, TARIFS, traduireErreur } from "@factureplus/core";
 import { useState, type FormEvent } from "react";
 
 import { Alerte, Bouton, Carte, Champ, Chargement, EnTetePage, Info } from "@/components/ui";

@@ -1,5 +1,5 @@
-import { annulerAchat, chargerAchat, formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_STATUT_ACHAT } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { annulerAchat, chargerAchat, formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_STATUT_ACHAT } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 

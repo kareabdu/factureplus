@@ -38,7 +38,7 @@ export default function Scanner() {
         {!permission.granted && !manuel && (
           <>
             <ThemedText themeColor="textSecondary">
-              StockTracker a besoin de la caméra pour lire les codes-barres. Les images ne sont ni enregistrées ni envoyées.
+              FacturePlus a besoin de la caméra pour lire les codes-barres. Les images ne sont ni enregistrées ni envoyées.
             </ThemedText>
             {permission.canAskAgain
               ? <Bouton titre="Autoriser la caméra" icone="photo" onPress={demander} />

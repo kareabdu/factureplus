@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-/** Icônes au trait (24 × 24) de StockTracker. Couleur : currentColor. */
+/** Icônes au trait (24 × 24) de FacturePlus. Couleur : currentColor. */
 
 const TRACES = {
   accueil: (

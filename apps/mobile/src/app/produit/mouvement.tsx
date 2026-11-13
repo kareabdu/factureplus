@@ -1,5 +1,5 @@
-import { chargerProduit, formaterQuantite, mouvementerStock, type TypeMouvement } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { chargerProduit, formaterQuantite, mouvementerStock, type TypeMouvement } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 

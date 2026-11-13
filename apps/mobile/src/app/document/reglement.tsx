@@ -1,7 +1,7 @@
 import {
   chargerDocument, enregistrerReglement, formaterMontant, LIBELLES_MODE_PAIEMENT, resteAPayer, type ModePaiement,
-} from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+} from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 

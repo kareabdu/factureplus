@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Ventes : clients, documents (facture, proforma, BL), règlements
+-- FacturePlus — Ventes : clients, documents (facture, proforma, BL), règlements
 --
 -- Cycle : brouillon (modifiable) → validation (numéro sans trou, stock déduit pour
 -- une facture) → règlements → payé. Une facture validée ne se modifie plus : on

@@ -1,5 +1,5 @@
-import { formaterQuantite, listerAlertes } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { formaterQuantite, listerAlertes } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 

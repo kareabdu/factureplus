@@ -1,5 +1,5 @@
-import { creerCategorie, listerCategories, modifierCategorie, supprimerCategorie, type Categorie } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { creerCategorie, listerCategories, modifierCategorie, supprimerCategorie, type Categorie } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { useState } from 'react';
 import { View } from 'react-native';
 

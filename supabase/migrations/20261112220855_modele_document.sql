@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Modèle de document (facture, proforma, bon de livraison)
+-- FacturePlus — Modèle de document (facture, proforma, bon de livraison)
 --
 -- Quatre mises en page au choix, avec la couleur de l'entreprise (couleur_document) :
 --   classique : logo et entreprise à gauche, numéro / dates / solde à droite

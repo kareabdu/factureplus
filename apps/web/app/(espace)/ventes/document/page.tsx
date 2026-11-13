@@ -5,7 +5,7 @@ import {
   formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_TYPE_DOCUMENT, ligneDepuisProduit, lireMontant, lireQuantite,
   refuserProforma, resteAPayer, statutAffiche, supprimerBrouillon, supprimerReglement, totalLigne, validerDocument,
   type Document, type EnteteDocument, type LigneDocument, type ModePaiement, type Reglement, type TypeDocument,
-} from "@stocktracker/core";
+} from "@factureplus/core";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";

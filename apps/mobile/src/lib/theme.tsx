@@ -6,7 +6,7 @@ import {
   memoriserPreferenceTheme,
   themeEffectif,
   type PreferenceTheme,
-} from '@stocktracker/core';
+} from '@factureplus/core';
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
 import { Colors, type Couleurs } from '@/constants/theme';

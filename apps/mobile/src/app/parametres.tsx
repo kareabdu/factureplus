@@ -1,6 +1,6 @@
 import {
   envoyerImageProduit, formaterNumero, modifierParametres, TYPES_TAXE, type ModeleDocument, type ParametresModifiables, type TypeTaxe,
-} from '@stocktracker/core';
+} from '@factureplus/core';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';

@@ -1,6 +1,6 @@
 "use client";
 
-import { chargerResume, formaterMontant, formaterQuantite, joursEssaiRestants, listerAlertes } from "@stocktracker/core";
+import { chargerResume, formaterMontant, formaterQuantite, joursEssaiRestants, listerAlertes } from "@factureplus/core";
 import Link from "next/link";
 import { useState } from "react";
 

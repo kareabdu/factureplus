@@ -1,4 +1,4 @@
-# StockTracker
+# FacturePlus
 
 Gestion de stock, ventes (factures, proformas, bons de livraison) et achats pour les commerçants.
 Application **native Android et iOS** (Expo), **web** (Next.js), backend **Supabase**.
@@ -64,7 +64,7 @@ Variables d'environnement (non versionnées), à partir des modèles :
 2. **Authentication → Email Templates → Reset Password** : afficher le code `{{ .Token }}` dans le message
    (le mot de passe oublié fonctionne par code à 6 chiffres, sur mobile comme sur le web).
 3. **Authentication → URL Configuration** : ajouter l'URL du web (`http://localhost:3000/**` et la production)
-   et `stocktracker://**` aux « Redirect URLs » (lien de confirmation d'e-mail).
+   et `factureplus://**` aux « Redirect URLs » (lien de confirmation d'e-mail).
 4. Le compartiment de stockage `produits` (photos, logos) est créé par la migration `20261111150852_tableau_de_bord.sql`.
 
 Tester la base sans Supabase :

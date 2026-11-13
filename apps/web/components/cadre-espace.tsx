@@ -1,6 +1,6 @@
 "use client";
 
-import { creerEquipe } from "@stocktracker/core";
+import { creerEquipe } from "@factureplus/core";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 

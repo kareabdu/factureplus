@@ -1,4 +1,4 @@
-import { LIBELLES_THEMES, type PreferenceTheme } from '@stocktracker/core';
+import { LIBELLES_THEMES, type PreferenceTheme } from '@factureplus/core';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { View } from 'react-native';
@@ -44,7 +44,7 @@ export default function Plus() {
       }} />
 
       <View style={{ alignItems: 'center', marginTop: Spacing.two }}>
-        <ThemedText type="small" themeColor="textSecondary">StockTracker {Constants.expoConfig?.version ?? ''}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">FacturePlus {Constants.expoConfig?.version ?? ''}</ThemedText>
       </View>
     </Ecran>
   );

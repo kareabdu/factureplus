@@ -1,7 +1,7 @@
 import {
   chargerClient, creerClient, formaterMontant, listerDocuments, modifierClient, resteAPayer, statutAffiche, supprimerClient,
-} from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+} from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
 import { FicheContact } from '@/components/fiche-contact';

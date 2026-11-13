@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Direction artistique StockTracker.
+ * Direction artistique FacturePlus.
  * Valeurs identiques à packages/core/src/design.ts (PALETTES) : modifier les deux ensemble.
  * Thème : <html data-theme="clair|sombre"> imposé par l'utilisateur, sinon réglage de l'appareil.
  */

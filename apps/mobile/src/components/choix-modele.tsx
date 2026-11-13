@@ -1,6 +1,6 @@
 import {
   COULEURS_DOCUMENT, documentExemple, estCouleurValide, htmlDocument, MODELES_DOCUMENT, type ModeleDocument, type Parametres,
-} from '@stocktracker/core';
+} from '@factureplus/core';
 import * as Print from 'expo-print';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';

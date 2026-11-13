@@ -11,7 +11,7 @@ await en(B, "select public.creer_equipe('Bakary Shop')");
 const params = async () => (await en(A, "select * from public.parametres where equipe_id=$1", [eA]))[0];
 
 console.log("Modèle de document");
-await vrai("par défaut : classique, couleur StockTracker", async () => {
+await vrai("par défaut : classique, couleur FacturePlus", async () => {
   const p = await params(); return p.modele_document === "classique" && p.couleur_document === "#147A2E";
 });
 await vrai("l'administrateur choisit le modèle moderne et sa couleur", async () => {

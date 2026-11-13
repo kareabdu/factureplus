@@ -1,5 +1,5 @@
-import { estStockBas, formaterMontant, formaterQuantite, listerCategories, listerProduits, produitParCodeBarres, type Produit } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { estStockBas, formaterMontant, formaterQuantite, listerCategories, listerProduits, produitParCodeBarres, type Produit } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useDeferredValue, useState } from 'react';

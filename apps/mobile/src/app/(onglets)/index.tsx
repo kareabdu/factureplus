@@ -1,8 +1,8 @@
 import {
   chargerResume, formaterMontant, formaterQuantite, joursDePeriode, joursEssaiRestants, LIBELLES_PERIODES, libellePeriode,
   listerAlertes, periodePersonnalisee, periodePredefinie, PERIODES_PREDEFINIES, type CodePeriode, type Periode,
-} from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+} from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -147,7 +147,7 @@ export default function Accueil() {
 // Période : filtres prédéfinis et personnalisés, mémorisés d'une ouverture à l'autre
 // ---------------------------------------------------------------------------
 
-const CLE_PERIODE = 'stocktracker.periode';
+const CLE_PERIODE = 'factureplus.periode';
 
 function lirePeriode(): Periode {
   try {

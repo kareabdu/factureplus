@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Catalogue et stock
+-- FacturePlus — Catalogue et stock
 --
 -- • categories, fournisseurs, produits (+ fournisseurs du produit)
 -- • mouvements_stock : journal inaltérable, écrit uniquement par prive.mouvementer

@@ -2,7 +2,7 @@ import {
   calculerTotaux, chargerClient, chargerDocument, enregistrerDocument, formaterMontant, formaterQuantite, LIBELLES_TYPE_DOCUMENT,
   statutAffiche, supprimerBrouillon, totalLigne, validerDocument,
   type Document, type EnteteDocument, type ReglageTaxe, type TypeDocument,
-} from '@stocktracker/core';
+} from '@factureplus/core';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';

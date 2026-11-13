@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Tableau de bord et stockage des images
+-- FacturePlus — Tableau de bord et stockage des images
 -- =============================================================================
 
 -- Indicateurs de l'accueil, calculés côté serveur (une seule requête)

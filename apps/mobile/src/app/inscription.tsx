@@ -1,4 +1,4 @@
-import { traduireErreur } from '@stocktracker/core';
+import { traduireErreur } from '@factureplus/core';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useState } from 'react';

@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Achats fournisseurs
+-- FacturePlus — Achats fournisseurs
 --
 -- brouillon (modifiable) → réception (numéro ACH-…, entrées de stock, coût d'achat
 -- du produit mis à jour) → éventuellement annulation (sorties de stock correspondantes).

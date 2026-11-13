@@ -1,6 +1,6 @@
 "use client";
 
-import { estStockBas, formaterMontant, formaterQuantite, listerCategories, listerProduits } from "@stocktracker/core";
+import { estStockBas, formaterMontant, formaterQuantite, listerCategories, listerProduits } from "@factureplus/core";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useDeferredValue, useState } from "react";
 

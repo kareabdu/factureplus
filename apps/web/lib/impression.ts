@@ -1,4 +1,4 @@
-import { chargerDocument, htmlDocument, type Parametres } from "@stocktracker/core";
+import { chargerDocument, htmlDocument, type Parametres } from "@factureplus/core";
 
 import { supabase } from "./supabase";
 

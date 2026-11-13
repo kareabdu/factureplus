@@ -1,6 +1,6 @@
 "use client";
 
-import { envoyerImageProduit, formaterNumero, modifierParametres, TYPES_TAXE, type ModeleDocument, type Parametres, type TypeTaxe } from "@stocktracker/core";
+import { envoyerImageProduit, formaterNumero, modifierParametres, TYPES_TAXE, type ModeleDocument, type Parametres, type TypeTaxe } from "@factureplus/core";
 import { useState, type FormEvent } from "react";
 
 import { ChoixModele } from "@/components/choix-modele";

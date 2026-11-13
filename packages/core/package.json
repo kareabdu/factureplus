@@ -1,8 +1,8 @@
 {
-  "name": "@stocktracker/core",
+  "name": "@factureplus/core",
   "version": "0.1.0",
   "private": true,
-  "description": "Types, règles métier et accès aux données partagés entre le web et le mobile StockTracker",
+  "description": "Types, règles métier et accès aux données partagés entre le web et le mobile FacturePlus",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {

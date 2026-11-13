@@ -1,5 +1,5 @@
-import { formaterMontant, formaterQuantite, listerProduits, produitParCodeBarres } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { formaterMontant, formaterQuantite, listerProduits, produitParCodeBarres } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router } from 'expo-router';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { FlatList, View } from 'react-native';

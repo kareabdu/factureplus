@@ -1,4 +1,4 @@
-import { formaterMontant, lireMontant, lireQuantite, type Ton } from '@stocktracker/core';
+import { formaterMontant, lireMontant, lireQuantite, type Ton } from '@factureplus/core';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -128,7 +128,7 @@ export function ErreurChargement({ message, reessayer }: { message: string; rees
 // Marque
 // ---------------------------------------------------------------------------
 
-/** Logo StockTracker : un carton stylisé sur fond vert (même dessin que l'icône d'application). */
+/** Logo FacturePlus : un carton stylisé sur fond vert (même dessin que l'icône d'application). */
 export function Monogramme({ taille = 36 }: { taille?: number }) {
   const k = taille / 36;
   return (
@@ -148,7 +148,7 @@ export function Logo({ taille = 36 }: { taille?: number }) {
   const theme = useTheme();
   const t = { fontSize: taille * 0.6, lineHeight: taille, fontWeight: 700 as const };
   return (
-    <View style={styles.logo} accessibilityRole="header" accessibilityLabel="StockTracker">
+    <View style={styles.logo} accessibilityRole="header" accessibilityLabel="FacturePlus">
       <Monogramme taille={taille} />
       <ThemedText style={[t, { color: theme.text }]}>
         Stock<ThemedText style={[t, { color: theme.primary }]}>Tracker</ThemedText>

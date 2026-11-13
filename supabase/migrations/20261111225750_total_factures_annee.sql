@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Tableau de bord : total des factures de l'année en cours
+-- FacturePlus — Tableau de bord : total des factures de l'année en cours
 --
 -- Ajoute ventes_annee et nb_factures_annee : factures émises ou payées (ni brouillons
 -- ni annulées) datées de l'année civile en cours.

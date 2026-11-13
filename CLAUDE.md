@@ -1,4 +1,4 @@
-# StockTracker — instructions pour Claude Code
+# FacturePlus — instructions pour Claude Code
 
 Gestion de stock, ventes (factures, proformas, bons de livraison) et achats pour commerçants d'Afrique de l'Ouest.
 Android et iOS (Expo), web (Next.js), backend Supabase. Réécriture native de l'ancienne app base44 (dans `legacy/`).
@@ -10,10 +10,10 @@ Tout est en **français** : code (noms de variables, fonctions, tables), interfa
 - Windows, PowerShell. Si `pnpm` est refusé (politique d'exécution), utiliser `pnpm.cmd` / `npx.cmd`.
 - Variables (non versionnées) : `apps/web/.env.local` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)
   et `apps/mobile/.env` (`EXPO_PUBLIC_…`).
-- Dépôt : https://github.com/kareabdu/stocktracker, branche `main`.
+- Dépôt : https://github.com/kareabdu/factureplus, branche `main`.
   Toujours le compte GitHub **kareabdu** : remote `https://kareabdu@github.com/…`, identité locale
   `kareabdu <36815642+kareabdu@users.noreply.github.com>` (vérifier `git config user.name` avant de commiter).
-- Supabase : projet « stocktracker », id `munketogvbztfvoiryeh` (organisation AppliKare, eu-west-1).
+- Supabase : projet « factureplus », id `munketogvbztfvoiryeh` (organisation AppliKare, eu-west-1).
 - iOS se compile via EAS (`eas build -p ios`) : pas de build iOS local sous Windows.
 
 ## Commandes
@@ -33,8 +33,8 @@ Après chaque modification : commiter et pousser sur `main` sans demander (véri
 
 ## Structure
 
-- `packages/core` (`@stocktracker/core`) : types, règles métier (montants, taxe, numéros, plans) et accès aux données
-  partagés web/mobile ; fournisseurs React dans `@stocktracker/core/react`. Toute logique réutilisable va ici.
+- `packages/core` (`@factureplus/core`) : types, règles métier (montants, taxe, numéros, plans) et accès aux données
+  partagés web/mobile ; fournisseurs React dans `@factureplus/core/react`. Toute logique réutilisable va ici.
 - `apps/mobile` : Expo 58, expo-router. Onglets natifs accueil / produits / ventes / plus ; écrans de pile
   et modales déclarés dans `src/app/_layout.tsx` (`Stack.Protected`). Composants d'interface dans
   `src/components/ui.tsx`, icônes (SF Symbols / Material) dans `icone.tsx`. Les écrans de sélection (scanner,

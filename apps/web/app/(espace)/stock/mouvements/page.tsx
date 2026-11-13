@@ -1,6 +1,6 @@
 "use client";
 
-import { formaterQuantite, LIBELLES_MOUVEMENT, listerMouvements, type TypeMouvement } from "@stocktracker/core";
+import { formaterQuantite, LIBELLES_MOUVEMENT, listerMouvements, type TypeMouvement } from "@factureplus/core";
 import Link from "next/link";
 import { useState } from "react";
 

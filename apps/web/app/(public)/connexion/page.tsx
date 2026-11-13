@@ -1,6 +1,6 @@
 "use client";
 
-import { traduireErreur } from "@stocktracker/core";
+import { traduireErreur } from "@factureplus/core";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 

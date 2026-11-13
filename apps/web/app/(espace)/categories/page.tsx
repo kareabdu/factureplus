@@ -1,6 +1,6 @@
 "use client";
 
-import { creerCategorie, listerCategories, modifierCategorie, supprimerCategorie } from "@stocktracker/core";
+import { creerCategorie, listerCategories, modifierCategorie, supprimerCategorie } from "@factureplus/core";
 import { useState, type FormEvent } from "react";
 
 import { Icone } from "@/components/icones";

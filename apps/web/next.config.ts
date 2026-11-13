@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   // Le paquet partagé est en TypeScript source : Next le compile.
-  transpilePackages: ["@stocktracker/core"],
+  transpilePackages: ["@factureplus/core"],
   turbopack: {
     rules: {
       "*.css": {

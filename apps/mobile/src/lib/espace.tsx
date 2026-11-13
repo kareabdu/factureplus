@@ -1,4 +1,4 @@
-import { EquipeProvider, SessionProvider, useEquipe, useSession } from '@stocktracker/core/react';
+import { EquipeProvider, SessionProvider, useEquipe, useSession } from '@factureplus/core/react';
 import type { ReactNode } from 'react';
 
 import { supabase } from '@/lib/supabase';

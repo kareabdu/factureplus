@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Documents modifiables quel que soit leur statut
+-- FacturePlus — Documents modifiables quel que soit leur statut
 --
 -- Une facture, une proforma ou un bon de livraison reste modifiable après validation :
 --   • le numéro est conservé ;

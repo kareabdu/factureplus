@@ -1,4 +1,4 @@
-import { accesActif, formaterMontant, joursEssaiRestants, modifierProfil, TARIFS, traduireErreur } from '@stocktracker/core';
+import { accesActif, formaterMontant, joursEssaiRestants, modifierProfil, TARIFS, traduireErreur } from '@factureplus/core';
 import { useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';

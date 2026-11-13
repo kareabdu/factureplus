@@ -1,5 +1,5 @@
-import { creerFournisseur, listerFournisseurs } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { creerFournisseur, listerFournisseurs } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { FlatList } from 'react-native';
 

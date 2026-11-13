@@ -2,7 +2,7 @@
 
 import {
   chargerProduit, creerProduit, envoyerImageProduit, lireQuantite, listerCategories, modifierProduit, type Produit, type SaisieProduit,
-} from "@stocktracker/core";
+} from "@factureplus/core";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 

@@ -2,7 +2,7 @@
 
 import {
   chargerInventaire, cloturerInventaire, formaterQuantite, lireQuantite, saisirComptage, supprimerInventaire,
-} from "@stocktracker/core";
+} from "@factureplus/core";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useDeferredValue, useMemo, useState } from "react";
 

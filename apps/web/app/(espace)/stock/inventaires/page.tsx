@@ -1,6 +1,6 @@
 "use client";
 
-import { creerInventaire, listerInventaires } from "@stocktracker/core";
+import { creerInventaire, listerInventaires } from "@factureplus/core";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 

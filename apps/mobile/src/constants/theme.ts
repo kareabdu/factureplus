@@ -1,10 +1,10 @@
 /**
- * Thème mobile StockTracker : la palette vient de @stocktracker/core (identique au web).
+ * Thème mobile FacturePlus : la palette vient de @factureplus/core (identique au web).
  */
 
 import '@/global.css';
 
-import { PALETTES, RAYONS, type Palette } from '@stocktracker/core';
+import { PALETTES, RAYONS, type Palette } from '@factureplus/core';
 import { Platform } from 'react-native';
 
 function couleurs(p: Palette) {

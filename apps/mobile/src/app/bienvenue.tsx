@@ -1,4 +1,4 @@
-import { creerEquipe } from '@stocktracker/core';
+import { creerEquipe } from '@factureplus/core';
 import { useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';

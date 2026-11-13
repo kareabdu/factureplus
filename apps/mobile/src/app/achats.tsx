@@ -1,5 +1,5 @@
-import { formaterMontant, LIBELLES_STATUT_ACHAT, listerAchats } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { formaterMontant, LIBELLES_STATUT_ACHAT, listerAchats } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 

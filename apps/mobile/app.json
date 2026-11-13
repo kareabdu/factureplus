@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "StockTracker",
-    "slug": "stocktracker",
+    "name": "FacturePlus",
+    "slug": "factureplus",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "stocktracker",
+    "scheme": "factureplus",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.stocktracker.app",
+      "bundleIdentifier": "com.applikare.factureplus",
       "supportsTablet": true,
       "icon": "./assets/images/icon.png",
       "infoPlist": {
@@ -16,7 +16,7 @@
       }
     },
     "android": {
-      "package": "com.stocktracker.app",
+      "package": "com.applikare.factureplus",
       "adaptiveIcon": {
         "backgroundColor": "#147A2E",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -43,15 +43,15 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "StockTracker utilise la caméra pour scanner les codes-barres de vos produits.",
+          "cameraPermission": "FacturePlus utilise la caméra pour scanner les codes-barres de vos produits.",
           "recordAudioAndroid": false
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "StockTracker accède à vos photos pour illustrer vos produits et ajouter votre logo.",
-          "cameraPermission": "StockTracker utilise la caméra pour photographier vos produits."
+          "photosPermission": "FacturePlus accède à vos photos pour illustrer vos produits et ajouter votre logo.",
+          "cameraPermission": "FacturePlus utilise la caméra pour photographier vos produits."
         }
       ],
       "expo-sharing",
@@ -59,7 +59,7 @@
       [
         "expo-contacts",
         {
-          "contactsPermission": "StockTracker accède à vos contacts pour créer un client à partir d'un contact choisi."
+          "contactsPermission": "FacturePlus accède à vos contacts pour créer un client à partir d'un contact choisi."
         }
       ]
     ],

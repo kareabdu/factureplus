@@ -15,7 +15,7 @@ const sortie = new Keyframe({
   100: { opacity: 0, transform: [{ scale: 1.06 }], easing: Easing.out(Easing.cubic) },
 });
 
-/** Prolonge l'écran de démarrage natif (logo StockTracker) puis s'efface en fondu. */
+/** Prolonge l'écran de démarrage natif (logo FacturePlus) puis s'efface en fondu. */
 export function AnimatedSplashOverlay() {
   const theme = useTheme();
   const [animer, setAnimer] = useState(false);

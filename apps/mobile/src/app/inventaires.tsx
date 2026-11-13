@@ -1,5 +1,5 @@
-import { creerInventaire, listerInventaires } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { creerInventaire, listerInventaires } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 

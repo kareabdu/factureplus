@@ -1,4 +1,4 @@
-import { chargerDocument, htmlDocument, LIBELLES_TYPE_DOCUMENT, lienPdfDocument, messagePartage, numeroWhatsApp, type Parametres } from '@stocktracker/core';
+import { chargerDocument, htmlDocument, LIBELLES_TYPE_DOCUMENT, lienPdfDocument, messagePartage, numeroWhatsApp, type Parametres } from '@factureplus/core';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { Linking, Platform } from 'react-native';

@@ -1,4 +1,4 @@
-import { formaterMontant, lireMontant, type Ton } from "@stocktracker/core";
+import { formaterMontant, lireMontant, type Ton } from "@factureplus/core";
 import Link from "next/link";
 import {
   useState, type ButtonHTMLAttributes, type ComponentProps, type InputHTMLAttributes, type ReactNode,

@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Socle : profils, équipes, paramètres, numérotation
+-- FacturePlus — Socle : profils, équipes, paramètres, numérotation
 --
 -- Remplace le modèle base44 « team_id = id du propriétaire » par de vraies équipes.
 -- Chaque table métier porte equipe_id ; la RLS isole les équipes.

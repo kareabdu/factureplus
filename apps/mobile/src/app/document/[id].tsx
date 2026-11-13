@@ -1,8 +1,8 @@
 import {
   annulerDocument, chargerDocument, convertirProforma, creerBonLivraison, formaterMontant, formaterQuantite,
   LIBELLES_MODE_PAIEMENT, LIBELLES_TYPE_DOCUMENT, refuserProforma, resteAPayer, statutAffiche, supprimerReglement,
-} from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+} from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';

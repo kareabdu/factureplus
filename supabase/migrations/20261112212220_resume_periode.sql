@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Tableau de bord sur une période choisie (début et fin)
+-- FacturePlus — Tableau de bord sur une période choisie (début et fin)
 --
 -- resume_tableau_de_bord(p_equipe, p_debut, p_fin) : les indicateurs de période
 -- (ventes, nombre de factures, encaissé, marge, meilleures ventes, ventes par jour

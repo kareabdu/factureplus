@@ -1,5 +1,5 @@
 /**
- * Direction artistique StockTracker : palette commune au web et au mobile.
+ * Direction artistique FacturePlus : palette commune au web et au mobile.
  * Vert repris de l'ancienne app (#147A2E) pour la continuité de marque.
  * Le web reprend ces valeurs dans apps/web/app/globals.css : toute modification ici doit y être reportée.
  */
@@ -75,7 +75,7 @@ export const LIBELLES_THEMES: Record<PreferenceTheme, string> = {
   sombre: "Sombre",
 };
 
-const CLE_THEME = "stocktracker.theme";
+const CLE_THEME = "factureplus.theme";
 
 /** Thème clair par défaut ; « automatique » (suit l'appareil) et « sombre » sont des choix explicites. */
 export const THEME_PAR_DEFAUT: PreferenceTheme = "clair";

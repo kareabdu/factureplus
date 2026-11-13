@@ -1,6 +1,6 @@
 "use client";
 
-import { creerClient, listerClients, modifierClient, supprimerClient } from "@stocktracker/core";
+import { creerClient, listerClients, modifierClient, supprimerClient } from "@factureplus/core";
 
 import { PageTiers } from "@/components/tiers";
 import { supabase } from "@/lib/supabase";

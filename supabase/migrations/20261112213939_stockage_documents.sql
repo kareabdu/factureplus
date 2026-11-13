@@ -1,5 +1,5 @@
 -- =============================================================================
--- StockTracker — Stockage privé des PDF de documents (factures, proformas, BL)
+-- FacturePlus — Stockage privé des PDF de documents (factures, proformas, BL)
 --
 -- Compartiment « documents » NON public : chemin « <equipe_id>/<document_id>.pdf ».
 -- Seuls les membres de l'équipe peuvent déposer, remplacer, lire ou supprimer ses

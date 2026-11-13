@@ -1,7 +1,7 @@
 import {
   chargerProduit, creerProduit, envoyerImageProduit, listerCategories, modifierProduit, type Produit, type SaisieProduit,
-} from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+} from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';

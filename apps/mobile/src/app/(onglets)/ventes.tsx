@@ -1,7 +1,7 @@
 import {
   chargerResume, formaterMontant, LIBELLES_TYPE_DOCUMENT, listerDocuments, resteAPayer, statutAffiche, type Document, type TypeDocument,
-} from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+} from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useDeferredValue, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';

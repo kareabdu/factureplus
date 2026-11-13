@@ -1,6 +1,6 @@
 "use client";
 
-import { creerFournisseur, listerFournisseurs, modifierFournisseur, supprimerFournisseur } from "@stocktracker/core";
+import { creerFournisseur, listerFournisseurs, modifierFournisseur, supprimerFournisseur } from "@factureplus/core";
 
 import { PageTiers } from "@/components/tiers";
 import { supabase } from "@/lib/supabase";

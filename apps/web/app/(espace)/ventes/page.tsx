@@ -1,6 +1,6 @@
 "use client";
 
-import { formaterMontant, listerDocuments, resteAPayer, statutAffiche, type StatutDocument, type TypeDocument } from "@stocktracker/core";
+import { formaterMontant, listerDocuments, resteAPayer, statutAffiche, type StatutDocument, type TypeDocument } from "@factureplus/core";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useDeferredValue, useState } from "react";
 

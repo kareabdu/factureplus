@@ -1,5 +1,5 @@
-import { listerFournisseurs } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { listerFournisseurs } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useDeferredValue, useState } from 'react';
 

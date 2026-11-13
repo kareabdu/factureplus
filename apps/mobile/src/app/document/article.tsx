@@ -1,5 +1,5 @@
-import { formaterMontant, formaterQuantite, lireMontant, lireQuantite, listerProduits, totalLigne, type Produit } from '@stocktracker/core';
-import { useDonnees } from '@stocktracker/core/react';
+import { formaterMontant, formaterQuantite, lireMontant, lireQuantite, listerProduits, totalLigne, type Produit } from '@factureplus/core';
+import { useDonnees } from '@factureplus/core/react';
 import { Stack } from 'expo-router';
 import { useDeferredValue, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';

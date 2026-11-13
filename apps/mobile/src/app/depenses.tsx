@@ -1,5 +1,5 @@
 import {
-  formaterMontant, LIBELLES_CATEGORIES_DEPENSE, libellePeriode, listerDepenses, periodePredefinie, resumerDepenses, type Periode,
+  formaterMontant, LIBELLES_CATEGORIES_DEPENSE, libellePeriode, listerDepenses, periodeParDefaut, resumerDepenses, type Periode,
 } from '@factureplus/core';
 import { useDonnees } from '@factureplus/core/react';
 import { router, useFocusEffect } from 'expo-router';
@@ -19,7 +19,7 @@ export default function Depenses() {
   const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
   const m = (v: number) => formaterMontant(v, parametres?.symbole_devise);
-  const [periode, setPeriode] = useState<Periode>(() => periodePredefinie('ce_mois'));
+  const [periode, setPeriode] = useState<Periode>(() => periodeParDefaut());
   const [recherche, setRecherche] = useState('');
   const r = useDeferredValue(recherche);
   const { donnees, chargement, erreur, recharger } = useDonnees(

@@ -1,6 +1,6 @@
 import {
   chargerResume, formaterMontant, formaterQuantite, joursDePeriode, libellePeriode,
-  listerAlertes, periodePersonnalisee, periodePredefinie, PERIODES_PREDEFINIES, type CodePeriode, type Periode,
+  listerAlertes, periodeParDefaut, type Periode,
 } from '@factureplus/core';
 import { useDonnees } from '@factureplus/core/react';
 import { router, useFocusEffect } from 'expo-router';
@@ -22,13 +22,12 @@ export default function Accueil() {
   const theme = useTheme();
   const symbole = parametres?.symbole_devise ?? 'FCFA';
   const m = (v: number) => formaterMontant(v, symbole);
-  const [periode, setPeriode] = useState<Periode>(lirePeriode);
+  const [periode, setPeriode] = useState<Periode>(() => periodeParDefaut());
   const [barreChoisie, setBarreChoisie] = useState<string | null>(null);
 
   function changerPeriode(p: Periode) {
     setPeriode(p);
     setBarreChoisie(null);
-    memoriserPeriode(p);
   }
 
   const { donnees, chargement, erreur, recharger } = useDonnees(
@@ -142,27 +141,6 @@ export default function Accueil() {
 // ---------------------------------------------------------------------------
 // Période : filtres prédéfinis et personnalisés, mémorisés d'une ouverture à l'autre
 // ---------------------------------------------------------------------------
-
-const CLE_PERIODE = 'factureplus.periode';
-
-function lirePeriode(): Periode {
-  try {
-    const v = JSON.parse(globalThis.localStorage?.getItem(CLE_PERIODE) ?? 'null') as { code?: CodePeriode; debut?: string; fin?: string } | null;
-    if (v?.code === 'personnalisee' && v.debut && v.fin) return periodePersonnalisee(v.debut, v.fin);
-    if (v?.code && v.code !== 'personnalisee' && PERIODES_PREDEFINIES.includes(v.code)) return periodePredefinie(v.code);
-  } catch {
-    // préférence illisible : période par défaut
-  }
-  return periodePredefinie('ce_mois');
-}
-
-function memoriserPeriode(p: Periode) {
-  try {
-    globalThis.localStorage?.setItem(CLE_PERIODE, JSON.stringify(p.code === 'personnalisee' ? p : { code: p.code }));
-  } catch {
-    // stockage indisponible : la période ne sera pas retenue
-  }
-}
 
 function Tuile({ icone, libelle, valeur, sous, ton, onPress }: {
   icone: NomIcone; libelle: string; valeur: string; sous?: string; ton?: 'attention' | 'danger'; onPress?: () => void;

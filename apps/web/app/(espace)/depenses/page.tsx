@@ -2,7 +2,7 @@
 
 import {
   CATEGORIES_DEPENSE, creerDepense, csvDepenses, envoyerRecu, formaterMontant, LIBELLES_CATEGORIES_DEPENSE, LIBELLES_MOYENS_DEPENSE,
-  LIBELLES_PERIODES, libellePeriode, lienRecu, listerDepenses, modifierDepense, MOYENS_DEPENSE, periodePersonnalisee, periodePredefinie,
+  LIBELLES_PERIODES, libellePeriode, lienRecu, listerDepenses, modifierDepense, MOYENS_DEPENSE, periodeParDefaut, periodePersonnalisee, periodePredefinie,
   PERIODES_PREDEFINIES, resumerDepenses, supprimerDepense, type CategorieDepense, type CodePeriode, type Depense, type MoyenDepense,
   type Periode, type SaisieDepense,
 } from "@factureplus/core";
@@ -19,7 +19,7 @@ const aujourdhui = () => new Date().toISOString().slice(0, 10);
 export default function Depenses() {
   const { equipeId, parametres } = useEquipe();
   const m = (v: number) => formaterMontant(v, parametres?.symbole_devise);
-  const [periode, setPeriode] = useState<Periode>(() => periodePredefinie("ce_mois"));
+  const [periode, setPeriode] = useState<Periode>(() => periodeParDefaut());
   const [categorie, setCategorie] = useState<CategorieDepense | "">("");
   const [recherche, setRecherche] = useState("");
   const r = useDeferredValue(recherche);

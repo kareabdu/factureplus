@@ -112,3 +112,9 @@ test("ouverture du paiement : Max It en premier pour Orange Money", async () => 
   assert.deepEqual(liensOuverturePaiement("orange_maxit", { url_paiement: "https://pay.exemple/1", liens: null }), ["https://pay.exemple/1"]);
   assert.deepEqual(liensOuverturePaiement("wave", reponse), ["https://pay.exemple/123"]);
 });
+
+test("période par défaut : aujourd'hui", async () => {
+  const { periodeParDefaut } = await import("../src/periodes.ts");
+  const p = periodeParDefaut(new Date(2026, 10, 13, 15, 30));
+  assert.deepEqual(p, { code: "aujourdhui", debut: "2026-11-13", fin: "2026-11-13" });
+});

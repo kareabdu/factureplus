@@ -28,6 +28,14 @@ export const PERIODES_PREDEFINIES: Exclude<CodePeriode, "personnalisee">[] = [
   "aujourdhui", "7_jours", "30_jours", "ce_mois", "mois_dernier", "cette_annee", "annee_derniere",
 ];
 
+/** Période sélectionnée à l'ouverture des pages filtrées par période */
+export const PERIODE_PAR_DEFAUT: Exclude<CodePeriode, "personnalisee"> = "aujourdhui";
+
+/** Période par défaut, calculée à la date `aujourdhui`. */
+export function periodeParDefaut(aujourdhui = new Date()): Periode {
+  return periodePredefinie(PERIODE_PAR_DEFAUT, aujourdhui);
+}
+
 const iso = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 

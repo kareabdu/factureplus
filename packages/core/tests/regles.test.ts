@@ -104,3 +104,11 @@ test("résumé des dépenses", async () => {
     categorie: "fournitures", moyen_paiement: "wave", description: null, recu_chemin: null, created_at: "" }]);
   assert.equal(csv.split("\n")[1], '2026-11-01;"Boutique; Ndiaye";Fournitures;1500;Wave;');
 });
+
+test("ouverture du paiement : Max It en premier pour Orange Money", async () => {
+  const { liensOuverturePaiement } = await import("../src/regles-abonnement.ts");
+  const reponse = { url_paiement: "https://pay.exemple/123", liens: { OM: "orange://pay/1", MAXIT: "sameaosmaxit://pay/1" } };
+  assert.deepEqual(liensOuverturePaiement("orange_maxit", reponse), ["sameaosmaxit://pay/1", "orange://pay/1", "https://pay.exemple/123"]);
+  assert.deepEqual(liensOuverturePaiement("orange_maxit", { url_paiement: "https://pay.exemple/1", liens: null }), ["https://pay.exemple/1"]);
+  assert.deepEqual(liensOuverturePaiement("wave", reponse), ["https://pay.exemple/123"]);
+});

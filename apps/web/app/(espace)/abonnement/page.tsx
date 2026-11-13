@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ECONOMIE_ANNUELLE, formaterMontant, lancerPaiementAbonnement, LIBELLES_ETATS_ACCES, LIBELLES_MOYENS_ABONNEMENT,
+  ECONOMIE_ANNUELLE, formaterMontant, lancerPaiementAbonnement, LIBELLES_ETATS_ACCES, LIBELLES_MOYENS_ABONNEMENT, liensOuverturePaiement,
   LIBELLES_STATUTS_PAIEMENT, listerMesPaiements, MOYENS_PAIEMENT_ABONNEMENT, paiementEnCours, PLANS_ABONNEMENT,
   TONS_ETATS_ACCES, verifierPaiementAbonnement, type MoyenPaiementAbonnement, type PlanAbonnement,
 } from "@factureplus/core";
@@ -28,6 +28,7 @@ function Abonnement() {
   const [moyen, setMoyen] = useState<MoyenPaiementAbonnement>("wave");
   const [telephone, setTelephone] = useState(profil?.telephone ?? "");
   const [qr, setQr] = useState<string | null>(null);
+  const [lienAppli, setLienAppli] = useState<string | null>(null);
   const [message, setMessage] = useState<Message | null>(
     retour === "annule" ? { type: "info", texte: "Paiement annulé. Vous pouvez réessayer." } : null,
   );
@@ -86,13 +87,25 @@ function Abonnement() {
         plan, moyen, telephone: telephone.trim() || undefined, retour: window.location.origin,
       });
       await recharger();
-      if (r.url_paiement) {
-        window.location.href = r.url_paiement;
+      const liens = liensOuverturePaiement(moyen, r);
+      setLienAppli(moyen === "orange_maxit" ? liens.find((l) => !l.startsWith("http")) ?? null : null);
+      // Téléphone : ouvre directement l'application (Max It pour Orange Money, Wave).
+      // Ordinateur : les liens d'application ne s'ouvrent pas, on préfère le QR code puis la page de paiement.
+      const telephoneMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const cible = telephoneMobile ? liens[0] : (r.qr_code ? null : liens.find((l) => l.startsWith("http")));
+      if (cible) {
+        window.location.href = cible;
+        if (!cible.startsWith("http")) {
+          // Lien d'application : la page reste affichée (repli QR code si l'application n'est pas installée)
+          if (r.qr_code) setQr(r.qr_code);
+          setMessage({ type: "info", texte: "Terminez le paiement dans Max It, puis revenez ici : l'abonnement s'activera automatiquement." });
+          setChargement(false);
+        }
         return;
       }
       if (r.qr_code) {
         setQr(r.qr_code);
-        setMessage({ type: "info", texte: "Scannez ce QR code avec Orange Money. L'abonnement s'activera automatiquement." });
+        setMessage({ type: "info", texte: "Scannez ce QR code avec Orange Money ou Max It. L'abonnement s'activera automatiquement." });
       } else {
         setMessage({ type: "erreur", texte: "Réponse inattendue du service de paiement. Réessayez." });
       }
@@ -142,6 +155,11 @@ function Abonnement() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img alt="QR code de paiement Orange Money" className="mx-auto size-56"
                 src={qr.startsWith("http") || qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`} />
+              {lienAppli && (
+                <a href={lienAppli} className="mt-4 flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-medium text-on-primary">
+                  Ouvrir Max It
+                </a>
+              )}
             </Carte>
           )}
         </div>

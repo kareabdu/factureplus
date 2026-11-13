@@ -1,5 +1,5 @@
 import {
-  ECONOMIE_ANNUELLE, formaterMontant, lancerPaiementAbonnement, LIBELLES_ETATS_ACCES, LIBELLES_MOYENS_ABONNEMENT,
+  ECONOMIE_ANNUELLE, formaterMontant, lancerPaiementAbonnement, LIBELLES_ETATS_ACCES, LIBELLES_MOYENS_ABONNEMENT, liensOuverturePaiement,
   LIBELLES_STATUTS_PAIEMENT, listerMesPaiements, MOYENS_PAIEMENT_ABONNEMENT, paiementEnCours, PLANS_ABONNEMENT,
   verifierPaiementAbonnement, type MoyenPaiementAbonnement, type PlanAbonnement,
 } from '@factureplus/core';
@@ -89,8 +89,18 @@ export default function Abonnement() {
     try {
       const r = await lancerPaiementAbonnement(supabase, { plan, moyen, telephone: telephone.trim() || undefined });
       await recharger();
-      if (r.url_paiement) {
-        await Linking.openURL(r.url_paiement);
+      // Orange Money : application Max It en priorité ; repli sur la page de paiement si elle n'est pas installée
+      let ouvert = false;
+      for (const lien of liensOuverturePaiement(moyen, r)) {
+        try {
+          await Linking.openURL(lien);
+          ouvert = true;
+          break;
+        } catch {
+          // application absente : lien suivant
+        }
+      }
+      if (ouvert) {
         setMessage({ type: 'info', texte: 'Terminez le paiement puis revenez ici : votre abonnement s\'activera automatiquement.' });
       } else if (r.qr_code) {
         setQr(r.qr_code);

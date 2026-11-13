@@ -87,3 +87,21 @@ export function messageAbonnement(e: EtatAbonnement): string | null {
     ? `${reste} d'essai gratuit (jusqu'au ${date}).`
     : `${reste} d'abonnement (jusqu'au ${date}). Pensez à renouveler.`;
 }
+
+/**
+ * Liens à ouvrir, dans l'ordre, pour payer : Orange Money ouvre d'abord l'application Max It
+ * (lien direct renvoyé par Unitech Pay), puis Orange Money, puis la page de paiement.
+ * Wave : page de paiement (elle ouvre l'application Wave).
+ */
+export function liensOuverturePaiement(
+  moyen: MoyenPaiementAbonnement,
+  reponse: { url_paiement: string | null; liens: Record<string, string> | null },
+): string[] {
+  const liens = Object.fromEntries(
+    Object.entries(reponse.liens ?? {}).map(([cle, url]) => [cle.toLowerCase().replace(/[^a-z]/g, ""), url]),
+  );
+  const ordre = moyen === "orange_maxit"
+    ? [liens.maxit, liens.om, liens.orangemoney, reponse.url_paiement]
+    : [reponse.url_paiement, liens.wave];
+  return [...new Set(ordre.filter((u): u is string => typeof u === "string" && u.trim() !== ""))];
+}

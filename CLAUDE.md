@@ -65,3 +65,11 @@ Après chaque modification : commiter et pousser sur `main` sans demander (véri
 - Numérotation sans trou par `prive.prochain_numero(equipe, type, année)` (compteur verrouillé), attribuée à la validation.
 - Une nouvelle migration s'accompagne d'un fichier `supabase/tests/<module>.test.mjs` ajouté à `test:db`.
 - Rôles d'équipe (pour plus tard) : `proprietaire`, `admin`, `membre`. Paramètres : proprietaire/admin.
+- **Abonnement** : `prive.etat_abonnement` (admin / actif / essai / expire, recopié dans `packages/core/src/regles-abonnement.ts`).
+  Équipe dont le propriétaire est expiré = lecture seule : déclencheur `a_exiger_abonnement` sur chaque table métier
+  (toute nouvelle table métier avec `equipe_id` doit le recevoir). Tarifs : `public.tarifs_abonnement()` = `PLANS_ABONNEMENT`.
+- **Paiement Unitech Pay** (Wave, Orange Money Max It) : fonctions Edge `supabase/functions/unitech-*` (paiement, verifier avec JWT ;
+  webhook signé HMAC et retour sans JWT). Paiements confirmés uniquement par `activer_paiement_abonnement` (rôle service).
+  Secrets Supabase : `UNITECH_API_KEY`, `ORIGINES_WEB` (origines du site autorisées au retour, séparées par des virgules).
+- **Administration de la plateforme** : table `administrateurs_plateforme` (alimentée à la main en SQL, jamais par migration),
+  RPC `admin_*` contrôlées par `prive.verifier_admin_plateforme()`.

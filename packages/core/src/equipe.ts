@@ -26,19 +26,3 @@ export async function chargerParametres(sb: SupabaseClient, equipeId: string): P
 export async function modifierParametres(sb: SupabaseClient, equipeId: string, champs: ParametresModifiables) {
   verifier(await sb.from("parametres").update(champs).eq("equipe_id", equipeId));
 }
-
-/** Jours d'essai restants (négatif si l'essai est terminé). */
-export function joursEssaiRestants(profil: Pick<Profil, "essai_fin">, maintenant = new Date()): number {
-  return Math.ceil((new Date(profil.essai_fin).getTime() - maintenant.getTime()) / 86_400_000);
-}
-
-/** Accès à l'application : abonnement actif ou essai en cours. */
-export function accesActif(profil: Pick<Profil, "abonnement_statut" | "abonnement_fin" | "essai_fin">, maintenant = new Date()) {
-  if (profil.abonnement_statut === "actif") {
-    return !profil.abonnement_fin || profil.abonnement_fin >= maintenant.toISOString().slice(0, 10);
-  }
-  return joursEssaiRestants(profil, maintenant) > 0;
-}
-
-/** Tarifs (FCFA) repris de l'ancienne app — paiement en phase suivante (Wave / Orange Money). */
-export const TARIFS = { mensuel: 2900, annuel: 29000 } as const;

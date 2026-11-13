@@ -98,6 +98,11 @@ function Navigation() {
         <Stack.Screen name="categories" options={{ headerShown: true, title: 'Catégories' }} />
         <Stack.Screen name="parametres" options={{ headerShown: true, title: 'Entreprise' }} />
         <Stack.Screen name="compte" options={{ headerShown: true, title: 'Mon compte' }} />
+        <Stack.Screen name="depenses" options={{ headerShown: true, title: 'Dépenses' }} />
+        <Stack.Screen name="depense/editer" options={{ ...modal, title: 'Dépense' }} />
+        <Stack.Screen name="abonnement" options={{ headerShown: true, title: 'Abonnement' }} />
+        <Stack.Screen name="admin" options={{ headerShown: true, title: 'Administration' }} />
+        <Stack.Screen name="utilisateur/[id]" options={{ headerShown: true, title: 'Compte' }} />
         <Stack.Screen name="scanner" options={{ presentation: 'fullScreenModal', headerShown: false }} />
         <Stack.Screen name="choisir/produit" options={{ ...modal, title: 'Choisir un produit' }} />
         <Stack.Screen name="choisir/client" options={{ headerShown: true, title: 'Clients' }} />

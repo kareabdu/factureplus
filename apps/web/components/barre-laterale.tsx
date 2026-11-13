@@ -15,6 +15,7 @@ const SECTIONS: { titre?: string; liens: { href: string; libelle: string; icone:
     { href: "/produits", libelle: "Produits", icone: "produits" },
     { href: "/ventes", libelle: "Ventes", icone: "ventes" },
     { href: "/achats", libelle: "Achats", icone: "achats" },
+    { href: "/depenses", libelle: "Dépenses", icone: "depenses" },
   ] },
   { titre: "Stock", liens: [
     { href: "/stock/mouvements", libelle: "Mouvements", icone: "mouvements" },
@@ -27,9 +28,12 @@ const SECTIONS: { titre?: string; liens: { href: string; libelle: string; icone:
   ] },
   { titre: "Réglages", liens: [
     { href: "/parametres", libelle: "Entreprise", icone: "reglages" },
+    { href: "/abonnement", libelle: "Abonnement", icone: "abonnement" },
     { href: "/compte", libelle: "Mon compte", icone: "compte" },
   ] },
 ];
+
+const SECTION_ADMIN = { titre: "Plateforme", liens: [{ href: "/admin", libelle: "Administration", icone: "admin" as NomIcone }] };
 
 const THEMES: { valeur: PreferenceTheme; icone: NomIcone; libelle: string }[] = [
   { valeur: "auto", icone: "ecran", libelle: "Automatique" },
@@ -40,7 +44,7 @@ const THEMES: { valeur: PreferenceTheme; icone: NomIcone; libelle: string }[] = 
 export function BarreLaterale() {
   const pathname = usePathname();
   const { deconnecter, email } = useSession();
-  const { parametres } = useEquipe();
+  const { parametres, estAdmin } = useEquipe();
   const [ouvert, setOuvert] = useState(false);
   const [theme, setTheme] = useState<PreferenceTheme>(lirePreferenceTheme);
 
@@ -67,7 +71,7 @@ export function BarreLaterale() {
         <div className="hidden px-5 pb-4 pt-6 md:block"><Logo inverse /></div>
         <p className="truncate px-5 pb-3 text-xs text-panneau-discret md:pt-0 pt-4">{parametres?.nom_entreprise}</p>
         <nav className="flex flex-1 flex-col gap-5 px-3">
-          {SECTIONS.map((s, i) => (
+          {(estAdmin ? [...SECTIONS, SECTION_ADMIN] : SECTIONS).map((s, i) => (
             <div key={i} className="flex flex-col gap-0.5">
               {s.titre && <p className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-panneau-discret">{s.titre}</p>}
               {s.liens.map((l) => (

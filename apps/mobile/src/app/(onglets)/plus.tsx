@@ -1,4 +1,4 @@
-import { LIBELLES_THEMES, type PreferenceTheme } from '@factureplus/core';
+import { LIBELLES_ETATS_ACCES, LIBELLES_THEMES, type PreferenceTheme } from '@factureplus/core';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { View } from 'react-native';
@@ -12,7 +12,7 @@ import { useThemeApp } from '@/lib/theme';
 
 export default function Plus() {
   const { deconnecter, email } = useSession();
-  const { parametres } = useEquipe();
+  const { parametres, abonnement, estAdmin } = useEquipe();
   const { preference, changerPreference } = useThemeApp();
 
   return (
@@ -26,15 +26,23 @@ export default function Plus() {
         <LigneListe icone="categorie" titre="Catégories" onPress={() => router.push('/categories')} />
       </Section>
 
-      <Section titre="Achats et tiers">
+      <Section titre="Achats et dépenses">
         <LigneListe icone="achats" titre="Achats fournisseurs" sousTitre="Réceptions de marchandises" onPress={() => router.push('/achats')} />
+        <LigneListe icone="depense" titre="Dépenses" sousTitre="Loyer, salaires, transport…" onPress={() => router.push('/depenses')} />
+      </Section>
+
+      <Section titre="Tiers">
         <LigneListe icone="fournisseur" titre="Fournisseurs" onPress={() => router.push('/fournisseurs')} />
         <LigneListe icone="client" titre="Clients" onPress={() => router.push('/clients')} />
       </Section>
 
       <Section titre="Réglages">
         <LigneListe icone="reglages" titre="Entreprise et factures" sousTitre={parametres?.nom_entreprise} onPress={() => router.push('/parametres')} />
+        <LigneListe icone="abonnement" titre="Abonnement"
+          sousTitre={abonnement ? `${LIBELLES_ETATS_ACCES[abonnement.etat]}${abonnement.fin ? ` · jusqu'au ${abonnement.fin.toLocaleDateString('fr-FR')}` : ''}` : undefined}
+          onPress={() => router.push('/abonnement')} />
         <LigneListe icone="compte" titre="Mon compte" sousTitre={email} onPress={() => router.push('/compte')} />
+        {estAdmin && <LigneListe icone="admin" titre="Administration" sousTitre="Comptes, abonnements, paiements" onPress={() => router.push('/admin')} />}
         <Pastilles libelle="Apparence" options={(Object.keys(LIBELLES_THEMES) as PreferenceTheme[]).map((code) => ({ code, libelle: LIBELLES_THEMES[code] }))}
           valeur={preference} onChange={changerPreference} />
       </Section>

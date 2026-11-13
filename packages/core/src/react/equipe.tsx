@@ -3,7 +3,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { suisAdminPlateforme } from "../administration";
 import { chargerMesEquipes, chargerParametres, chargerProfil } from "../equipe";
+import { etatAbonnement, type EtatAbonnement } from "../regles-abonnement";
 import type { MonEquipe, Parametres, Profil } from "../types";
 
 /**
@@ -18,6 +20,10 @@ interface EtatEquipe {
   equipeId: string;
   parametres: Parametres | null;
   profil: Profil | null;
+  /** Administrateur de la plateforme FacturePlus */
+  estAdmin: boolean;
+  /** État d'accès (essai, abonné, expiré…) d'après le profil */
+  abonnement: EtatAbonnement | null;
   supabase: SupabaseClient;
   /** Recharge équipe, paramètres et profil (après création, modification des paramètres…) */
   rafraichir: () => Promise<void>;
@@ -33,20 +39,25 @@ export function EquipeProvider({
   const [equipe, setEquipe] = useState<MonEquipe | null>(null);
   const [parametres, setParametres] = useState<Parametres | null>(null);
   const [profil, setProfil] = useState<Profil | null>(null);
+  const [estAdmin, setEstAdmin] = useState(false);
 
   const charger = useCallback(async () => {
     if (!userId) {
       setEquipe(null);
       setParametres(null);
       setProfil(null);
+      setEstAdmin(false);
       setChargement(false);
       return;
     }
     setErreur(null);
     try {
-      const [equipes, p] = await Promise.all([chargerMesEquipes(supabase), chargerProfil(supabase, userId)]);
+      const [equipes, p, admin] = await Promise.all([
+        chargerMesEquipes(supabase), chargerProfil(supabase, userId), suisAdminPlateforme(supabase),
+      ]);
       const e = equipes[0] ?? null;
       setProfil(p);
+      setEstAdmin(admin);
       setEquipe(e);
       setParametres(e ? await chargerParametres(supabase, e.id) : null);
     } catch (err) {
@@ -72,9 +83,11 @@ export function EquipeProvider({
     },
     parametres,
     profil,
+    estAdmin,
+    abonnement: profil ? etatAbonnement(profil, estAdmin) : null,
     supabase,
     rafraichir: charger,
-  }), [chargement, erreur, equipe, parametres, profil, supabase, charger]);
+  }), [chargement, erreur, equipe, parametres, profil, estAdmin, supabase, charger]);
 
   return <EquipeContext.Provider value={valeur}>{children}</EquipeContext.Provider>;
 }

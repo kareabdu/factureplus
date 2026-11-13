@@ -73,3 +73,34 @@ test("numéro WhatsApp international", () => {
   assert.equal(numeroWhatsApp("221778339771", "+221 33 800 00 00"), "221778339771");
   assert.equal(numeroWhatsApp("778339771"), "778339771");
 });
+
+// Mêmes règles que prive.etat_abonnement (supabase/tests/abonnement.test.mjs).
+test("état d'abonnement", async () => {
+  const { etatAbonnement, messageAbonnement } = await import("../src/regles-abonnement.ts");
+  const maintenant = new Date("2026-11-13T10:00:00");
+  const base = { abonnement_statut: "essai", abonnement_fin: null, abonnement_plan: null, essai_fin: "2026-11-18T10:00:00" } as const;
+  const essai = etatAbonnement(base, false, maintenant);
+  assert.equal(essai.etat, "essai");
+  assert.equal(essai.joursRestants, 5);
+  assert.equal(essai.avertir, true);
+  assert.equal(etatAbonnement({ ...base, essai_fin: "2026-11-13T09:00:00" }, false, maintenant).etat, "expire");
+  assert.equal(etatAbonnement({ ...base, essai_fin: "2026-11-13T09:00:00" }, true, maintenant).etat, "admin");
+  const actif = etatAbonnement({ ...base, abonnement_statut: "actif", abonnement_fin: "2026-11-13", abonnement_plan: "mensuel" }, false, maintenant);
+  assert.equal(actif.etat, "actif");
+  assert.equal(etatAbonnement({ ...base, essai_fin: "2026-11-01T00:00:00", abonnement_statut: "actif", abonnement_fin: "2026-11-12" }, false, maintenant).etat, "expire");
+  assert.equal(etatAbonnement({ ...base, essai_fin: "2026-12-30T00:00:00" }, false, maintenant).avertir, false);
+  assert.match(messageAbonnement(etatAbonnement({ ...base, essai_fin: "2026-11-01T00:00:00" }, false, maintenant)) ?? "", /lecture seule/);
+});
+
+test("résumé des dépenses", async () => {
+  const { resumerDepenses, csvDepenses } = await import("../src/regles-depenses.ts");
+  const r = resumerDepenses([
+    { montant: 50000, categorie: "loyer" }, { montant: 10000, categorie: "transport" }, { montant: 40000, categorie: "loyer" },
+  ]);
+  assert.equal(r.total, 100000);
+  assert.equal(r.parCategorie[0].categorie, "loyer");
+  assert.equal(r.parCategorie[0].part, 0.9);
+  const csv = csvDepenses([{ id: "1", equipe_id: "e", commercant: "Boutique; Ndiaye", montant: 1500, date_depense: "2026-11-01",
+    categorie: "fournitures", moyen_paiement: "wave", description: null, recu_chemin: null, created_at: "" }]);
+  assert.equal(csv.split("\n")[1], '2026-11-01;"Boutique; Ndiaye";Fournitures;1500;Wave;');
+});

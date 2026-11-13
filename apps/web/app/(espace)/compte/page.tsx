@@ -1,19 +1,18 @@
 "use client";
 
-import { accesActif, formaterMontant, joursEssaiRestants, modifierProfil, TARIFS, traduireErreur } from "@factureplus/core";
+import { LIBELLES_ETATS_ACCES, modifierProfil, TONS_ETATS_ACCES, traduireErreur } from "@factureplus/core";
 import { useState, type FormEvent } from "react";
 
-import { Alerte, Bouton, Carte, Champ, Chargement, EnTetePage, Info } from "@/components/ui";
+import { Alerte, Badge, Bouton, Carte, Champ, Chargement, EnTetePage, Info, LienBouton } from "@/components/ui";
 import { useEquipe, useSession } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
 export default function Compte() {
   const { userId, email } = useSession();
-  const { profil, rafraichir } = useEquipe();
+  const { profil, abonnement, rafraichir } = useEquipe();
   const [message, setMessage] = useState<{ type: "erreur" | "succes"; texte: string } | null>(null);
   const [chargement, setChargement] = useState<string | null>(null);
   if (!profil || !userId) return <Chargement />;
-  const essai = joursEssaiRestants(profil);
 
   async function profilEnvoyer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -48,17 +47,11 @@ export default function Compte() {
       <EnTetePage titre="Mon compte" description={email ?? undefined} />
       <div className="flex max-w-xl flex-col gap-6">
         {message && <Alerte type={message.type}>{message.texte}</Alerte>}
-        <Carte titre="Abonnement">
-          {profil.abonnement_statut === "actif" ? (
-            <>
-              <Info libelle="Formule" valeur={profil.abonnement_plan === "annuel" ? "Annuelle" : "Mensuelle"} fort />
-              {profil.abonnement_fin && <Info libelle="Jusqu'au" valeur={new Date(profil.abonnement_fin).toLocaleDateString("fr-FR")} />}
-            </>
-          ) : <Info libelle="Essai gratuit" valeur={essai > 0 ? `${essai} jour(s) restant(s)` : "Terminé"} fort />}
-          {!accesActif(profil) && <div className="mt-3"><Alerte type="attention">Votre accès a expiré.</Alerte></div>}
-          <p className="mt-3 text-sm text-muted">
-            Mensuel {formaterMontant(TARIFS.mensuel)} · Annuel {formaterMontant(TARIFS.annuel)}. Le paiement Wave / Orange Money arrive bientôt.
-          </p>
+        <Carte titre="Abonnement" action={abonnement && <Badge ton={TONS_ETATS_ACCES[abonnement.etat]}>{LIBELLES_ETATS_ACCES[abonnement.etat]}</Badge>}>
+          {abonnement?.etat === "admin" ? <p className="text-sm text-muted">Accès permanent (administrateur).</p> : abonnement?.fin && (
+            <Info libelle={abonnement.etat === "expire" ? "Terminé le" : "Jusqu'au"} valeur={abonnement.fin.toLocaleDateString("fr-FR")} fort />
+          )}
+          <div className="mt-3"><LienBouton href="/abonnement" variante="secondaire" icone="abonnement">Gérer mon abonnement</LienBouton></div>
         </Carte>
         <Carte titre="Profil">
           <form onSubmit={profilEnvoyer} className="flex flex-col gap-4">

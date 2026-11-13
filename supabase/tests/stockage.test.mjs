@@ -16,9 +16,10 @@ const deposer = async (u, bucket, chemin) => {
 };
 
 console.log("Compartiments");
-await vrai("« documents » privé, « produits » public", async () => {
+await vrai("« documents » et « recus » privés, « produits » public", async () => {
   const b = await en(null, "select id, public from storage.buckets order by id");
-  return b.length === 2 && b[0].id === "documents" && !b[0].public && b[1].id === "produits" && b[1].public;
+  return b.length === 3 && b[0].id === "documents" && !b[0].public && b[1].id === "produits" && b[1].public
+    && b[2].id === "recus" && !b[2].public;
 });
 
 console.log("PDF des documents");

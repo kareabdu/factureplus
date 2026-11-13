@@ -1,23 +1,24 @@
 import {
-  chargerResume, formaterMontant, formaterQuantite, joursDePeriode, joursEssaiRestants, LIBELLES_PERIODES, libellePeriode,
+  chargerResume, formaterMontant, formaterQuantite, joursDePeriode, libellePeriode,
   listerAlertes, periodePersonnalisee, periodePredefinie, PERIODES_PREDEFINIES, type CodePeriode, type Periode,
 } from '@factureplus/core';
 import { useDonnees } from '@factureplus/core/react';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ChampDate } from '@/components/champ-date';
+import { BandeauAbonnement } from '@/components/bandeau-abonnement';
+import { FiltresPeriode } from '@/components/filtres-periode';
 import { Icone, type NomIcone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Carte, ChargementPlein, Ecran, ErreurChargement, LigneListe, Section } from '@/components/ui';
+import { Carte, ChargementPlein, Ecran, ErreurChargement, LigneListe, Section } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useEquipe } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
 
 export default function Accueil() {
-  const { equipeId, parametres, profil } = useEquipe();
+  const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
   const symbole = parametres?.symbole_devise ?? 'FCFA';
   const m = (v: number) => formaterMontant(v, symbole);
@@ -39,7 +40,6 @@ export default function Accueil() {
 
   if (chargement && !donnees) return <ChargementPlein />;
   const [r, alertes] = donnees ?? [null, []];
-  const essai = profil && profil.abonnement_statut === 'essai' ? joursEssaiRestants(profil) : null;
   // Graphique : une barre par jour jusqu'à 62 jours, sinon une barre par mois
   const jours = joursDePeriode(periode);
   const parMois = jours.length > 62;
@@ -61,11 +61,7 @@ export default function Accueil() {
         <ThemedText type="subtitle" numberOfLines={1}>{parametres?.nom_entreprise || 'Accueil'}</ThemedText>
       </View>
 
-      {essai !== null && essai <= 3 && (
-        <Alerte type={essai > 0 ? 'attention' : 'erreur'}>
-          {essai > 0 ? `Votre essai gratuit se termine dans ${essai} jour${essai > 1 ? 's' : ''}.` : 'Votre essai gratuit est terminé.'}
-        </Alerte>
-      )}
+      <BandeauAbonnement />
       {erreur && <ErreurChargement message={erreur} reessayer={recharger} />}
 
       <FiltresPeriode periode={periode} onChange={changerPeriode} />
@@ -168,35 +164,6 @@ function memoriserPeriode(p: Periode) {
   }
 }
 
-function FiltresPeriode({ periode, onChange }: { periode: Periode; onChange: (p: Periode) => void }) {
-  const theme = useTheme();
-  const codes: CodePeriode[] = [...PERIODES_PREDEFINIES, 'personnalisee'];
-  return (
-    <View style={{ gap: Spacing.two }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pastilles}>
-        {codes.map((code) => {
-          const choisi = periode.code === code;
-          return (
-            <Pressable key={code} accessibilityRole="radio" accessibilityState={{ selected: choisi }}
-              onPress={() => onChange(code === 'personnalisee' ? periodePersonnalisee(periode.debut, periode.fin) : periodePredefinie(code))}
-              style={[styles.pastille, { backgroundColor: choisi ? theme.primary : theme.backgroundElement, borderColor: choisi ? theme.primary : theme.border }]}>
-              <ThemedText type="small" style={{ color: choisi ? theme.onPrimary : theme.text }}>{LIBELLES_PERIODES[code]}</ThemedText>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-      {periode.code === 'personnalisee' && (
-        <View style={styles.dates}>
-          <ThemedText type="small" themeColor="textSecondary">Du</ThemedText>
-          <ChampDate libelle="Début de la période" valeur={periode.debut} onChange={(d) => onChange(periodePersonnalisee(d, periode.fin))} />
-          <ThemedText type="small" themeColor="textSecondary">au</ThemedText>
-          <ChampDate libelle="Fin de la période" valeur={periode.fin} onChange={(d) => onChange(periodePersonnalisee(periode.debut, d))} />
-        </View>
-      )}
-    </View>
-  );
-}
-
 function Tuile({ icone, libelle, valeur, sous, ton, onPress }: {
   icone: NomIcone; libelle: string; valeur: string; sous?: string; ton?: 'attention' | 'danger'; onPress?: () => void;
 }) {
@@ -230,7 +197,4 @@ const styles = StyleSheet.create({
   graphe: { flexDirection: 'row', alignItems: 'flex-end', gap: 2, height: 48, marginTop: Spacing.one },
   zoneBarre: { flex: 1, height: '100%', justifyContent: 'flex-end' },
   barre: { width: '100%', borderRadius: 2 },
-  pastilles: { gap: Spacing.two, paddingRight: Spacing.three },
-  pastille: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, borderRadius: Rayons.plein, borderWidth: 1, minHeight: 40, justifyContent: 'center' },
-  dates: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: Spacing.two },
 });

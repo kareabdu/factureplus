@@ -110,6 +110,26 @@ const TRACES = {
   ),
   supprimer: <path d="M4 6.5h16M9.5 6.5V4h5v2.5M6.5 6.5l1 13.5h9l1-13.5M10 10.5v6M14 10.5v6" />,
   fleche: <path d="M5 12h14M13 6l6 6-6 6" />,
+  depenses: (
+    <>
+      <rect x="3" y="5.5" width="18" height="13" rx="2" />
+      <path d="M3 10h18M7 15h4" />
+    </>
+  ),
+  abonnement: <path d="M3.5 8.5 7.5 12 12 5l4.5 7 4-3.5-1.8 10H5.3z" />,
+  admin: (
+    <>
+      <path d="M12 3 4.5 6v5.5c0 4.4 3.1 8.2 7.5 9.5 4.4-1.3 7.5-5.1 7.5-9.5V6z" />
+      <path d="m9 12 2 2 4-4" />
+    </>
+  ),
+  telecharger: <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />,
+  recu: (
+    <>
+      <path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z" />
+      <path d="M9 8.5h6M9 12h6" />
+    </>
+  ),
 } as const;
 
 export type NomIcone = keyof typeof TRACES;

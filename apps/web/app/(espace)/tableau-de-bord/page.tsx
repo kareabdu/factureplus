@@ -1,6 +1,6 @@
 "use client";
 
-import { chargerResume, formaterMontant, formaterQuantite, joursEssaiRestants, listerAlertes } from "@factureplus/core";
+import { chargerResume, formaterMontant, formaterQuantite, listerAlertes } from "@factureplus/core";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -9,7 +9,7 @@ import { useDonnees, useEquipe } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
 export default function TableauDeBord() {
-  const { equipeId, parametres, profil } = useEquipe();
+  const { equipeId, parametres } = useEquipe();
   const m = (v: number) => formaterMontant(v, parametres?.symbole_devise);
   const [maintenant] = useState(() => Date.now());
   const { donnees, erreur, recharger } = useDonnees(
@@ -20,7 +20,6 @@ export default function TableauDeBord() {
   if (erreur && !donnees) return <div className="flex flex-col gap-3"><Alerte>{erreur}</Alerte><Bouton variante="secondaire" onClick={() => void recharger()}>Réessayer</Bouton></div>;
   if (!donnees) return <Chargement />;
   const [r, alertes] = donnees;
-  const essai = profil?.abonnement_statut === "essai" ? joursEssaiRestants(profil) : null;
   const max = Math.max(1, ...r.ventes_par_jour.map((j) => j.total));
 
   return (
@@ -31,11 +30,6 @@ export default function TableauDeBord() {
           <LienBouton href="/produits/editer" variante="secondaire" icone="plus">Produit</LienBouton>
         </>} />
 
-      {essai !== null && essai <= 3 && (
-        <div className="mb-6"><Alerte type={essai > 0 ? "attention" : "erreur"}>
-          {essai > 0 ? `Votre essai gratuit se termine dans ${essai} jour${essai > 1 ? "s" : ""}.` : "Votre essai gratuit est terminé."}
-        </Alerte></div>
-      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Indicateur libelle="Ventes du mois" valeur={m(r.ventes_periode)} detail={`${r.nb_factures_periode} facture(s) · encaissé ${m(r.encaisse_periode)}`} href="/ventes" />

@@ -1,10 +1,12 @@
 "use client";
 
-import { creerEquipe } from "@factureplus/core";
-import { useRouter } from "next/navigation";
+import { creerEquipe, messageAbonnement } from "@factureplus/core";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
 import { BarreLaterale } from "@/components/barre-laterale";
+import { Icone } from "@/components/icones";
 import { Alerte, Bouton, Champ, Chargement, Logo } from "@/components/ui";
 import { EspaceProvider, useEquipe, useSession } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
@@ -45,9 +47,29 @@ function Cadre({ children }: { children: ReactNode }) {
     <div className="flex flex-1 flex-col md:flex-row">
       <BarreLaterale />
       <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8 lg:px-10">
-        <div className="mx-auto max-w-6xl">{children}</div>
+        <div className="mx-auto max-w-6xl">
+          <BandeauAbonnement />
+          {children}
+        </div>
       </main>
     </div>
+  );
+}
+
+/** Fin d'essai ou d'abonnement proche, ou accès expiré (lecture seule). */
+function BandeauAbonnement() {
+  const { abonnement } = useEquipe();
+  const pathname = usePathname();
+  const message = abonnement ? messageAbonnement(abonnement) : null;
+  if (!abonnement || !message || pathname === "/abonnement") return null;
+  const expire = abonnement.etat === "expire";
+  return (
+    <Link href="/abonnement" className={`mb-6 flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition-colors ${
+      expire ? "border-danger/40 bg-danger-soft text-danger hover:border-danger" : "border-warning/40 bg-warning-soft text-warning hover:border-warning"}`}>
+      <Icone nom={expire ? "alerte" : "abonnement"} taille={18} />
+      <span className="flex-1 text-foreground">{message}</span>
+      <span className="font-semibold whitespace-nowrap">{expire ? "S'abonner" : "Voir les offres"} →</span>
+    </Link>
   );
 }
 

@@ -37,6 +37,10 @@ export const ICONES = {
   document: { ios: 'doc.plaintext', android: 'description' },
   tendance: { ios: 'chart.line.uptrend.xyaxis', android: 'trending_up' },
   compte: { ios: 'person.crop.circle', android: 'person' },
+  depense: { ios: 'creditcard.fill', android: 'receipt' },
+  abonnement: { ios: 'crown.fill', android: 'workspace_premium' },
+  admin: { ios: 'shield.lefthalf.filled', android: 'admin_panel_settings' },
+  recu: { ios: 'doc.text.image', android: 'image' },
 } as const satisfies Record<string, { ios: SFSymbol; android: AndroidSymbol }>;
 
 export type NomIcone = keyof typeof ICONES;

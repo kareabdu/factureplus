@@ -9,7 +9,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
-import { Alerte, Badge, Bouton, Carte, Champ, Chargement, EnTetePage, Info, Tableau } from "@/components/ui";
+import { Alerte, Badge, Bouton, Carte, Chargement, EnTetePage, Info, Tableau } from "@/components/ui";
 import { useDonnees, useEquipe, useSession } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
@@ -27,7 +27,6 @@ function Abonnement() {
   const { profil, abonnement, rafraichir } = useEquipe();
   const [plan, setPlan] = useState<PlanAbonnement>("annuel");
   const [moyen, setMoyen] = useState<MoyenPaiementAbonnement>("wave");
-  const [telephone, setTelephone] = useState(profil?.telephone ?? "");
   const [qr, setQr] = useState<string | null>(null);
   const [lienAppli, setLienAppli] = useState<string | null>(null);
   const [message, setMessage] = useState<Message | null>(
@@ -78,19 +77,16 @@ function Abonnement() {
   if (!profil || !abonnement || !paiements) return <Chargement />;
 
   async function payer() {
-    if (MOYENS_PAIEMENT_ABONNEMENT.find((x) => x.code === moyen)?.telephone && telephone.replace(/\D/g, "").length < 9) {
-      return setMessage({ type: "erreur", texte: "Indiquez le numéro Orange Money qui va payer." });
-    }
     setMessage(null);
     setChargement(true);
     try {
       const r = await lancerPaiementAbonnement(supabase, {
-        plan, moyen, telephone: telephone.trim() || undefined, retour: window.location.origin,
+        plan, moyen, retour: window.location.origin,
       });
       await recharger();
       const liens = liensOuverturePaiement(moyen, r);
       setLienAppli(moyen === "orange_maxit" ? liens.find((l) => !l.startsWith("http")) ?? null : null);
-      // Téléphone : ouvre directement l'application (Max It pour Orange Money, Wave).
+      // Téléphone : ouvre directement l'application (Max It ou Wave).
       // Ordinateur : les liens d'application ne s'ouvrent pas, on préfère le QR code puis la page de paiement.
       const telephoneMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       const cible = telephoneMobile ? liens[0] : (r.qr_code ? null : liens.find((l) => l.startsWith("http")));
@@ -106,7 +102,7 @@ function Abonnement() {
       }
       if (r.qr_code) {
         setQr(r.qr_code);
-        setMessage({ type: "info", texte: "Scannez ce QR code avec Orange Money ou Max It. L'abonnement s'activera automatiquement." });
+        setMessage({ type: "info", texte: "Scannez ce QR code avec Max It. L'abonnement s'activera automatiquement." });
       } else {
         setMessage({ type: "erreur", texte: "Réponse inattendue du service de paiement. Réessayez." });
       }
@@ -120,7 +116,7 @@ function Abonnement() {
 
   return (
     <>
-      <EnTetePage titre="Abonnement" description="Paiement sécurisé par Wave ou Orange Money (Unitech Pay)." />
+      <EnTetePage titre="Abonnement" description="Paiement sécurisé par Wave ou Max It (Unitech Pay)." />
       {message && <div className="mb-4"><Alerte type={message.type}>{message.texte}</Alerte></div>}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
@@ -152,9 +148,9 @@ function Abonnement() {
           )}
 
           {qr && (
-            <Carte titre="QR code Orange Money">
+            <Carte titre="QR code Max It">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="QR code de paiement Orange Money" className="mx-auto size-56"
+              <img alt="QR code de paiement Max It" className="mx-auto size-56"
                 src={qr.startsWith("http") || qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`} />
               {lienAppli && (
                 <a href={lienAppli} className="mt-4 flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-medium text-on-primary">
@@ -203,10 +199,6 @@ function Abonnement() {
                   })}
                 </div>
               </div>
-              {MOYENS_PAIEMENT_ABONNEMENT.find((x) => x.code === moyen)?.telephone && (
-                <Champ libelle="Numéro Orange Money" type="tel" value={telephone} onChange={(e) => setTelephone(e.target.value)}
-                  placeholder="77 000 00 00" className="max-w-xs" />
-              )}
               <div><Bouton onClick={payer} chargement={chargement}>Payer {formaterMontant(PLANS_ABONNEMENT[plan].montant)}</Bouton></div>
             </div>
           </Carte>

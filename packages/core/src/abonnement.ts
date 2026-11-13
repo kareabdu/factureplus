@@ -58,7 +58,7 @@ async function appelerFonction<T>(sb: SupabaseClient, nom: string, corps: unknow
 
 export function lancerPaiementAbonnement(
   sb: SupabaseClient,
-  saisie: { plan: PlanAbonnement; moyen: MoyenPaiementAbonnement; telephone?: string; retour?: string },
+  saisie: { plan: PlanAbonnement; moyen: MoyenPaiementAbonnement; retour?: string },
 ): Promise<ReponsePaiement> {
   return appelerFonction(sb, "unitech-paiement", saisie);
 }

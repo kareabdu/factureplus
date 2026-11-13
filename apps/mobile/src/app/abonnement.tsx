@@ -12,7 +12,7 @@ import { AppState, Pressable, View } from 'react-native';
 
 import { Icone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Badge, Bouton, Carte, Champ, ChargementPlein, Ecran, Info, LigneListe, Section } from '@/components/ui';
+import { Alerte, Badge, Bouton, Carte, ChargementPlein, Ecran, Info, LigneListe, Section } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { vibrerSucces } from '@/lib/confirmer';
@@ -25,7 +25,7 @@ const LOGOS_PAIEMENT: Record<MoyenPaiementAbonnement, number> = {
   orange_maxit: require('@/assets/images/paiement-maxit.png'),
 };
 
-/** Abonnement : état de l'accès, choix de la formule et paiement Wave / Orange Money (Unitech Pay). */
+/** Abonnement : état de l'accès, choix de la formule et paiement Wave / Max It (Unitech Pay). */
 export default function Abonnement() {
   const { paiement: retour } = useLocalSearchParams<{ paiement?: string }>();
   const { userId } = useSession();
@@ -33,7 +33,6 @@ export default function Abonnement() {
   const theme = useTheme();
   const [plan, setPlan] = useState<PlanAbonnement>('annuel');
   const [moyen, setMoyen] = useState<MoyenPaiementAbonnement>('wave');
-  const [telephone, setTelephone] = useState(profil?.telephone ?? '');
   const [qr, setQr] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'succes' | 'erreur' | 'info'; texte: string } | null>(
     retour === 'annule' ? { type: 'info', texte: 'Paiement annulé. Vous pouvez réessayer.' } : null,
@@ -86,16 +85,12 @@ export default function Abonnement() {
   if (!profil || !abonnement || !paiements) return <ChargementPlein />;
 
   async function payer() {
-    const avecTelephone = MOYENS_PAIEMENT_ABONNEMENT.find((x) => x.code === moyen)?.telephone;
-    if (avecTelephone && telephone.replace(/\D/g, '').length < 9) {
-      return setMessage({ type: 'erreur', texte: 'Indiquez le numéro Orange Money qui va payer.' });
-    }
     setMessage(null);
     setChargement(true);
     try {
-      const r = await lancerPaiementAbonnement(supabase, { plan, moyen, telephone: telephone.trim() || undefined });
+      const r = await lancerPaiementAbonnement(supabase, { plan, moyen });
       await recharger();
-      // Orange Money : application Max It en priorité ; repli sur la page de paiement si elle n'est pas installée
+      // Max It : application ouverte en priorité ; repli sur la page de paiement si elle n'est pas installée
       let ouvert = false;
       for (const lien of liensOuverturePaiement(moyen, r)) {
         try {
@@ -110,7 +105,7 @@ export default function Abonnement() {
         setMessage({ type: 'info', texte: 'Terminez le paiement puis revenez ici : votre abonnement s\'activera automatiquement.' });
       } else if (r.qr_code) {
         setQr(r.qr_code);
-        setMessage({ type: 'info', texte: 'Scannez ce QR code avec Orange Money. L\'abonnement s\'activera automatiquement.' });
+        setMessage({ type: 'info', texte: 'Scannez ce QR code avec Max It. L\'abonnement s\'activera automatiquement.' });
       } else {
         setMessage({ type: 'erreur', texte: 'Réponse inattendue du service de paiement. Réessayez.' });
       }
@@ -161,7 +156,7 @@ export default function Abonnement() {
 
       {qr && (
         <Carte>
-          <ThemedText type="smallBold">QR code Orange Money</ThemedText>
+          <ThemedText type="smallBold">QR code Max It</ThemedText>
           <Image source={{ uri: qr.startsWith('http') || qr.startsWith('data:') ? qr : `data:image/png;base64,${qr}` }}
             style={{ width: 220, height: 220, alignSelf: 'center' }} contentFit="contain" />
         </Carte>
@@ -210,10 +205,6 @@ export default function Abonnement() {
               );
             })}
           </View>
-          {MOYENS_PAIEMENT_ABONNEMENT.find((x) => x.code === moyen)?.telephone && (
-            <Champ libelle="Numéro Orange Money" value={telephone} onChangeText={setTelephone} keyboardType="phone-pad"
-              autoComplete="tel" placeholder="77 000 00 00" />
-          )}
           <Bouton titre={`Payer ${formaterMontant(PLANS_ABONNEMENT[plan].montant)}`} icone="paiement" onPress={payer} chargement={chargement} />
         </Section>
       )}

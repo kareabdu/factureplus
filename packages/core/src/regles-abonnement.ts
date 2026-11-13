@@ -19,9 +19,10 @@ export const TARIFS = { mensuel: PLANS_ABONNEMENT.mensuel.montant, annuel: PLANS
 /** Économie de l'annuel par rapport à 12 mois au tarif mensuel (FCFA). */
 export const ECONOMIE_ANNUELLE = PLANS_ABONNEMENT.mensuel.montant * 12 - PLANS_ABONNEMENT.annuel.montant;
 
-export const MOYENS_PAIEMENT_ABONNEMENT: { code: MoyenPaiementAbonnement; libelle: string; telephone: boolean }[] = [
-  { code: "wave", libelle: "Wave", telephone: false },
-  { code: "orange_maxit", libelle: "Max It", telephone: true },
+/** Max It remplace Orange Money : le paiement se fait dans l'application, sans numéro à saisir. */
+export const MOYENS_PAIEMENT_ABONNEMENT: { code: MoyenPaiementAbonnement; libelle: string }[] = [
+  { code: "wave", libelle: "Wave" },
+  { code: "orange_maxit", libelle: "Max It" },
 ];
 
 /** Bandeau d'avertissement affiché ce nombre de jours avant la fin de l'accès. */
@@ -89,7 +90,7 @@ export function messageAbonnement(e: EtatAbonnement): string | null {
 }
 
 /**
- * Liens à ouvrir, dans l'ordre, pour payer : Orange Money ouvre d'abord l'application Max It
+ * Liens à ouvrir, dans l'ordre, pour payer : Max It ouvre d'abord son application
  * (lien direct renvoyé par Unitech Pay), puis Orange Money, puis la page de paiement.
  * Wave : page de paiement (elle ouvre l'application Wave).
  */

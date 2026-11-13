@@ -4,6 +4,7 @@ import { traduireErreur } from "@factureplus/core";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
+import { BoutonGoogle } from "@/components/bouton-google";
 import { Alerte, Bouton, Champ } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 
@@ -25,6 +26,7 @@ export default function Connexion() {
     <form onSubmit={envoyer} className="flex flex-col gap-4">
       <h1 className="text-xl font-semibold tracking-tight">Connexion</h1>
       {erreur && <Alerte>{erreur}</Alerte>}
+      <BoutonGoogle onErreur={setErreur} />
       <Champ libelle="E-mail" name="email" type="email" autoComplete="email" required />
       <Champ libelle="Mot de passe" name="motDePasse" type="password" autoComplete="current-password" required />
       <Bouton type="submit" chargement={chargement}>Se connecter</Bouton>

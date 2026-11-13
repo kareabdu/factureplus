@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useState } from 'react';
 
+import { BoutonGoogle } from '@/components/bouton-google';
 import { ThemedText } from '@/components/themed-text';
 import { Alerte, Bouton, Champ, Ecran, Lien } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
@@ -48,6 +49,7 @@ export default function Inscription() {
       <ThemedText type="subtitle">Créer un compte</ThemedText>
       <ThemedText themeColor="textSecondary">7 jours d&apos;essai gratuit, sans engagement.</ThemedText>
       {erreur && <Alerte>{erreur}</Alerte>}
+      <BoutonGoogle onErreur={setErreur} />
       <Champ libelle="Votre nom" value={nom} onChangeText={setNom} autoComplete="name" textContentType="name" />
       <Champ libelle="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email"
         keyboardType="email-address" textContentType="emailAddress" />

@@ -4,6 +4,7 @@ import { traduireErreur } from "@factureplus/core";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
+import { BoutonGoogle } from "@/components/bouton-google";
 import { Alerte, Bouton, Champ } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 
@@ -44,6 +45,7 @@ export default function Inscription() {
       <h1 className="text-xl font-semibold tracking-tight">Créer un compte</h1>
       <p className="-mt-2 text-sm text-muted">7 jours d&apos;essai gratuit, sans engagement.</p>
       {erreur && <Alerte>{erreur}</Alerte>}
+      <BoutonGoogle onErreur={setErreur} />
       <Champ libelle="Votre nom" name="nom" autoComplete="name" required />
       <Champ libelle="E-mail" name="email" type="email" autoComplete="email" required />
       <Champ libelle="Mot de passe" name="motDePasse" type="password" autoComplete="new-password" required aide="8 caractères minimum" />

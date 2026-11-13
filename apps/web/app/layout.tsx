@@ -19,8 +19,8 @@ export const viewport: Viewport = {
   ],
 };
 
-// Applique le thème choisi (clair / sombre) avant le premier affichage ; sans choix, le CSS suit l'appareil.
-const scriptTheme = `(function(){try{var t=localStorage.getItem("stocktracker.theme");if(t==="clair"||t==="sombre")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;
+// Thème avant le premier affichage : clair par défaut, sombre si choisi, celui de l'appareil si « automatique ».
+const scriptTheme = `(function(){var t="clair";try{t=localStorage.getItem("stocktracker.theme")||"clair"}catch(e){}if(t!=="auto")document.documentElement.setAttribute("data-theme",t==="sombre"?"sombre":"clair")})()`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

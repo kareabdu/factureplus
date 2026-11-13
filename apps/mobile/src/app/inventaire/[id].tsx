@@ -5,6 +5,7 @@ import { useDonnees } from '@stocktracker/core/react';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useDeferredValue, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -20,6 +21,7 @@ type Vue = 'tous' | 'a_compter' | 'ecarts';
 export default function Inventaire() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
+  const { bottom: margeBas } = useSafeAreaInsets();
   const { donnees, recharger, setDonnees } = useDonnees(() => chargerInventaire(supabase, id), [id]);
   const [recherche, setRecherche] = useState('');
   const [vue, setVue] = useState<Vue>('tous');
@@ -100,6 +102,8 @@ export default function Inventaire() {
         data={lignes}
         keyExtractor={(l) => l.produit_id}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="on-drag"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.liste}
         ListHeaderComponent={
@@ -118,7 +122,7 @@ export default function Inventaire() {
         ItemSeparatorComponent={() => <View style={{ height: Spacing.two }} />}
       />
       {ouvert && (
-        <View style={[styles.pied, { backgroundColor: theme.backgroundElement, borderTopColor: theme.border }]}>
+        <View style={[styles.pied, { paddingBottom: margeBas + Spacing.three, backgroundColor: theme.backgroundElement, borderTopColor: theme.border }]}>
           <Bouton titre="Clôturer l'inventaire" icone="valider" onPress={cloturer} chargement={cloture} desactive={comptes === 0} />
         </View>
       )}
@@ -164,5 +168,5 @@ const styles = StyleSheet.create({
   liste: { padding: Spacing.three, paddingBottom: 140, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
   ligne: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, borderRadius: Rayons.moyen, borderWidth: 1 },
   saisie: { width: 84, height: 46, borderWidth: 1, borderRadius: Rayons.petit, textAlign: 'center', fontSize: 18, fontWeight: '600' },
-  pied: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: Spacing.three, paddingBottom: Spacing.five, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row' },
+  pied: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: Spacing.three, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: 'row' },
 });

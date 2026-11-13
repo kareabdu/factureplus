@@ -77,19 +77,21 @@ export const LIBELLES_THEMES: Record<PreferenceTheme, string> = {
 
 const CLE_THEME = "stocktracker.theme";
 
+/** Thème clair par défaut ; « automatique » (suit l'appareil) et « sombre » sont des choix explicites. */
+export const THEME_PAR_DEFAUT: PreferenceTheme = "clair";
+
 export function lirePreferenceTheme(): PreferenceTheme {
   try {
     const v = globalThis.localStorage?.getItem(CLE_THEME);
-    return v === "clair" || v === "sombre" ? v : "auto";
+    return v === "clair" || v === "sombre" || v === "auto" ? v : THEME_PAR_DEFAUT;
   } catch {
-    return "auto";
+    return THEME_PAR_DEFAUT;
   }
 }
 
 export function memoriserPreferenceTheme(p: PreferenceTheme): void {
   try {
-    if (p === "auto") globalThis.localStorage?.removeItem(CLE_THEME);
-    else globalThis.localStorage?.setItem(CLE_THEME, p);
+    globalThis.localStorage?.setItem(CLE_THEME, p);
   } catch {
     // stockage indisponible : la préférence ne sera pas retenue
   }

@@ -1,7 +1,8 @@
 import { formaterMontant, lireMontant, lireQuantite, type Ton } from '@stocktracker/core';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -46,6 +47,10 @@ export function Ecran({
   pied?: ReactNode;
 }) {
   const [enCours, setEnCours] = useState(false);
+  // Position réelle de la zone à l'écran : selon la version d'iOS, l'en-tête natif est au-dessus
+  // du contenu ou le recouvre (effet translucide). Une valeur fixe laissait un vide sous le clavier.
+  const zone = useRef<ComponentRef<typeof View>>(null);
+  const [decalage, setDecalage] = useState(0);
   const bords: Edge[] = [];
   if (!enTete) bords.push('top');
   if (!onglets && !pied) bords.push('bottom');
@@ -53,7 +58,9 @@ export function Ecran({
     <ThemedView style={styles.flex}>
       <SafeAreaView style={styles.flex} edges={bords}>
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={enTete && Platform.OS === 'ios' ? 96 : 0}>
+          keyboardVerticalOffset={Platform.OS === 'ios' ? decalage : 0}>
+          <View ref={zone} style={styles.flex}
+            onLayout={() => zone.current?.measureInWindow((_x: number, y: number) => setDecalage((d) => (Math.abs(d - y) > 1 ? y : d)))}>
           <ScrollView
             contentContainerStyle={styles.contenu}
             keyboardShouldPersistTaps="handled"
@@ -66,6 +73,7 @@ export function Ecran({
             ) : undefined}>
             {children}
           </ScrollView>
+          </View>
           {pied && <PiedActions>{pied}</PiedActions>}
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -73,10 +81,25 @@ export function Ecran({
   );
 }
 
+/** Vrai quand le clavier est affiché (iOS : dès le début de l'animation). */
+export function useClavierVisible(): boolean {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const apparition = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const disparition = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const a = Keyboard.addListener(apparition, () => setVisible(true));
+    const b = Keyboard.addListener(disparition, () => setVisible(false));
+    return () => { a.remove(); b.remove(); };
+  }, []);
+  return visible;
+}
+
 function PiedActions({ children }: { children: ReactNode }) {
   const theme = useTheme();
+  // Clavier ouvert : la barre se colle au clavier, sans la marge de la barre d'accueil de l'iPhone
+  const clavier = useClavierVisible();
   return (
-    <SafeAreaView edges={['bottom']} style={[styles.pied, { backgroundColor: theme.backgroundElement, borderTopColor: theme.border }]}>
+    <SafeAreaView edges={clavier ? [] : ['bottom']} style={[styles.pied, { backgroundColor: theme.backgroundElement, borderTopColor: theme.border }]}>
       <View style={styles.piedContenu}>{children}</View>
     </SafeAreaView>
   );

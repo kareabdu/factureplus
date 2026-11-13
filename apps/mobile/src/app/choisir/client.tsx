@@ -74,6 +74,8 @@ export default function ChoisirClient() {
         data={clients}
         keyExtractor={(c) => c.id}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="on-drag"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.contenu}
         ListHeaderComponent={

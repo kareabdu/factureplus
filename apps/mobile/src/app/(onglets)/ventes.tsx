@@ -55,6 +55,8 @@ export default function Ventes() {
           keyExtractor={(d) => d.id}
           contentContainerStyle={[styles.liste, { paddingBottom: 120 + margeOnglets }]}
           keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="on-drag"
           refreshControl={<RefreshControl refreshing={false} onRefresh={recharger} />}
           ListHeaderComponent={
             <View style={{ gap: Spacing.three, marginBottom: Spacing.two }}>

@@ -46,6 +46,8 @@ export default function ChoisirProduit() {
         data={donnees ?? []}
         keyExtractor={(p) => p.id}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="on-drag"
         contentContainerStyle={{ padding: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.six }}
         ListHeaderComponent={<Recherche valeur={recherche} onChange={setRecherche} placeholder="Nom, référence…" onScanner={scanner} />}
         ListEmptyComponent={chargement ? undefined : (

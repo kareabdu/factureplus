@@ -154,3 +154,6 @@ vite.config.ts.timestamp-*
 .expo/
 expo-env.d.ts
 next-env.d.ts
+
+# Exports de données (données personnelles, jamais versionnées)
+exports/

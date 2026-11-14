@@ -14,7 +14,8 @@ Tout est en **français** : code (noms de variables, fonctions, tables), interfa
   Toujours le compte GitHub **kareabdu** : remote `https://kareabdu@github.com/…`, identité locale
   `kareabdu <36815642+kareabdu@users.noreply.github.com>` (vérifier `git config user.name` avant de commiter).
 - Supabase : projet « factureplus », id `munketogvbztfvoiryeh` (organisation AppliKare, eu-west-1).
-- Site web hébergé sur Vercel (projet `factureplus`, équipe kareabdou-3392, racine `apps/web`) : déployé à chaque push
+- Site web en ligne : https://factureplus-zeta.vercel.app (URL du site et redirection autorisée dans Supabase).
+  Hébergé sur Vercel (projet `factureplus`, équipe kareabdou-3392, racine `apps/web`) : déployé à chaque push
   sur `main`. Variables `NEXT_PUBLIC_SUPABASE_*` définies dans Vercel (type Config).
 - iOS se compile via EAS (`eas build -p ios`) : pas de build iOS local sous Windows.
 

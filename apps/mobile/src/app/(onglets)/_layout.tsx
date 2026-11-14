@@ -3,11 +3,16 @@ import { NativeTabs } from 'expo-router/native-tabs';
 import { ICONES } from '@/components/icone';
 import { useTheme } from '@/hooks/use-theme';
 
+/**
+ * Barre d'onglets classique (opaque) sur iOS 26 aussi : app.json → ios.infoPlist.UIDesignRequiresCompatibility.
+ * La barre en verre d'iOS 26 restait parfois sombre au-dessus d'un contenu clair (jusqu'au défilement suivant).
+ */
 export default function LayoutOnglets() {
   const theme = useTheme();
   return (
     <NativeTabs
       backgroundColor={theme.backgroundElement}
+      disableTransparentOnScrollEdge
       indicatorColor={theme.primarySoft}
       iconColor={{ default: theme.textSecondary, selected: theme.primary }}
       labelStyle={{ default: { color: theme.textSecondary }, selected: { color: theme.primary, fontWeight: '600' } }}>

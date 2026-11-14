@@ -19,6 +19,13 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appName": "FacturePlus - Facture & Stock",
+        "sku": "factureplus",
+        "language": "fr-FR",
+        "companyName": "AppliKare"
+      }
+    }
   }
 }

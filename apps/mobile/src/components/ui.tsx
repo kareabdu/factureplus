@@ -1,4 +1,5 @@
 import { DEVISES, filtrerUnites, formaterMontant, lireMontant, lireQuantite, trouverDevise, type Ton } from '@factureplus/core';
+import { Image } from 'expo-image';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -129,33 +130,15 @@ export function ErreurChargement({ message, reessayer }: { message: string; rees
 // ---------------------------------------------------------------------------
 
 /** Logo FacturePlus : un carton stylisé sur fond vert (même dessin que l'icône d'application). */
-export function Monogramme({ taille = 36 }: { taille?: number }) {
-  const k = taille / 36;
-  return (
-    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
-      style={{ width: taille, height: taille, borderRadius: 10 * k, backgroundColor: '#147A2E', alignItems: 'center', justifyContent: 'center' }}>
-      <View style={{ width: 20 * k, height: 16 * k, borderRadius: 3 * k, borderWidth: 2.6 * k, borderColor: '#FFFFFF', marginTop: 6 * k }}>
-        {/* Rabat */}
-        <View style={{ position: 'absolute', left: 2.4 * k, right: 2.4 * k, top: -2.6 * k, height: 5 * k, backgroundColor: '#FFFFFF', borderRadius: 1.2 * k }} />
-        {/* Étiquette */}
-        <View style={{ position: 'absolute', left: 2.4 * k, right: 2.4 * k, top: 7.6 * k, height: 2.8 * k, backgroundColor: '#9BE3AE', borderRadius: 1.4 * k }} />
-      </View>
-    </View>
-  );
-}
-
+/** Logo : pastille verte, « facture+ » en blanc (assets/images/logo.png, même dessin que l'icône). */
 export function Logo({ taille = 36 }: { taille?: number }) {
-  const theme = useTheme();
-  const t = { fontSize: taille * 0.6, lineHeight: taille, fontWeight: 700 as const };
   return (
     <View style={styles.logo} accessibilityRole="header" accessibilityLabel="FacturePlus">
-      <Monogramme taille={taille} />
-      <ThemedText style={[t, { color: theme.text }]}>
-        Facture<ThemedText style={[t, { color: theme.primary }]}>Plus</ThemedText>
-      </ThemedText>
+      <Image source={require('@/assets/images/logo.png')} style={{ height: taille, width: taille * RATIO_LOGO }} contentFit="contain" />
     </View>
   );
 }
+const RATIO_LOGO = 484 / 146;
 
 // ---------------------------------------------------------------------------
 // Textes et blocs

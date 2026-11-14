@@ -57,7 +57,9 @@ function lireCsv(nom) {
 // Outils de nettoyage
 // ---------------------------------------------------------------------------
 const texte = (v, max) => {
-  const s = String(v ?? "").trim();
+  // L'export base44 protège les valeurs commençant par + = - @ d'une apostrophe (« '+221 77… ») ;
+  // les numéros copiés portent parfois des marques de direction Unicode (U+202A / U+202C).
+  const s = String(v ?? "").replace(/[‪‬]/g, "").trim().replace(/^'+(?=\s*[+=\-@0-9])/, "").trim();
   return s ? s.slice(0, max) : null;
 };
 const entier = (v) => {

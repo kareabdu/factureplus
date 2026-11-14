@@ -14,6 +14,8 @@ export default function Inscription() {
   const [motDePasse, setMotDePasse] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoye, setEnvoye] = useState(false);
+  const [code, setCode] = useState('');
+  const [info, setInfo] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
 
   async function creerCompte() {
@@ -28,18 +30,44 @@ export default function Inscription() {
     });
     setChargement(false);
     if (error) return setErreur(traduireErreur(error));
-    // Confirmation d'e-mail activée : pas de session tant que le lien n'est pas ouvert
+    // Confirmation d'e-mail activée : pas de session tant que le code n'est pas saisi
     if (!data.session) setEnvoye(true);
+  }
+
+  async function confirmer() {
+    if (!code.trim()) return setErreur('Saisissez le code reçu.');
+    setErreur(null);
+    setInfo(null);
+    setChargement(true);
+    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'signup' });
+    setChargement(false);
+    // En cas de succès, la navigation bascule d'elle-même (Stack.Protected)
+    if (error) setErreur('Code invalide ou expiré.');
+  }
+
+  async function renvoyer() {
+    setErreur(null);
+    setInfo(null);
+    const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
+    if (error) setErreur(traduireErreur(error));
+    else setInfo('Nouveau code envoyé.');
   }
 
   if (envoye) {
     return (
       <Ecran>
-        <ThemedText type="subtitle">Vérifiez vos e-mails</ThemedText>
-        <Alerte type="succes">
-          Un lien de confirmation a été envoyé à {email.trim()}. Ouvrez-le, puis revenez vous connecter.
+        <ThemedText type="subtitle">Confirmez votre e-mail</ThemedText>
+        <Alerte type="info">
+          E-mail envoyé à {email.trim()} : saisissez le code reçu ou ouvrez le lien qu'il contient sur ce téléphone
+          (pensez aux courriers indésirables).
         </Alerte>
-        <Bouton titre="Aller à la connexion" onPress={() => router.replace('/connexion')} />
+        {erreur && <Alerte>{erreur}</Alerte>}
+        {info && <Alerte type="succes">{info}</Alerte>}
+        <Champ libelle="Code reçu" value={code} onChangeText={setCode} keyboardType="number-pad" autoComplete="one-time-code"
+          textContentType="oneTimeCode" maxLength={8} autoFocus />
+        <Bouton titre="Confirmer" onPress={confirmer} chargement={chargement} />
+        <Lien titre="Renvoyer un code" onPress={renvoyer} />
+        <Lien titre="Aller à la connexion" onPress={() => router.replace('/connexion')} />
       </Ecran>
     );
   }

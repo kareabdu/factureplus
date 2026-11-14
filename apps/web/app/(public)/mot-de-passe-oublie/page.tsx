@@ -7,10 +7,13 @@ import { useState, type FormEvent } from "react";
 import { Alerte, Bouton, Champ } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 
-/** Réinitialisation par code reçu par e-mail (même parcours que sur mobile). */
+/**
+ * Réinitialisation par lien reçu par e-mail : le lien connecte l'utilisateur et l'amène sur
+ * « Mon compte » (?reinitialisation=1) pour choisir son nouveau mot de passe.
+ */
 export default function MotDePasseOublie() {
   const [email, setEmail] = useState("");
-  const [etape, setEtape] = useState<"email" | "code">("email");
+  const [envoye, setEnvoye] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
 
@@ -18,47 +21,34 @@ export default function MotDePasseOublie() {
     e?.preventDefault();
     setErreur(null);
     setChargement(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/compte?reinitialisation=1`,
+    });
     setChargement(false);
     if (error) return setErreur(traduireErreur(error));
-    setEtape("code");
+    setEnvoye(true);
   }
 
-  async function changer(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const motDePasse = String(f.get("motDePasse"));
-    if (motDePasse.length < 8) return setErreur("Le mot de passe doit contenir au moins 8 caractères.");
-    setErreur(null);
-    setChargement(true);
-    const v = await supabase.auth.verifyOtp({ email: email.trim(), token: String(f.get("code")).trim(), type: "recovery" });
-    if (v.error) {
-      setChargement(false);
-      return setErreur("Code invalide ou expiré.");
-    }
-    const r = await supabase.auth.updateUser({ password: motDePasse });
-    setChargement(false);
-    if (r.error) setErreur(traduireErreur(r.error));
-  }
-
-  return etape === "email" ? (
+  return envoye ? (
+    <div className="flex flex-col gap-4">
+      <h1 className="text-xl font-semibold tracking-tight">Vérifiez vos e-mails</h1>
+      <Alerte type="succes">
+        Un lien a été envoyé à {email.trim()} (pensez aux courriers indésirables). Ouvrez-le pour choisir un nouveau mot de passe.
+      </Alerte>
+      {erreur && <Alerte>{erreur}</Alerte>}
+      <button type="button" onClick={() => demander()} disabled={chargement} className="text-sm text-primary hover:underline">
+        Renvoyer le lien
+      </button>
+      <Link href="/connexion" className="text-center text-sm text-primary hover:underline">Retour à la connexion</Link>
+    </div>
+  ) : (
     <form onSubmit={demander} className="flex flex-col gap-4">
       <h1 className="text-xl font-semibold tracking-tight">Mot de passe oublié</h1>
-      <p className="-mt-2 text-sm text-muted">Nous vous envoyons un code par e-mail.</p>
+      <p className="-mt-2 text-sm text-muted">Nous vous envoyons un lien par e-mail.</p>
       {erreur && <Alerte>{erreur}</Alerte>}
       <Champ libelle="E-mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
-      <Bouton type="submit" chargement={chargement}>Recevoir un code</Bouton>
+      <Bouton type="submit" chargement={chargement}>Recevoir un lien</Bouton>
       <Link href="/connexion" className="text-center text-sm text-primary hover:underline">Retour à la connexion</Link>
-    </form>
-  ) : (
-    <form onSubmit={changer} className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold tracking-tight">Nouveau mot de passe</h1>
-      <Alerte type="info">Code envoyé à {email.trim()} (pensez aux courriers indésirables).</Alerte>
-      {erreur && <Alerte>{erreur}</Alerte>}
-      <Champ libelle="Code reçu" name="code" inputMode="numeric" autoComplete="one-time-code" required />
-      <Champ libelle="Nouveau mot de passe" name="motDePasse" type="password" autoComplete="new-password" required />
-      <Bouton type="submit" chargement={chargement}>Changer le mot de passe</Bouton>
-      <button type="button" onClick={() => demander()} className="text-sm text-primary hover:underline">Renvoyer un code</button>
     </form>
   );
 }

@@ -1,5 +1,5 @@
 import { LIBELLES_ETATS_ACCES, modifierProfil, traduireErreur } from '@factureplus/core';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
 import { Alerte, Bouton, Champ, ChargementPlein, Ecran, Info, LigneListe, Section } from '@/components/ui';
@@ -9,6 +9,8 @@ import { supabase } from '@/lib/supabase';
 
 export default function Compte() {
   const { userId, email } = useSession();
+  // Arrivée par le lien « Mot de passe oublié » : l'utilisateur doit choisir un nouveau mot de passe
+  const reinitialisation = useLocalSearchParams<{ reinitialisation?: string }>().reinitialisation === '1';
   const { profil, abonnement, rafraichir } = useEquipe();
   const [nom, setNom] = useState(profil?.nom_complet ?? '');
   const [telephone, setTelephone] = useState(profil?.telephone ?? '');
@@ -45,6 +47,7 @@ export default function Compte() {
   return (
     <Ecran enTete>
       {message && <Alerte type={message.type}>{message.texte}</Alerte>}
+      {reinitialisation && !message && <Alerte type="info">Choisissez votre nouveau mot de passe ci-dessous (section Sécurité).</Alerte>}
 
       <Section titre="Abonnement">
         <LigneListe icone="abonnement" titre={abonnement ? LIBELLES_ETATS_ACCES[abonnement.etat] : 'Abonnement'}
@@ -61,7 +64,8 @@ export default function Compte() {
       </Section>
 
       <Section titre="Sécurité">
-        <Champ libelle="Nouveau mot de passe" value={motDePasse} onChangeText={setMotDePasse} secureTextEntry autoComplete="new-password" />
+        <Champ libelle="Nouveau mot de passe" value={motDePasse} onChangeText={setMotDePasse} secureTextEntry autoComplete="new-password"
+          autoFocus={reinitialisation} aide="8 caractères minimum" />
         <Bouton titre="Changer le mot de passe" variante="secondaire" onPress={changerMotDePasse} chargement={chargement === 'mdp'} />
       </Section>
     </Ecran>

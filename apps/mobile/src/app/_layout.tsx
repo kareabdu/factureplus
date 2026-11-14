@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { ChargementPlein } from '@/components/ui';
 import { Fournisseurs, useEquipe, useSession } from '@/lib/espace';
+import { useLienRecuperation } from '@/lib/lien-recuperation';
 import { ThemeApp, useThemeApp } from '@/lib/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -57,10 +58,11 @@ function Navigation() {
   const { session, chargement: chargementSession } = useSession();
   const { equipe, chargement, erreur } = useEquipe();
   const connecte = !!session;
+  const pret = connecte && !!equipe;
+  useLienRecuperation(pret);
 
   if (chargementSession || (connecte && chargement && !erreur)) return <ChargementPlein />;
 
-  const pret = connecte && !!equipe;
   const modal = { presentation: 'modal' as const, headerShown: true };
 
   return (

@@ -4,17 +4,16 @@ import { useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { Alerte, Bouton, Champ, Ecran, Lien } from '@/components/ui';
+import { LIEN_REINITIALISATION } from '@/lib/lien-recuperation';
 import { supabase } from '@/lib/supabase';
 
 /**
- * Réinitialisation par code à 6 chiffres reçu par e-mail (pas de lien profond à configurer) :
- * le modèle d'e-mail « Reset password » de Supabase doit afficher {{ .Token }}.
+ * Réinitialisation par lien reçu par e-mail : le lien rouvre l'application (factureplus://),
+ * qui ouvre la session puis « Mon compte » pour choisir le nouveau mot de passe (voir lien-recuperation.ts).
  */
 export default function MotDePasseOublie() {
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [motDePasse, setMotDePasse] = useState('');
-  const [etape, setEtape] = useState<'email' | 'code'>('email');
+  const [envoye, setEnvoye] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
 
@@ -22,45 +21,29 @@ export default function MotDePasseOublie() {
     if (!email.trim()) return setErreur('Indiquez votre e-mail.');
     setErreur(null);
     setChargement(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: LIEN_REINITIALISATION });
     setChargement(false);
     if (error) return setErreur(traduireErreur(error));
-    setEtape('code');
-  }
-
-  async function changer() {
-    if (motDePasse.length < 8) return setErreur('Le mot de passe doit contenir au moins 8 caractères.');
-    setErreur(null);
-    setChargement(true);
-    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'recovery' });
-    if (error) {
-      setChargement(false);
-      return setErreur('Code invalide ou expiré.');
-    }
-    const r = await supabase.auth.updateUser({ password: motDePasse });
-    setChargement(false);
-    if (r.error) setErreur(traduireErreur(r.error));
-    // Connecté : la navigation bascule vers l'application.
+    setEnvoye(true);
   }
 
   return (
     <Ecran>
-      <ThemedText type="subtitle">Mot de passe oublié</ThemedText>
+      <ThemedText type="subtitle">{envoye ? 'Vérifiez vos e-mails' : 'Mot de passe oublié'}</ThemedText>
       {erreur && <Alerte>{erreur}</Alerte>}
-      {etape === 'email' ? (
+      {envoye ? (
         <>
-          <ThemedText themeColor="textSecondary">Nous vous envoyons un code par e-mail.</ThemedText>
-          <Champ libelle="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
-          <Bouton titre="Recevoir un code" onPress={envoyer} chargement={chargement} />
+          <Alerte type="succes">
+            Un lien a été envoyé à {email.trim()} (pensez aux courriers indésirables). Ouvrez-le sur ce téléphone pour
+            choisir un nouveau mot de passe.
+          </Alerte>
+          <Lien titre="Renvoyer le lien" onPress={envoyer} />
         </>
       ) : (
         <>
-          <Alerte type="info">Code envoyé à {email.trim()} (pensez aux courriers indésirables).</Alerte>
-          <Champ libelle="Code reçu" value={code} onChangeText={setCode} keyboardType="number-pad" autoComplete="one-time-code"
-            textContentType="oneTimeCode" maxLength={8} />
-          <Champ libelle="Nouveau mot de passe" value={motDePasse} onChangeText={setMotDePasse} secureTextEntry autoComplete="new-password" />
-          <Bouton titre="Changer le mot de passe" onPress={changer} chargement={chargement} />
-          <Lien titre="Renvoyer un code" onPress={envoyer} />
+          <ThemedText themeColor="textSecondary">Nous vous envoyons un lien par e-mail.</ThemedText>
+          <Champ libelle="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
+          <Bouton titre="Recevoir un lien" onPress={envoyer} chargement={chargement} />
         </>
       )}
       <Lien titre="Retour à la connexion" onPress={() => router.back()} />

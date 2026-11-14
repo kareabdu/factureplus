@@ -1,13 +1,20 @@
 "use client";
 
 import { LIBELLES_ETATS_ACCES, modifierProfil, TONS_ETATS_ACCES, traduireErreur } from "@factureplus/core";
-import { useState, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState, type FormEvent } from "react";
 
 import { Alerte, Badge, Bouton, Carte, Champ, Chargement, EnTetePage, Info, LienBouton } from "@/components/ui";
 import { useEquipe, useSession } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
-export default function Compte() {
+export default function PageCompte() {
+  return <Suspense fallback={<Chargement />}><Compte /></Suspense>;
+}
+
+function Compte() {
+  // Arrivée par le lien « Mot de passe oublié » : l'utilisateur doit choisir un nouveau mot de passe
+  const reinitialisation = useSearchParams().get("reinitialisation") === "1";
   const { userId, email } = useSession();
   const { profil, abonnement, rafraichir } = useEquipe();
   const [message, setMessage] = useState<{ type: "erreur" | "succes"; texte: string } | null>(null);
@@ -62,7 +69,9 @@ export default function Compte() {
         </Carte>
         <Carte titre="Mot de passe">
           <form onSubmit={motDePasse} className="flex flex-col gap-4">
-            <Champ libelle="Nouveau mot de passe" name="motDePasse" type="password" autoComplete="new-password" required />
+            {reinitialisation && !message && <Alerte type="info">Choisissez votre nouveau mot de passe.</Alerte>}
+            <Champ libelle="Nouveau mot de passe" name="motDePasse" type="password" autoComplete="new-password" required
+              autoFocus={reinitialisation} aide="8 caractères minimum" />
             <div><Bouton type="submit" variante="secondaire" chargement={chargement === "mdp"}>Changer le mot de passe</Bouton></div>
           </form>
         </Carte>

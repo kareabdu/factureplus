@@ -105,7 +105,7 @@ export default function VoirDocument() {
           <Bouton titre={`Modifier ${d.type === 'bl' ? 'le bon' : 'la ' + libelle.toLowerCase()}`} icone="modifier" variante="secondaire"
             onPress={() => router.push({ pathname: '/document/editer', params: { id: d.id, type: d.type } })} />
           {d.client_telephone && (
-            <Bouton titre="Envoyer sur WhatsApp (avec PDF)" variante="secondaire" chargement={occupe === 'wa'}
+            <Bouton titre="Envoyer sur WhatsApp" variante="secondaire" chargement={occupe === 'wa'}
               onPress={() => executer('wa', () => envoyerSurWhatsApp(d.id, parametres))} />
           )}
           {d.type === 'proforma' && d.statut === 'emis' && (

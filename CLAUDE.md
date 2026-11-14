@@ -80,5 +80,8 @@ Après chaque modification : commiter et pousser sur `main` sans demander (véri
   Toute nouvelle table liée à une équipe par une clé « on delete restrict » doit y être ajoutée.
 - **Connexion** : e-mail (code à l'inscription), Google (web et mobile), Apple (iOS natif, `signInWithIdToken`).
   Pages publiques `/confidentialite` et `/assistance` (groupe `(legal)`), liées depuis l'app (exigence App Store).
+- **Liens courts des PDF** (WhatsApp) : `<site>/d/<code>` (redirection dans `next.config.ts`) → fonction Edge
+  `lien-pdf` (sans JWT) → lien signé de 5 min. Codes dans `liens_documents` (RPC `lien_court_document`, 30 jours).
+  Table technique de partage : volontairement sans `a_exiger_abonnement` (un compte expiré peut envoyer ses documents).
 - **Administration de la plateforme** : table `administrateurs_plateforme` (alimentée à la main en SQL, jamais par migration),
   RPC `admin_*` contrôlées par `prive.verifier_admin_plateforme()`.

@@ -289,9 +289,13 @@ export function messagePartage(d: Document, p: Parametres, lienPdf?: string | nu
 /** Durée de validité du lien de téléchargement envoyé au client. */
 export const DUREE_LIEN_PDF_JOURS = 30;
 
+/** Adresse du site web de FacturePlus (liens courts, pages publiques). */
+export const SITE_WEB = "https://factureplus.kareapps.com";
+
 /**
  * Dépose le PDF d'un document dans l'espace privé « documents » de l'équipe (remplace la version
- * précédente) et renvoie un lien signé temporaire, à envoyer au client.
+ * précédente) et renvoie un lien court à envoyer au client : <site>/d/<code>, valable 30 jours,
+ * redirigé par la fonction Edge « lien-pdf » vers le fichier.
  * Chemin : <equipe>/<document>/<numéro>.pdf — le nom téléchargé est le numéro du document.
  */
 export async function lienPdfDocument(
@@ -301,7 +305,7 @@ export async function lienPdfDocument(
   const chemin = `${d.equipe_id}/${d.id}/${nom}.pdf`;
   const depot = await sb.storage.from("documents").upload(chemin, contenu, { contentType: "application/pdf", upsert: true });
   if (depot.error) throw new Error(traduireErreur(depot.error));
-  const lien = await sb.storage.from("documents").createSignedUrl(chemin, DUREE_LIEN_PDF_JOURS * 86_400, { download: `${nom}.pdf` });
-  if (lien.error || !lien.data?.signedUrl) throw new Error(traduireErreur(lien.error ?? "Lien de téléchargement indisponible"));
-  return lien.data.signedUrl;
+  const { data: code, error } = await sb.rpc("lien_court_document", { p_document: d.id, p_chemin: chemin, p_jours: DUREE_LIEN_PDF_JOURS });
+  if (error || !code) throw new Error(traduireErreur(error ?? "Lien de téléchargement indisponible"));
+  return `${SITE_WEB}/d/${code}`;
 }

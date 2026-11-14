@@ -1,4 +1,4 @@
-import { LIBELLES_ETATS_ACCES, modifierProfil, supprimerMonCompte, traduireErreur } from '@factureplus/core';
+import { LIBELLES_ETATS_ACCES, modifierProfil, SITE_WEB, supprimerMonCompte, traduireErreur } from '@factureplus/core';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
@@ -7,8 +7,6 @@ import { Alerte, Bouton, Champ, ChargementPlein, Ecran, Info, LigneListe, Sectio
 import { confirmer, signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe, useSession } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
-
-const SITE = 'https://factureplus.kareapps.com';
 
 export default function Compte() {
   const { userId, email } = useSession();
@@ -90,8 +88,8 @@ export default function Compte() {
       </Section>
 
       <Section titre="Aide">
-        <LigneListe icone="document" titre="Politique de confidentialité" onPress={() => WebBrowser.openBrowserAsync(`${SITE}/confidentialite`)} />
-        <LigneListe icone="compte" titre="Assistance" sousTitre="WhatsApp, e-mail" onPress={() => WebBrowser.openBrowserAsync(`${SITE}/assistance`)} />
+        <LigneListe icone="document" titre="Politique de confidentialité" onPress={() => WebBrowser.openBrowserAsync(`${SITE_WEB}/confidentialite`)} />
+        <LigneListe icone="compte" titre="Assistance" sousTitre="WhatsApp, e-mail" onPress={() => WebBrowser.openBrowserAsync(`${SITE_WEB}/assistance`)} />
       </Section>
 
       <Section titre="Supprimer mon compte">

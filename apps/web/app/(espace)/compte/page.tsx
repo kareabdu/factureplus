@@ -1,10 +1,12 @@
 "use client";
 
-import { LIBELLES_ETATS_ACCES, modifierProfil, TONS_ETATS_ACCES, traduireErreur } from "@factureplus/core";
-import { useSearchParams } from "next/navigation";
+import {
+  LIBELLES_ETATS_ACCES, modifierProfil, MOT_CONFIRMATION_SUPPRESSION, supprimerMonCompte, TONS_ETATS_ACCES, traduireErreur,
+} from "@factureplus/core";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 
-import { Alerte, Badge, Bouton, Carte, Champ, Chargement, EnTetePage, Info, LienBouton } from "@/components/ui";
+import { Alerte, Badge, Bouton, Carte, Champ, Chargement, EnTetePage, Info, LienBouton, Modale } from "@/components/ui";
 import { useEquipe, useSession } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
@@ -16,7 +18,11 @@ function Compte() {
   // Arrivée par le lien « Mot de passe oublié » : l'utilisateur doit choisir un nouveau mot de passe
   const reinitialisation = useSearchParams().get("reinitialisation") === "1";
   const { userId, email } = useSession();
-  const { profil, abonnement, rafraichir } = useEquipe();
+  const { profil, abonnement, rafraichir, equipe } = useEquipe();
+  const router = useRouter();
+  const [suppression, setSuppression] = useState(false);
+  const [confirmation, setConfirmation] = useState("");
+  const [erreurSuppression, setErreurSuppression] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "erreur" | "succes"; texte: string } | null>(null);
   const [chargement, setChargement] = useState<string | null>(null);
   if (!profil || !userId) return <Chargement />;
@@ -49,6 +55,19 @@ function Compte() {
     setMessage({ type: "succes", texte: "Mot de passe modifié." });
   }
 
+  async function supprimerCompte() {
+    setChargement("suppression");
+    setErreurSuppression(null);
+    try {
+      await supprimerMonCompte(supabase, equipe?.id ?? null);
+      await supabase.auth.signOut();
+      router.replace("/connexion");
+    } catch (err) {
+      setErreurSuppression(traduireErreur(err));
+      setChargement(null);
+    }
+  }
+
   return (
     <>
       <EnTetePage titre="Mon compte" description={email ?? undefined} />
@@ -75,7 +94,35 @@ function Compte() {
             <div><Bouton type="submit" variante="secondaire" chargement={chargement === "mdp"}>Changer le mot de passe</Bouton></div>
           </form>
         </Carte>
+        <Carte titre="Supprimer mon compte">
+          <p className="mb-3 text-sm text-muted">
+            Supprime définitivement votre compte, votre entreprise et toutes ses données (produits, ventes, achats,
+            dépenses, fichiers). Cette action est irréversible.
+          </p>
+          <Bouton variante="danger" icone="supprimer" onClick={() => { setConfirmation(""); setErreurSuppression(null); setSuppression(true); }}>
+            Supprimer mon compte
+          </Bouton>
+        </Carte>
       </div>
+
+      <Modale ouverte={suppression} titre="Supprimer mon compte" onFermer={() => chargement !== "suppression" && setSuppression(false)}>
+        <div className="flex flex-col gap-4">
+          <Alerte>
+            Votre compte, {equipe ? <>l&apos;entreprise « {equipe.nom} » </> : "votre entreprise "}et toutes leurs données
+            seront supprimés définitivement. Un abonnement en cours n&apos;est pas remboursé.
+          </Alerte>
+          {erreurSuppression && <Alerte>{erreurSuppression}</Alerte>}
+          <Champ libelle={`Tapez ${MOT_CONFIRMATION_SUPPRESSION} pour confirmer`} value={confirmation}
+            onChange={(e) => setConfirmation(e.target.value)} autoComplete="off" autoFocus />
+          <div className="flex justify-end gap-2">
+            <Bouton variante="secondaire" onClick={() => setSuppression(false)} disabled={chargement === "suppression"}>Annuler</Bouton>
+            <Bouton variante="danger" icone="supprimer" chargement={chargement === "suppression"}
+              disabled={confirmation.trim().toUpperCase() !== MOT_CONFIRMATION_SUPPRESSION} onClick={supprimerCompte}>
+              Supprimer définitivement
+            </Bouton>
+          </div>
+        </div>
+      </Modale>
     </>
   );
 }

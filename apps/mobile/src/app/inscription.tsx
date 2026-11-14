@@ -3,7 +3,7 @@ import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useState } from 'react';
 
-import { BoutonGoogle } from '@/components/bouton-google';
+import { ConnexionSociale } from '@/components/connexion-sociale';
 import { ThemedText } from '@/components/themed-text';
 import { Alerte, Bouton, Champ, Ecran, Lien } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
@@ -58,7 +58,7 @@ export default function Inscription() {
       <Ecran>
         <ThemedText type="subtitle">Confirmez votre e-mail</ThemedText>
         <Alerte type="info">
-          E-mail envoyé à {email.trim()} : saisissez le code reçu ou ouvrez le lien qu'il contient sur ce téléphone
+          E-mail envoyé à {email.trim()} : saisissez le code reçu ou ouvrez le lien qu&apos;il contient sur ce téléphone
           (pensez aux courriers indésirables).
         </Alerte>
         {erreur && <Alerte>{erreur}</Alerte>}
@@ -77,7 +77,7 @@ export default function Inscription() {
       <ThemedText type="subtitle">Créer un compte</ThemedText>
       <ThemedText themeColor="textSecondary">7 jours d&apos;essai gratuit, sans engagement.</ThemedText>
       {erreur && <Alerte>{erreur}</Alerte>}
-      <BoutonGoogle onErreur={setErreur} />
+      <ConnexionSociale onErreur={setErreur} />
       <Champ libelle="Votre nom" value={nom} onChangeText={setNom} autoComplete="name" textContentType="name" />
       <Champ libelle="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email"
         keyboardType="email-address" textContentType="emailAddress" />

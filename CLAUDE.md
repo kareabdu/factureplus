@@ -75,5 +75,10 @@ Après chaque modification : commiter et pousser sur `main` sans demander (véri
 - **Paiement Unitech Pay** (Wave, Orange Money Max It) : fonctions Edge `supabase/functions/unitech-*` (paiement, verifier avec JWT ;
   webhook signé HMAC et retour sans JWT). Paiements confirmés uniquement par `activer_paiement_abonnement` (rôle service).
   Secrets Supabase : `UNITECH_API_KEY`, `ORIGINES_WEB` (origines du site autorisées au retour, séparées par des virgules).
+- **Suppression de compte** (exigence App Store) : `public.supprimer_mon_compte()` (supprime les équipes possédées dans l'ordre
+  imposé par les clés « restrict », puis `auth.users`) ; fichiers du stockage supprimés avant, côté client (`supprimerMonCompte`).
+  Toute nouvelle table liée à une équipe par une clé « on delete restrict » doit y être ajoutée.
+- **Connexion** : e-mail (code à l'inscription), Google (web et mobile), Apple (iOS natif, `signInWithIdToken`).
+  Pages publiques `/confidentialite` et `/assistance` (groupe `(legal)`), liées depuis l'app (exigence App Store).
 - **Administration de la plateforme** : table `administrateurs_plateforme` (alimentée à la main en SQL, jamais par migration),
   RPC `admin_*` contrôlées par `prive.verifier_admin_plateforme()`.

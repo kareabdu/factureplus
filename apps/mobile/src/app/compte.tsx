@@ -1,17 +1,20 @@
-import { LIBELLES_ETATS_ACCES, modifierProfil, traduireErreur } from '@factureplus/core';
+import { LIBELLES_ETATS_ACCES, modifierProfil, supprimerMonCompte, traduireErreur } from '@factureplus/core';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 
 import { Alerte, Bouton, Champ, ChargementPlein, Ecran, Info, LigneListe, Section } from '@/components/ui';
-import { vibrerSucces } from '@/lib/confirmer';
+import { confirmer, signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe, useSession } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
+
+const SITE = 'https://factureplus.kareapps.com';
 
 export default function Compte() {
   const { userId, email } = useSession();
   // Arrivée par le lien « Mot de passe oublié » : l'utilisateur doit choisir un nouveau mot de passe
   const reinitialisation = useLocalSearchParams<{ reinitialisation?: string }>().reinitialisation === '1';
-  const { profil, abonnement, rafraichir } = useEquipe();
+  const { profil, abonnement, rafraichir, equipe } = useEquipe();
   const [nom, setNom] = useState(profil?.nom_complet ?? '');
   const [telephone, setTelephone] = useState(profil?.telephone ?? '');
   const [motDePasse, setMotDePasse] = useState('');
@@ -44,6 +47,23 @@ export default function Compte() {
     setMessage({ type: 'succes', texte: 'Mot de passe modifié.' });
   }
 
+  async function supprimerCompte() {
+    const nomEntreprise = equipe ? `l'entreprise « ${equipe.nom} »` : 'votre entreprise';
+    if (!(await confirmer('Supprimer mon compte ?',
+      `Votre compte, ${nomEntreprise} et toutes leurs données (produits, ventes, achats, dépenses, fichiers) seront supprimés définitivement.`,
+      'Continuer', true))) return;
+    if (!(await confirmer('Confirmer la suppression',
+      "Cette action est irréversible. Un abonnement en cours n'est pas remboursé.", 'Supprimer définitivement', true))) return;
+    setChargement('suppression');
+    try {
+      await supprimerMonCompte(supabase, equipe?.id ?? null);
+      await supabase.auth.signOut(); // la navigation revient d'elle-même à la connexion
+    } catch (e) {
+      setChargement(null);
+      signalerErreur(new Error(traduireErreur(e)), 'Suppression impossible');
+    }
+  }
+
   return (
     <Ecran enTete>
       {message && <Alerte type={message.type}>{message.texte}</Alerte>}
@@ -67,6 +87,16 @@ export default function Compte() {
         <Champ libelle="Nouveau mot de passe" value={motDePasse} onChangeText={setMotDePasse} secureTextEntry autoComplete="new-password"
           autoFocus={reinitialisation} aide="8 caractères minimum" />
         <Bouton titre="Changer le mot de passe" variante="secondaire" onPress={changerMotDePasse} chargement={chargement === 'mdp'} />
+      </Section>
+
+      <Section titre="Aide">
+        <LigneListe icone="document" titre="Politique de confidentialité" onPress={() => WebBrowser.openBrowserAsync(`${SITE}/confidentialite`)} />
+        <LigneListe icone="compte" titre="Assistance" sousTitre="WhatsApp, e-mail" onPress={() => WebBrowser.openBrowserAsync(`${SITE}/assistance`)} />
+      </Section>
+
+      <Section titre="Supprimer mon compte">
+        <Info libelle="Effet" valeur="Compte, entreprise et données effacés définitivement" />
+        <Bouton titre="Supprimer mon compte" variante="danger" onPress={supprimerCompte} chargement={chargement === 'suppression'} />
       </Section>
     </Ecran>
   );

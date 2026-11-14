@@ -13,7 +13,8 @@
       "icon": "./assets/images/icon.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.applikare.factureplus",
@@ -61,7 +62,8 @@
         {
           "contactsPermission": "FacturePlus accède à vos contacts pour créer un client à partir d'un contact choisi."
         }
-      ]
+      ],
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true,

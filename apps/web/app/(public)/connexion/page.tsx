@@ -34,6 +34,9 @@ export default function Connexion() {
       <p className="text-center text-sm text-muted">
         Pas encore de compte ? <Link href="/inscription" className="font-medium text-primary hover:underline">Créer un compte</Link>
       </p>
+      <p className="text-center text-xs text-muted">
+        <Link href="/assistance" className="hover:underline">Assistance</Link> · <Link href="/confidentialite" className="hover:underline">Confidentialité</Link>
+      </p>
     </form>
   );
 }

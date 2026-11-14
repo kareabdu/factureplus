@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { BoutonGoogle } from '@/components/bouton-google';
+import { ConnexionSociale } from '@/components/connexion-sociale';
 import { ThemedText } from '@/components/themed-text';
 import { Alerte, Bouton, Champ, Ecran, Lien, Logo } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
@@ -36,7 +36,7 @@ export default function Connexion() {
       </View>
       <ThemedText type="subtitle">Connexion</ThemedText>
       {erreur && <Alerte>{erreur}</Alerte>}
-      <BoutonGoogle onErreur={setErreur} />
+      <ConnexionSociale onErreur={setErreur} />
       <Champ libelle="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email"
         keyboardType="email-address" textContentType="emailAddress" placeholder="vous@exemple.sn" />
       <Champ libelle="Mot de passe" value={motDePasse} onChangeText={setMotDePasse} secureTextEntry

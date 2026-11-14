@@ -5,6 +5,7 @@ export * from "./types";
 export * from "./libelles";
 export * from "./erreurs";
 export * from "./equipe";
+export * from "./compte";
 export * from "./regles-abonnement";
 export * from "./abonnement";
 export * from "./administration";

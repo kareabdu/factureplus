@@ -1,8 +1,7 @@
 import { traduireErreur } from '@factureplus/core';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import * as Crypto from 'expo-crypto';
 import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
+import { requireOptionalNativeModule } from 'expo';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, View } from 'react-native';
@@ -49,14 +48,29 @@ async function connexionGoogle(): Promise<void> {
   if (e) throw e;
 }
 
+type ModuleApple = typeof import('expo-apple-authentication');
+
+/**
+ * Modules natifs Apple chargés à la demande : un build qui ne les contient pas (ancien build de
+ * développement) affiche l'écran sans le bouton Apple au lieu de planter à l'import.
+ */
+async function chargerApple(): Promise<ModuleApple | null> {
+  if (Platform.OS !== 'ios' || !requireOptionalNativeModule('ExpoAppleAuthentication') || !requireOptionalNativeModule('ExpoCrypto')) {
+    return null;
+  }
+  const AppleAuthentication = await import('expo-apple-authentication');
+  return (await AppleAuthentication.isAvailableAsync()) ? AppleAuthentication : null;
+}
+
 /**
  * Connexion Apple native (iOS) : jeton d'identité Apple échangé contre une session Supabase.
  * Le nom n'est transmis par Apple qu'à la toute première connexion : on l'enregistre alors dans le profil.
  */
-async function connexionApple(): Promise<void> {
+async function connexionApple(AppleAuthentication: ModuleApple): Promise<void> {
+  const Crypto = await import('expo-crypto');
   const nonce = Crypto.randomUUID();
   const nonceHache = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, nonce);
-  let identifiants: AppleAuthentication.AppleAuthenticationCredential;
+  let identifiants: Awaited<ReturnType<ModuleApple['signInAsync']>>;
   try {
     identifiants = await AppleAuthentication.signInAsync({
       requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
@@ -88,18 +102,20 @@ export function ConnexionSociale({ onErreur }: { onErreur: (message: string | nu
   const theme = useTheme();
   const { schema } = useThemeApp();
   const [chargement, setChargement] = useState<'apple' | 'google' | null>(null);
-  const [appleDisponible, setAppleDisponible] = useState(false);
+  const [AppleAuthentication, setApple] = useState<ModuleApple | null>(null);
+  const appleDisponible = !!AppleAuthentication;
 
   useEffect(() => {
-    if (Platform.OS !== 'ios') return;
-    AppleAuthentication.isAvailableAsync().then(setAppleDisponible, () => setAppleDisponible(false));
+    let actif = true;
+    chargerApple().then((m) => { if (actif) setApple(() => m); }, () => undefined);
+    return () => { actif = false; };
   }, []);
 
   async function lancer(fournisseur: 'apple' | 'google') {
     onErreur(null);
     setChargement(fournisseur);
     try {
-      await (fournisseur === 'apple' ? connexionApple() : connexionGoogle());
+      await (fournisseur === 'apple' && AppleAuthentication ? connexionApple(AppleAuthentication) : connexionGoogle());
     } catch (e) {
       onErreur(traduireErreur(e));
     } finally {
@@ -111,7 +127,7 @@ export function ConnexionSociale({ onErreur }: { onErreur: (message: string | nu
     <View style={{ gap: Spacing.three }}>
       {/* Côte à côte ; Google seul (pleine largeur) quand Apple n'est pas disponible (Android) */}
       <View style={{ flexDirection: 'row', gap: Spacing.two }}>
-        {appleDisponible && (
+        {AppleAuthentication && (
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
             buttonStyle={schema === 'sombre'

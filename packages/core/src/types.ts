@@ -186,6 +186,7 @@ export interface Document {
   client_adresse: string | null;
   conditions: string | null;
   notes: string | null;
+  images_notes?: string[];
   taxe_type: TypeTaxe;
   taxe_nom: string;
   taxe_taux: number;
@@ -221,6 +222,8 @@ export interface EnteteDocument {
   echeance?: string | null;
   conditions?: string | null;
   notes?: string | null;
+  /** Images sous les notes (URL publiques du stockage « produits »), 4 au plus. */
+  images_notes?: string[];
 }
 
 export interface Reglement {

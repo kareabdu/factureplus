@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  annulerDocument, calculerTotaux, chargerDocument, convertirProforma, creerBonLivraison, enregistrerDocument, enregistrerReglement,
+  annulerDocument, calculerTotaux, chargerDocument, envoyerImageProduit, convertirProforma, creerBonLivraison, enregistrerDocument, enregistrerReglement,
   formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_TYPE_DOCUMENT, CLIENT_DE_PASSAGE, ligneDepuisArticleLibre, ligneDepuisProduit, lireMontant, lireQuantite,
   refuserProforma, resteAPayer, statutAffiche, supprimerBrouillon, supprimerReglement, totalLigne, validerDocument,
   type Document, type EnteteDocument, type LigneDocument, type ModePaiement, type Reglement, type TypeDocument,
@@ -57,7 +57,7 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
   const m = (v: number) => formaterMontant(v, parametres?.symbole_devise);
   const [entete, setEntete] = useState<EnteteDocument>(() => d ? {
     client_id: d.client_id, client_nom: d.client_nom, client_telephone: d.client_telephone, client_adresse: d.client_adresse,
-    date: d.date, echeance: d.echeance, conditions: d.conditions, notes: d.notes,
+    date: d.date, echeance: d.echeance, conditions: d.conditions, notes: d.notes, images_notes: d.images_notes ?? [],
   } : { client_nom: "", date: new Date().toISOString().slice(0, 10) });
   const [lignes, setLignes] = useState<Ligne[]>(() => lignesInitiales.map((l) => ({ ...l, cle: ++compteur })));
   const [erreur, setErreur] = useState<string | null>(null);
@@ -213,6 +213,8 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
               <Zone libelle="Conditions" value={entete.conditions ?? ""} onChange={(e) => setEntete((x) => ({ ...x, conditions: e.target.value }))}
                 placeholder={parametres?.conditions_defaut ?? undefined} />
               <Zone libelle="Notes" value={entete.notes ?? ""} onChange={(e) => setEntete((x) => ({ ...x, notes: e.target.value }))} />
+              <ImagesNotes images={entete.images_notes ?? []} equipeId={equipeId} onErreur={setErreur}
+                onChange={(images_notes) => setEntete((x) => ({ ...x, images_notes }))} />
             </div>
           </Carte>
         </div>
@@ -284,7 +286,13 @@ function Consultation({ document: d, lignes, reglements, recharger }: {
               </tr>
             ))}
           </Tableau>
-          {d.notes && <p className="border-t border-border p-4 text-sm text-muted">{d.notes}</p>}
+          {d.notes && <p className="whitespace-pre-line border-t border-border p-4 text-sm text-muted">{d.notes}</p>}
+          {!!d.images_notes?.length && (
+            <div className="flex flex-wrap gap-3 border-t border-border p-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {d.images_notes.map((u) => <a key={u} href={u} target="_blank" rel="noreferrer"><img src={u} alt="Image des notes" className="h-24 max-w-48 rounded-lg object-contain" /></a>)}
+            </div>
+          )}
         </Carte>
 
         <div className="flex flex-col gap-6">
@@ -362,5 +370,48 @@ function FormReglement({ document: d, reste, onFait }: { document: Document; res
       <Champ libelle="Référence de transaction" name="reference" />
       <Bouton type="submit" chargement={chargement}>Enregistrer le règlement</Bouton>
     </form>
+  );
+}
+
+const MAX_IMAGES_NOTES = 4;
+
+/** Images insérées dans les notes (imprimées sous le texte), 4 au plus. */
+function ImagesNotes({ images, equipeId, onChange, onErreur }: {
+  images: string[]; equipeId: string; onChange: (images: string[]) => void; onErreur: (message: string) => void;
+}) {
+  const [envoi, setEnvoi] = useState(false);
+
+  async function ajouter(fichier: File | undefined) {
+    if (!fichier) return;
+    setEnvoi(true);
+    try {
+      const url = await envoyerImageProduit(supabase, equipeId, fichier, fichier.type || "image/jpeg");
+      onChange([...images, url].slice(0, MAX_IMAGES_NOTES));
+    } catch (e) {
+      onErreur((e as Error).message);
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {images.map((u) => (
+        <div key={u} className="relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={u} alt="Image des notes" className="h-20 w-20 rounded-lg border border-border object-cover" />
+          <button type="button" onClick={() => onChange(images.filter((x) => x !== u))} aria-label="Retirer l'image"
+            className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-xs text-background">✕</button>
+        </div>
+      ))}
+      {images.length < MAX_IMAGES_NOTES && (
+        <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-primary hover:bg-surface-retrait">
+          <Icone nom="recu" taille={20} />
+          {envoi ? "Envoi…" : "Image"}
+          <input type="file" accept="image/*" className="sr-only" disabled={envoi}
+            onChange={(e) => { void ajouter(e.target.files?.[0]); e.target.value = ""; }} />
+        </label>
+      )}
+    </div>
   );
 }

@@ -9,25 +9,23 @@ import { Icone, type NomIcone } from "@/components/icones";
 
 /** Composants d'interface communs (couleurs : globals.css). */
 
-/** Tracé du mot « facture+ » (traits arrondis, incliné à l'affichage) — même dessin que l'icône mobile. */
-const TRACE_LOGO = "M6 0 V-56 Q6 -70 22 -70 M-3 -46 H20 M78 -46 V0 M78 -23 A23 23 0 1 0 32 -23 A23 23 0 1 0 78 -23 M136.6 -37.8 A23 23 0 1 0 136.6 -8.2 M158 -62 V-14 Q158 0 172 0 M149 -46 H172 M184 -46 V-23 A23 23 0 0 0 230 -23 V-46 M230 -46 V0 M248 -46 V0 M248 -21 Q248 -46 274 -46 M285 -23 H331 A23 23 0 1 0 326.1 -8.8 M355 -23 H389 M372 -40 V-6";
-
-function MotLogo({ couleur }: { couleur: string }) {
+/** Logo : coche blanche sur fond vert (image de l'ancienne application, même dessin que l'icône mobile). */
+export function Monogramme({ taille = 32 }: { taille?: number }) {
   return (
-    <g transform="skewX(-12)">
-      <path d={TRACE_LOGO} fill="none" stroke={couleur} strokeWidth="15" strokeLinecap="round" strokeLinejoin="round" />
-    </g>
+    <svg viewBox="0 0 24 24" width={taille} height={taille} aria-hidden="true">
+      <rect width="24" height="24" rx="5.3" fill="#147A2E" />
+      <path transform="translate(4.8 4.8) scale(0.6)" d="M5 12.5L10 17.5L19 7" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
-/** Logo : pastille verte, « facture+ » en blanc (inversé : pastille blanche, mot vert). */
-export function Logo({ className = "", inverse = false, hauteur = 34 }: { className?: string; inverse?: boolean; hauteur?: number }) {
+export function Logo({ className = "", inverse = false }: { className?: string; inverse?: boolean }) {
   return (
-    <span className={`inline-flex ${className}`}>
-      <svg viewBox="-42 -108 484 146" height={hauteur} width={Math.round((hauteur * 484) / 146)} role="img" aria-label="FacturePlus">
-        <rect x="-42" y="-108" width="484" height="146" rx="44" fill={inverse ? "#fff" : "#147A2E"} />
-        <MotLogo couleur={inverse ? "#147A2E" : "#fff"} />
-      </svg>
+    <span className={`inline-flex items-center gap-2.5 font-semibold tracking-tight ${className}`}>
+      <Monogramme />
+      <span className={`text-lg ${inverse ? "text-panneau-texte" : "text-foreground"}`}>
+        Facture<span className={inverse ? "text-accent" : "text-primary"}>Plus</span>
+      </span>
     </span>
   );
 }

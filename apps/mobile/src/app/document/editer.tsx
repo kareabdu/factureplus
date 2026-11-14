@@ -1,12 +1,14 @@
 import {
-  calculerTotaux, chargerClient, CLIENT_DE_PASSAGE, chargerDocument, enregistrerDocument, formaterMontant, formaterQuantite, LIBELLES_TYPE_DOCUMENT,
+  calculerTotaux, chargerClient, CLIENT_DE_PASSAGE, chargerDocument, enregistrerDocument, envoyerImageProduit, formaterMontant, formaterQuantite, LIBELLES_TYPE_DOCUMENT,
   statutAffiche, supprimerBrouillon, totalLigne, validerDocument,
   type Document, type EnteteDocument, type ReglageTaxe, type TypeDocument,
 } from '@factureplus/core';
 import { libelleEnregistrementAuto, useEnregistrementAuto } from '@factureplus/core/react';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ChampDate, versIso } from '@/components/champ-date';
 import { Icone } from '@/components/icone';
@@ -85,9 +87,9 @@ export default function EditerDocument() {
       setExistant(d);
       setType(d.type);
       setEntete({ client_id: d.client_id, client_nom: d.client_nom, client_telephone: d.client_telephone, client_adresse: d.client_adresse,
-        date: d.date, echeance: d.echeance, conditions: d.conditions, notes: d.notes });
+        date: d.date, echeance: d.echeance, conditions: d.conditions, notes: d.notes, images_notes: d.images_notes ?? [] });
       const charge = { client_id: d.client_id, client_nom: d.client_nom, client_telephone: d.client_telephone, client_adresse: d.client_adresse,
-        date: d.date, echeance: d.echeance, conditions: d.conditions, notes: d.notes };
+        date: d.date, echeance: d.echeance, conditions: d.conditions, notes: d.notes, images_notes: d.images_notes ?? [] };
       const lignesChargees = l.map((x) => ({
         produit_id: x.produit_id, designation: x.designation, unite: x.unite ?? null, prix_unitaire: x.prix_unitaire,
         quantite: x.quantite, taxable: x.taxable, cle: ++compteur,
@@ -237,7 +239,7 @@ export default function EditerDocument() {
               <ThemedText type="smallBold" style={{ fontSize: 16 }}>{m(totalLigne(l))}</ThemedText>
             </Pressable>
           ))}
-          <LigneAction onPress={() => article()} libelle="Ajouter un article" icone="ajouter" droite={m(totaux.sous_total)} />
+          <LigneAction onPress={() => article()} libelle="Ajouter un article" icone="ajouter" />
         </Bloc>
 
         {/* Totaux */}
@@ -283,6 +285,8 @@ export default function EditerDocument() {
           <TextInput value={entete.notes ?? ''} onChangeText={(notes) => setEntete((e) => ({ ...e, notes }))} multiline
             placeholder="Notes (visibles sur le document)" placeholderTextColor={theme.textSecondary} accessibilityLabel="Notes"
             style={[styles.notes, { color: theme.text }]} />
+          <ImagesNotes images={entete.images_notes ?? []} equipeId={equipeId}
+            onChange={(images_notes) => setEntete((e) => ({ ...e, images_notes }))} />
         </Bloc>
       </Ecran>
     </>
@@ -292,6 +296,60 @@ export default function EditerDocument() {
 // ---------------------------------------------------------------------------
 // Éléments du modèle
 // ---------------------------------------------------------------------------
+
+const MAX_IMAGES_NOTES = 4;
+
+/** Images insérées dans les notes (imprimées sous le texte) : galerie ou appareil photo, 4 au plus. */
+function ImagesNotes({ images, equipeId, onChange }: { images: string[]; equipeId: string; onChange: (images: string[]) => void }) {
+  const theme = useTheme();
+  const [envoi, setEnvoi] = useState(false);
+
+  async function ajouter(source: 'galerie' | 'camera') {
+    try {
+      if (source === 'camera' && !(await ImagePicker.requestCameraPermissionsAsync()).granted) return;
+      const options: ImagePicker.ImagePickerOptions = { mediaTypes: 'images', quality: 0.6 };
+      const r = source === 'camera' ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
+      if (r.canceled || !r.assets[0]) return;
+      setEnvoi(true);
+      const contenu = await (await fetch(r.assets[0].uri)).arrayBuffer();
+      const url = await envoyerImageProduit(supabase, equipeId, contenu, r.assets[0].mimeType ?? 'image/jpeg');
+      onChange([...images, url].slice(0, MAX_IMAGES_NOTES));
+    } catch (e) {
+      signalerErreur(e);
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  return (
+    <View style={styles.imagesNotes}>
+      {images.map((u) => (
+        <View key={u}>
+          <Image source={{ uri: u }} style={[styles.imageNote, { backgroundColor: theme.backgroundSelected }]} contentFit="cover" />
+          <Pressable onPress={() => onChange(images.filter((x) => x !== u))} hitSlop={8} accessibilityRole="button" accessibilityLabel="Retirer l'image"
+            style={[styles.retirerImage, { backgroundColor: theme.text }]}>
+            <Icone nom="fermer" taille={12} couleur={theme.background} />
+          </Pressable>
+        </View>
+      ))}
+      {envoi && <View style={[styles.imageNote, styles.ajoutImage, { borderColor: theme.border }]}><ActivityIndicator color={theme.primary} /></View>}
+      {!envoi && images.length < MAX_IMAGES_NOTES && (
+        <>
+          <Pressable onPress={() => ajouter('galerie')} accessibilityRole="button" accessibilityLabel="Insérer une image depuis la galerie"
+            style={({ pressed }) => [styles.imageNote, styles.ajoutImage, { borderColor: theme.border, opacity: pressed ? 0.6 : 1 }]}>
+            <Icone nom="recu" taille={22} couleur={theme.primary} />
+            <ThemedText type="small" themeColor="primary">Image</ThemedText>
+          </Pressable>
+          <Pressable onPress={() => ajouter('camera')} accessibilityRole="button" accessibilityLabel="Prendre une photo"
+            style={({ pressed }) => [styles.imageNote, styles.ajoutImage, { borderColor: theme.border, opacity: pressed ? 0.6 : 1 }]}>
+            <Icone nom="photo" taille={22} couleur={theme.primary} />
+            <ThemedText type="small" themeColor="primary">Photo</ThemedText>
+          </Pressable>
+        </>
+      )}
+    </View>
+  );
+}
 
 function Bloc({ children }: { children: ReactNode }) {
   const theme = useTheme();
@@ -362,6 +420,10 @@ const styles = StyleSheet.create({
   total: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: Spacing.three },
   separateur: { height: StyleSheet.hairlineWidth },
   echeance: { gap: Spacing.two, paddingHorizontal: Spacing.one },
+  imagesNotes: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, paddingHorizontal: Spacing.three + Spacing.one, paddingBottom: Spacing.three },
+  imageNote: { width: 72, height: 72, borderRadius: Rayons.moyen },
+  ajoutImage: { borderWidth: 1, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', gap: 2 },
+  retirerImage: { position: 'absolute', top: -6, right: -6, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   notes: { minHeight: 72, padding: Spacing.three + Spacing.one, fontSize: 16, textAlignVertical: 'top' },
 });
 

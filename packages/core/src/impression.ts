@@ -232,6 +232,8 @@ export function htmlDocument(args: {
   table.totaux td { padding: 5px 0; text-transform: uppercase; font-size: 10px; }
   table.totaux td.n { text-transform: none; font-size: 11px; }
   .bloc { margin-top: 18px; color: #5b6670; }
+  .images-notes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .images-notes img { max-width: 48%; max-height: 260px; object-fit: contain; border-radius: 6px; }
   .signature { margin-top: 28px; text-align: right; color: #5b6670; }
   .signature img { max-height: 70px; }
   .pied { margin-top: 24px; font-size: 9px; color: #8a949e; text-align: center; }
@@ -245,7 +247,8 @@ export function htmlDocument(args: {
   ${totaux}
   ${reglementsHtml}
   ${d.conditions ? `<div class="bloc"><div class="etiquette">Conditions</div>${multiligne(d.conditions)}</div>` : ""}
-  ${d.notes ? `<div class="bloc"><div class="etiquette">Notes</div>${multiligne(d.notes)}</div>` : ""}
+  ${d.notes || d.images_notes?.length ? `<div class="bloc"><div class="etiquette">Notes</div>${multiligne(d.notes)}${d.images_notes?.length
+    ? `<div class="images-notes">${d.images_notes.map((u) => `<img src="${echapper(u)}" alt="">`).join("")}</div>` : ""}</div>` : ""}
   ${estBL ? '<div class="signature">Signature du client :<br><br><br></div>'
     : p.signature_url ? `<div class="signature"><img src="${echapper(p.signature_url)}" alt=""></div>` : ""}
 </div>

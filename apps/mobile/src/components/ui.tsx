@@ -129,16 +129,26 @@ export function ErreurChargement({ message, reessayer }: { message: string; rees
 // Marque
 // ---------------------------------------------------------------------------
 
-/** Logo FacturePlus : un carton stylisé sur fond vert (même dessin que l'icône d'application). */
-/** Logo : pastille verte, « facture+ » en blanc (assets/images/logo.png, même dessin que l'icône). */
+/** Logo FacturePlus : coche blanche sur fond vert (image de l'ancienne application, même dessin que l'icône). */
+export function Monogramme({ taille = 36 }: { taille?: number }) {
+  return (
+    <Image source={require('@/assets/images/splash-icon.png')} style={{ width: taille, height: taille }} contentFit="contain"
+      accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+  );
+}
+
 export function Logo({ taille = 36 }: { taille?: number }) {
+  const theme = useTheme();
+  const t = { fontSize: taille * 0.6, lineHeight: taille, fontWeight: 700 as const };
   return (
     <View style={styles.logo} accessibilityRole="header" accessibilityLabel="FacturePlus">
-      <Image source={require('@/assets/images/logo.png')} style={{ height: taille, width: taille * RATIO_LOGO }} contentFit="contain" />
+      <Monogramme taille={taille} />
+      <ThemedText style={[t, { color: theme.text }]}>
+        Facture<ThemedText style={[t, { color: theme.primary }]}>Plus</ThemedText>
+      </ThemedText>
     </View>
   );
 }
-const RATIO_LOGO = 484 / 146;
 
 // ---------------------------------------------------------------------------
 // Textes et blocs

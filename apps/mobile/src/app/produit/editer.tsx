@@ -10,7 +10,7 @@ import { Pressable, View } from 'react-native';
 
 import { Icone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Bouton, BoutonIcone, Champ, ChampMontant, ChampQuantite, ChargementPlein, Ecran, Pastilles } from '@/components/ui';
+import { Alerte, Bouton, BoutonIcone, Champ, ChampMontant, ChampQuantite, ChampUnite, ChargementPlein, Ecran, Pastilles } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { signalerErreur, vibrerSucces } from '@/lib/confirmer';
@@ -123,10 +123,8 @@ function Formulaire({ id, produit: p, codeBarres }: { id?: string; produit: Prod
           <View style={{ flex: 1 }}><ChampMontant libelle="Prix de vente" symbole={symbole} valeur={s.prix_vente ?? null} onChange={(v) => maj({ prix_vente: v ?? 0 })} /></View>
           <View style={{ flex: 1 }}><ChampMontant libelle="Prix d'achat" symbole={symbole} valeur={s.prix_achat ?? null} onChange={(v) => maj({ prix_achat: v ?? 0 })} /></View>
         </View>
-        <View style={{ flexDirection: 'row', gap: Spacing.two }}>
-          <View style={{ flex: 1 }}><Champ libelle="Unité" value={s.unite} onChangeText={(unite) => maj({ unite })} placeholder="Pcs, kg, L…" /></View>
-          <View style={{ flex: 1 }}><ChampQuantite libelle="Seuil d'alerte" valeur={s.seuil_alerte ?? null} onChange={(v) => maj({ seuil_alerte: v ?? 0 })} /></View>
-        </View>
+        <ChampUnite valeur={s.unite ?? ''} onChange={(unite) => maj({ unite })} />
+        <ChampQuantite libelle="Seuil d'alerte" unite={s.unite} valeur={s.seuil_alerte ?? null} onChange={(v) => maj({ seuil_alerte: v ?? 0 })} />
         {!id && <ChampQuantite libelle="Stock initial" unite={s.unite} valeur={stockInitial} onChange={setStockInitial} aide="Quantité déjà en stock aujourd'hui" />}
 
         {(categories.donnees?.length ?? 0) > 0 ? (

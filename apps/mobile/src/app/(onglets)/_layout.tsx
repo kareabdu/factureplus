@@ -7,6 +7,7 @@ export default function LayoutOnglets() {
   const theme = useTheme();
   return (
     <NativeTabs
+      labelVisibilityMode="labeled"
       backgroundColor={theme.backgroundElement}
       indicatorColor={theme.primarySoft}
       iconColor={{ default: theme.textSecondary, selected: theme.primary }}

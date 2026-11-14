@@ -130,3 +130,15 @@ test("période par défaut : aujourd'hui", async () => {
   const p = periodeParDefaut(new Date(2026, 10, 13, 15, 30));
   assert.deepEqual(p, { code: "aujourdhui", debut: "2026-11-13", fin: "2026-11-13" });
 });
+
+test("devises et unités", async () => {
+  const { DEVISES, filtrerUnites, trouverDevise, UNITES } = await import("../src/listes.ts");
+  assert.equal(new Set(DEVISES.map((d) => d.code)).size, DEVISES.length);
+  assert.ok(DEVISES.every((d) => d.code.length === 3 && d.symbole.length <= 10)); // contraintes de la table parametres
+  assert.equal(trouverDevise("eur")?.symbole, "€");
+  assert.equal(trouverDevise("XOF")?.symbole, "FCFA");
+  assert.deepEqual(filtrerUnites("bo"), ["Boîte", "Bouteille", "Botte"]);
+  assert.deepEqual(filtrerUnites("boit"), ["Boîte"]); // sans accent
+  assert.equal(filtrerUnites("kg").length, UNITES.length); // unité exacte : liste complète
+  assert.equal(filtrerUnites("").length, UNITES.length);
+});

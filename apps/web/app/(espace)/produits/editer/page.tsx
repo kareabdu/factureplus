@@ -6,7 +6,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 
-import { Alerte, Bouton, Carte, Champ, ChampMontant, Chargement, EnTetePage, Liste, Zone } from "@/components/ui";
+import { Alerte, Bouton, Carte, Champ, ChampUnite, ChampMontant, Chargement, EnTetePage, Liste, Zone } from "@/components/ui";
 import { useDonnees, useEquipe } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
@@ -86,7 +86,7 @@ function Formulaire({ produit: p }: { produit: Produit | null }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <ChampMontant libelle="Prix de vente" symbole={symbole} valeur={prixVente} onChange={setPrixVente} />
             <ChampMontant libelle="Prix d'achat" symbole={symbole} valeur={prixAchat} onChange={setPrixAchat} />
-            <Champ libelle="Unité" name="unite" defaultValue={p?.unite ?? parametres?.unite_defaut ?? "Pcs"} />
+            <ChampUnite name="unite" defaultValue={p?.unite ?? parametres?.unite_defaut ?? "Pcs"} />
             <Champ libelle="Seuil d'alerte" name="seuil_alerte" inputMode="decimal" defaultValue={p ? String(p.seuil_alerte).replace(".", ",") : ""}
               aide="Alerte quand le stock descend à ce niveau" />
             {!p && <Champ libelle="Stock initial" name="stock_initial" inputMode="decimal" aide="Quantité déjà en stock aujourd'hui" />}

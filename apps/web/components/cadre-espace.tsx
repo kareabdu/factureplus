@@ -1,13 +1,13 @@
 "use client";
 
-import { creerEquipe, messageAbonnement } from "@factureplus/core";
+import { creerEquipe, messageAbonnement, trouverDevise } from "@factureplus/core";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
 import { BarreLaterale } from "@/components/barre-laterale";
 import { Icone } from "@/components/icones";
-import { Alerte, Bouton, Champ, Chargement, Logo } from "@/components/ui";
+import { Alerte, Bouton, Champ, ChoixDevise, Chargement, Logo } from "@/components/ui";
 import { EspaceProvider, useEquipe, useSession } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
@@ -86,7 +86,8 @@ function Bienvenue() {
     if (nom.length < 2) return setErreur("Indiquez le nom de votre commerce.");
     setChargement(true);
     try {
-      await creerEquipe(supabase, nom);
+      const devise = String(new FormData(e.currentTarget).get("devise") || "XOF");
+      await creerEquipe(supabase, nom, devise, trouverDevise(devise)?.symbole ?? devise);
       await rafraichir();
     } catch (err) {
       setErreur((err as Error).message);
@@ -102,6 +103,7 @@ function Bienvenue() {
         <p className="-mt-2 text-sm text-muted">Comment s&apos;appelle votre commerce ? Ce nom apparaîtra sur vos factures.</p>
         {erreur && <Alerte>{erreur}</Alerte>}
         <Champ libelle="Nom du commerce" name="nom" placeholder="Ex. Quincaillerie Diallo" required />
+        <ChoixDevise name="devise" defaultValue="XOF" />
         <Bouton type="submit" chargement={chargement}>Commencer</Bouton>
         <button type="button" onClick={() => void deconnecter()} className="text-sm text-muted hover:text-foreground">Se déconnecter</button>
       </form>

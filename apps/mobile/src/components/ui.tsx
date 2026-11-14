@@ -1,4 +1,4 @@
-import { formaterMontant, lireMontant, lireQuantite, type Ton } from '@factureplus/core';
+import { DEVISES, filtrerUnites, formaterMontant, lireMontant, lireQuantite, trouverDevise, type Ton } from '@factureplus/core';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -303,10 +303,15 @@ export function LigneListe({
 export function Champ({ libelle, aide, erreur, ...props }: TextInputProps & { libelle: string; aide?: string; erreur?: string | null }) {
   const theme = useTheme();
   const [focus, setFocus] = useState(false);
+  const entree = useRef<ComponentRef<typeof TextInput>>(null);
   return (
     <View style={styles.champ}>
-      <ThemedText type="smallBold">{libelle}</ThemedText>
+      {/* Toucher le libellé place le curseur dans le champ */}
+      <Pressable onPress={() => entree.current?.focus()} accessible={false}>
+        <ThemedText type="smallBold">{libelle}</ThemedText>
+      </Pressable>
       <TextInput
+        ref={entree}
         placeholderTextColor={theme.textSecondary}
         accessibilityLabel={libelle}
         {...props}
@@ -380,6 +385,80 @@ export function Pastilles<T extends string>({ libelle, options, valeur, onChange
           );
         })}
       </View>
+    </View>
+  );
+}
+
+/** Liste déroulante en ligne (sous un champ) : options à toucher, l'option choisie est cochée. */
+export function ListeOptions({ options, valeur, onChoisir }: {
+  options: readonly { cle: string; libelle: string; detail?: string }[]; valeur?: string | null; onChoisir: (cle: string) => void;
+}) {
+  const theme = useTheme();
+  if (!options.length) return null;
+  return (
+    <View style={[styles.listeOptions, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+      <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled style={{ maxHeight: 264 }}>
+        {options.map((o) => {
+          const choisi = o.cle === valeur;
+          return (
+            <Pressable key={o.cle} onPress={() => onChoisir(o.cle)} accessibilityRole="button" accessibilityState={{ selected: choisi }}
+              style={({ pressed }) => [styles.option, { backgroundColor: pressed ? theme.backgroundSelected : 'transparent' }]}>
+              <ThemedText style={[styles.flex, choisi && { color: theme.primary, fontWeight: '600' }]} numberOfLines={1}>{o.libelle}</ThemedText>
+              {!!o.detail && <ThemedText type="small" themeColor="textSecondary">{o.detail}</ThemedText>}
+              {choisi && <Icone nom="valider" taille={18} couleur={theme.primary} />}
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+/** Unité : saisie libre, avec la liste des unités usuelles (filtrée par la saisie). */
+export function ChampUnite({ libelle = 'Unité', valeur, onChange }: { libelle?: string; valeur: string; onChange: (v: string) => void }) {
+  const theme = useTheme();
+  const [ouvert, setOuvert] = useState(false);
+  const [focus, setFocus] = useState(false);
+  const entree = useRef<ComponentRef<typeof TextInput>>(null);
+  return (
+    <View style={styles.champ}>
+      <Pressable onPress={() => entree.current?.focus()} accessible={false}>
+        <ThemedText type="smallBold">{libelle}</ThemedText>
+      </Pressable>
+      <View style={[styles.input, styles.combo, { backgroundColor: theme.backgroundElement, borderColor: focus || ouvert ? theme.primary : theme.border }]}>
+        <TextInput ref={entree} value={valeur} onChangeText={(t) => { onChange(t); setOuvert(true); }} accessibilityLabel={libelle}
+          placeholder="Pcs, kg, carton…" placeholderTextColor={theme.textSecondary} autoCorrect={false}
+          onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} style={[styles.flex, { color: theme.text, fontSize: 16, minHeight: 48 }]} />
+        <Pressable hitSlop={12} onPress={() => setOuvert((o) => !o)} accessibilityRole="button"
+          accessibilityLabel={ouvert ? 'Fermer la liste des unités' : 'Afficher les unités usuelles'}>
+          <Icone nom={ouvert ? 'haut' : 'bas'} taille={18} couleur={theme.textSecondary} />
+        </Pressable>
+      </View>
+      {ouvert && (
+        <ListeOptions options={filtrerUnites(valeur).map((u) => ({ cle: u, libelle: u }))} valeur={valeur}
+          onChoisir={(u) => { onChange(u); setOuvert(false); entree.current?.blur(); }} />
+      )}
+    </View>
+  );
+}
+
+/** Choix de la devise dans une liste déroulante. */
+export function ChoixDevise({ valeur, onChange }: { valeur: string; onChange: (code: string) => void }) {
+  const theme = useTheme();
+  const [ouvert, setOuvert] = useState(false);
+  const d = trouverDevise(valeur);
+  return (
+    <View style={styles.champ}>
+      <ThemedText type="smallBold">Devise</ThemedText>
+      <Pressable onPress={() => setOuvert((o) => !o)} accessibilityRole="button" accessibilityLabel={`Devise : ${d?.libelle ?? valeur}`}
+        style={[styles.input, styles.combo, { backgroundColor: theme.backgroundElement, borderColor: ouvert ? theme.primary : theme.border }]}>
+        <ThemedText style={styles.flex} numberOfLines={1}>{d ? `${d.libelle} (${d.code})` : valeur}</ThemedText>
+        <Icone nom={ouvert ? 'haut' : 'bas'} taille={18} couleur={theme.textSecondary} />
+      </Pressable>
+      {ouvert && (
+        <ListeOptions options={DEVISES.map((x) => ({ cle: x.code, libelle: x.libelle, detail: x.symbole === x.code ? x.code : `${x.code} · ${x.symbole}` }))}
+          valeur={d?.code} onChoisir={(code) => { onChange(code); setOuvert(false); }} />
+      )}
     </View>
   );
 }
@@ -517,6 +596,9 @@ export const styles = StyleSheet.create({
   champ: { gap: Spacing.one + Spacing.half },
   input: { minHeight: 50, borderRadius: Rayons.moyen, borderWidth: 1, paddingHorizontal: Spacing.three, fontSize: 16 },
   inputMulti: { minHeight: 96, paddingTop: Spacing.three, textAlignVertical: 'top' },
+  combo: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  listeOptions: { borderRadius: Rayons.moyen, borderWidth: 1, overflow: 'hidden' },
+  option: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingHorizontal: Spacing.three, minHeight: 46 },
   pastilles: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   pastille: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, borderRadius: Rayons.plein, borderWidth: 1, minHeight: 40, justifyContent: 'center' },
   recherche: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, borderRadius: Rayons.moyen, borderWidth: 1, paddingHorizontal: Spacing.three },

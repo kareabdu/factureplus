@@ -1,14 +1,14 @@
 import {
-  formaterMontant, formaterQuantite, lireMontant, lireQuantite, listerArticlesLibres, listerProduits, totalLigne, type ArticleLibre, type Produit,
+  filtrerUnites, formaterMontant, formaterQuantite, lireMontant, lireQuantite, listerArticlesLibres, listerProduits, totalLigne, type ArticleLibre, type Produit,
 } from '@factureplus/core';
 import { useDonnees } from '@factureplus/core/react';
 import { Stack } from 'expo-router';
-import { useDeferredValue, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useDeferredValue, useEffect, useRef, useState, type ComponentRef, type ReactNode, type RefObject } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { Icone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Bouton, Ecran } from '@/components/ui';
+import { Alerte, Bouton, Ecran, ListeOptions } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useEquipe } from '@/lib/espace';
@@ -31,7 +31,11 @@ export default function Article() {
   const [taxable, setTaxable] = useState(initiale?.taxable ?? true);
   const [ouvert, setOuvert] = useState(!initiale);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [unitesOuvertes, setUnitesOuvertes] = useState(false);
   const repondu = useRef(false);
+  const champPrix = useRef<ComponentRef<typeof TextInput>>(null);
+  const champQuantite = useRef<ComponentRef<typeof TextInput>>(null);
+  const champUnite = useRef<ComponentRef<typeof TextInput>>(null);
 
   const recherche = useDeferredValue(produitId ? '' : designation);
   const { donnees: suggestions } = useDonnees(
@@ -157,19 +161,29 @@ export default function Article() {
             )}
           </View>
 
-          <Champ libelle="Prix unitaire">
-            <TextInput value={prix} onChangeText={setPrix} keyboardType="number-pad" placeholder="" selectTextOnFocus
+          <Champ libelle="Prix unitaire" entree={champPrix}>
+            <TextInput ref={champPrix} value={prix} onChangeText={setPrix} keyboardType="number-pad" placeholder="" selectTextOnFocus
               accessibilityLabel="Prix unitaire" style={[styles.valeur, { color: theme.text }]} />
             <ThemedText themeColor="textSecondary" style={{ fontSize: 16 }}>{symbole}</ThemedText>
           </Champ>
-          <Champ libelle="Quantité">
-            <TextInput value={quantite} onChangeText={setQuantite} keyboardType="decimal-pad" placeholder="0" selectTextOnFocus
+          <Champ libelle="Quantité" entree={champQuantite}>
+            <TextInput ref={champQuantite} value={quantite} onChangeText={setQuantite} keyboardType="decimal-pad" placeholder="0" selectTextOnFocus
               placeholderTextColor={theme.textSecondary} accessibilityLabel="Quantité" style={[styles.valeur, { color: theme.text }]} />
           </Champ>
-          <Champ libelle="Unité" dernier>
-            <TextInput value={unite} onChangeText={setUnite} accessibilityLabel="Unité"
-              style={[styles.valeur, { color: theme.text, fontWeight: '400' }]} />
+          <Champ libelle="Unité" dernier={!unitesOuvertes} entree={champUnite}>
+            <TextInput ref={champUnite} value={unite} onChangeText={(t) => { setUnite(t); setUnitesOuvertes(true); }} accessibilityLabel="Unité"
+              autoCorrect={false} style={[styles.valeur, { color: theme.text, fontWeight: '400' }]} />
+            <Pressable hitSlop={12} onPress={() => setUnitesOuvertes((o) => !o)} accessibilityRole="button"
+              accessibilityLabel={unitesOuvertes ? 'Fermer la liste des unités' : 'Afficher les unités usuelles'}>
+              <Icone nom={unitesOuvertes ? 'haut' : 'bas'} taille={18} couleur={theme.textSecondary} />
+            </Pressable>
           </Champ>
+          {unitesOuvertes && (
+            <View style={styles.unites}>
+              <ListeOptions options={filtrerUnites(unite).map((u) => ({ cle: u, libelle: u }))} valeur={unite}
+                onChoisir={(u) => { setUnite(u); setUnitesOuvertes(false); champUnite.current?.blur(); }} />
+            </View>
+          )}
         </Bloc>
 
         {controleStock && stock !== undefined && qte > stock && (
@@ -195,14 +209,18 @@ function Bloc({ children }: { children: ReactNode }) {
   return <View style={[styles.bloc, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>{children}</View>;
 }
 
-function Champ({ libelle, children, dernier }: { libelle: string; children: ReactNode; dernier?: boolean }) {
+/** Ligne libellé + saisie : toute la ligne (libellé compris) place le curseur dans la saisie. */
+function Champ({ libelle, children, dernier, entree }: {
+  libelle: string; children: ReactNode; dernier?: boolean; entree: RefObject<ComponentRef<typeof TextInput> | null>;
+}) {
   const theme = useTheme();
   return (
-    <View style={[styles.champ, !dernier && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
-      { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }]}>
+    <Pressable onPress={() => entree.current?.focus()} accessible={false}
+      style={[styles.champ, !dernier && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
+        { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border }]}>
       <ThemedText style={{ fontSize: 18, flex: 1 }}>{libelle}</ThemedText>
       {children}
-    </View>
+    </Pressable>
   );
 }
 
@@ -218,6 +236,7 @@ const styles = StyleSheet.create({
   entete: { paddingHorizontal: Spacing.three, paddingTop: Spacing.three, paddingBottom: Spacing.one, textTransform: 'uppercase', fontSize: 12 },
   champ: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingHorizontal: Spacing.three + Spacing.one, minHeight: 64 },
   valeur: { minWidth: 80, textAlign: 'right', fontSize: 20, fontWeight: '600', paddingVertical: Spacing.two },
+  unites: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.three },
   total: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.three + Spacing.one },
   totalTexte: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
 });

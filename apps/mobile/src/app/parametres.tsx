@@ -1,5 +1,5 @@
 import {
-  envoyerImageProduit, formaterNumero, modifierParametres, TYPES_TAXE, type ModeleDocument, type ParametresModifiables, type TypeTaxe,
+  envoyerImageProduit, formaterNumero, modifierParametres, trouverDevise, TYPES_TAXE, type ModeleDocument, type ParametresModifiables, type TypeTaxe,
 } from '@factureplus/core';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,7 +9,7 @@ import { View } from 'react-native';
 
 import { ChoixModele } from '@/components/choix-modele';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Bouton, Champ, ChargementPlein, Ecran, Interrupteur, Pastilles, Section } from '@/components/ui';
+import { Alerte, Bouton, Champ, ChampUnite, ChargementPlein, ChoixDevise, Ecran, Interrupteur, Pastilles, Section } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe } from '@/lib/espace';
@@ -72,6 +72,7 @@ export default function Parametres() {
         <Champ libelle="E-mail" value={texte('email')} onChangeText={(email) => maj({ email })} keyboardType="email-address" autoCapitalize="none" />
         <Champ libelle="NINEA" value={texte('ninea')} onChangeText={(ninea) => maj({ ninea })} autoCapitalize="characters" />
         <Champ libelle="RCCM" value={texte('rccm')} onChangeText={(rccm) => maj({ rccm })} autoCapitalize="characters" />
+        <ChoixDevise valeur={texte('devise')} onChange={(code) => maj({ devise: code, symbole_devise: trouverDevise(code)?.symbole ?? code })} />
       </Section>
 
       <Section titre="Numérotation">
@@ -83,7 +84,7 @@ export default function Parametres() {
         <ThemedText type="small" themeColor="textSecondary">Exemple de numéro : {apercuNumero}</ThemedText>
         <Interrupteur libelle="Référence produit automatique" aide={`Préfixe : ${s.prefixe_ref_produit ?? 'P-'}`}
           valeur={!!s.ref_produit_auto} onChange={(ref_produit_auto) => maj({ ref_produit_auto })} />
-        <Champ libelle="Unité par défaut" value={texte('unite_defaut')} onChangeText={(unite_defaut) => maj({ unite_defaut })} />
+        <ChampUnite libelle="Unité par défaut" valeur={texte('unite_defaut')} onChange={(unite_defaut) => maj({ unite_defaut })} />
       </Section>
 
       <Section titre="Taxe">

@@ -1,24 +1,17 @@
-import { creerEquipe } from '@factureplus/core';
+import { creerEquipe, trouverDevise } from '@factureplus/core';
 import { useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Bouton, Champ, Ecran, Lien, Logo, Pastilles } from '@/components/ui';
+import { Alerte, Bouton, Champ, ChoixDevise, Ecran, Lien, Logo } from '@/components/ui';
 import { useEquipe, useSession } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
-
-const DEVISES = [
-  { code: 'XOF', libelle: 'FCFA (XOF)', symbole: 'FCFA' },
-  { code: 'XAF', libelle: 'FCFA (XAF)', symbole: 'FCFA' },
-  { code: 'GNF', libelle: 'Franc guinéen', symbole: 'GNF' },
-  { code: 'MAD', libelle: 'Dirham', symbole: 'DH' },
-] as const;
 
 /** Première connexion : création de l'entreprise (équipe). */
 export default function Bienvenue() {
   const { rafraichir } = useEquipe();
   const { deconnecter } = useSession();
   const [nom, setNom] = useState('');
-  const [devise, setDevise] = useState<(typeof DEVISES)[number]['code']>('XOF');
+  const [devise, setDevise] = useState('XOF');
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
 
@@ -27,8 +20,7 @@ export default function Bienvenue() {
     setErreur(null);
     setChargement(true);
     try {
-      const d = DEVISES.find((x) => x.code === devise)!;
-      await creerEquipe(supabase, nom.trim(), d.code, d.symbole);
+      await creerEquipe(supabase, nom.trim(), devise, trouverDevise(devise)?.symbole ?? devise);
       await rafraichir();
     } catch (e) {
       setErreur((e as Error).message);
@@ -45,7 +37,7 @@ export default function Bienvenue() {
       </ThemedText>
       {erreur && <Alerte>{erreur}</Alerte>}
       <Champ libelle="Nom du commerce" value={nom} onChangeText={setNom} placeholder="Ex. Quincaillerie Diallo" autoCapitalize="words" />
-      <Pastilles libelle="Devise" options={DEVISES.map((d) => ({ code: d.code, libelle: d.libelle }))} valeur={devise} onChange={setDevise} />
+      <ChoixDevise valeur={devise} onChange={setDevise} />
       <Bouton titre="Commencer" onPress={creer} chargement={chargement} />
       <Lien titre="Se déconnecter" onPress={deconnecter} />
     </Ecran>

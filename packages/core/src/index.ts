@@ -23,3 +23,4 @@ export * from "./periodes";
 export * from "./whatsapp";
 export * from "./impression";
 export * from "./design";
+export * from "./listes";

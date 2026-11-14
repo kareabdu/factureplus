@@ -1,7 +1,7 @@
-import { formaterMontant, lireMontant, type Ton } from "@factureplus/core";
+import { DEVISES, formaterMontant, lireMontant, UNITES, type Ton } from "@factureplus/core";
 import Link from "next/link";
 import {
-  useState, type ButtonHTMLAttributes, type ComponentProps, type InputHTMLAttributes, type ReactNode,
+  useId, useState, type ButtonHTMLAttributes, type ComponentProps, type InputHTMLAttributes, type ReactNode,
   type SelectHTMLAttributes, type TextareaHTMLAttributes,
 } from "react";
 
@@ -83,6 +83,26 @@ function Etiquette({ libelle, requis, aide, className = "", children }: {
 
 export function Champ({ libelle, aide, className = "", ...props }: InputHTMLAttributes<HTMLInputElement> & { libelle: string; aide?: string }) {
   return <Etiquette libelle={libelle} requis={props.required} aide={aide} className={className}><input {...props} className={styleChamp} /></Etiquette>;
+}
+
+/** Unité : saisie libre avec suggestions des unités usuelles (liste déroulante du navigateur). */
+export function ChampUnite({ libelle = "Unité", ...props }: Omit<InputHTMLAttributes<HTMLInputElement>, "list"> & { libelle?: string }) {
+  const id = useId();
+  return (
+    <>
+      <Champ libelle={libelle} list={id} autoComplete="off" placeholder="Pcs, kg, carton…" {...props} />
+      <datalist id={id}>{UNITES.map((u) => <option key={u} value={u} />)}</datalist>
+    </>
+  );
+}
+
+/** Choix de la devise. */
+export function ChoixDevise({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <Liste libelle="Devise" className={className} {...props}>
+      {DEVISES.map((d) => <option key={d.code} value={d.code}>{d.libelle} ({d.symbole === d.code ? d.code : `${d.code} · ${d.symbole}`})</option>)}
+    </Liste>
+  );
 }
 
 export function Zone({ libelle, aide, className = "", ...props }: TextareaHTMLAttributes<HTMLTextAreaElement> & { libelle: string; aide?: string }) {

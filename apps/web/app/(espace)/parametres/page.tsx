@@ -1,10 +1,10 @@
 "use client";
 
-import { envoyerImageProduit, formaterNumero, modifierParametres, TYPES_TAXE, type ModeleDocument, type Parametres, type TypeTaxe } from "@factureplus/core";
+import { envoyerImageProduit, formaterNumero, modifierParametres, trouverDevise, TYPES_TAXE, type ModeleDocument, type Parametres, type TypeTaxe } from "@factureplus/core";
 import { useState, type FormEvent } from "react";
 
 import { ChoixModele } from "@/components/choix-modele";
-import { Alerte, Bouton, Carte, Case, Champ, Chargement, EnTetePage, Liste, Zone } from "@/components/ui";
+import { Alerte, Bouton, Carte, Case, Champ, ChampUnite, ChoixDevise, Chargement, EnTetePage, Liste, Zone } from "@/components/ui";
 import { useEquipe } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
@@ -37,6 +37,7 @@ function Formulaire({ p }: { p: Parametres }) {
         email: t("email"), site_web: t("site_web"), ninea: t("ninea"), rccm: t("rccm"), identifiant_fiscal: t("identifiant_fiscal"),
         prefixe_facture: prefixe, prefixe_proforma: String(f.get("prefixe_proforma")), prefixe_bl: String(f.get("prefixe_bl")), format_numero: format,
         prefixe_ref_produit: String(f.get("prefixe_ref_produit")), ref_produit_auto: f.get("ref_produit_auto") === "on", unite_defaut: String(f.get("unite_defaut")),
+        devise: String(f.get("devise")), symbole_devise: trouverDevise(String(f.get("devise")))?.symbole ?? p.symbole_devise,
         taxe_type: taxe, taxe_nom: String(f.get("taxe_nom") ?? p.taxe_nom), taxe_taux: Number(String(f.get("taxe_taux") ?? "0").replace(",", ".")) || 0,
         taxe_incluse: f.get("taxe_incluse") === "on", conditions_defaut: t("conditions_defaut"), pied_facture: t("pied_facture"),
         couleur_document: couleur, modele_document: modele, logo_url: logo,
@@ -80,6 +81,7 @@ function Formulaire({ p }: { p: Parametres }) {
             <Champ libelle="NINEA" name="ninea" defaultValue={p.ninea ?? ""} />
             <Champ libelle="RCCM" name="rccm" defaultValue={p.rccm ?? ""} />
             <Champ libelle="Identifiant fiscal (NIF)" name="identifiant_fiscal" defaultValue={p.identifiant_fiscal ?? ""} />
+            <ChoixDevise name="devise" defaultValue={p.devise} />
           </div>
         </Carte>
         <Carte titre="Numérotation">
@@ -89,7 +91,7 @@ function Formulaire({ p }: { p: Parametres }) {
             <Champ libelle="Préfixe livraisons" name="prefixe_bl" defaultValue={p.prefixe_bl} />
             <Champ libelle="Format" value={format} onChange={(e) => setFormat(e.target.value)} className="sm:col-span-2"
               aide={`{PREFIX}, {YYYY}, {N:04d} — exemple : ${formaterNumero(format, prefixe, new Date().getFullYear(), 1)}`} />
-            <Champ libelle="Unité par défaut" name="unite_defaut" defaultValue={p.unite_defaut} />
+            <ChampUnite libelle="Unité par défaut" name="unite_defaut" defaultValue={p.unite_defaut} />
             <Champ libelle="Préfixe réf. produit" name="prefixe_ref_produit" defaultValue={p.prefixe_ref_produit} />
             <div className="sm:col-span-2 sm:self-end"><Case libelle="Référence produit automatique" name="ref_produit_auto" defaultChecked={p.ref_produit_auto} /></div>
           </div>

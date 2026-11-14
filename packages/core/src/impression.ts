@@ -292,6 +292,11 @@ export const DUREE_LIEN_PDF_JOURS = 30;
 /** Adresse du site web de FacturePlus (liens courts, pages publiques). */
 export const SITE_WEB = "https://factureplus.kareapps.com";
 
+/** Nom du fichier PDF d'un document (sans extension) : son numéro, ex. « FAC-2026-0001 ». */
+export function nomFichierDocument(d: Pick<Document, "numero" | "type">): string {
+  return (d.numero ?? `${LIBELLES_TYPE_DOCUMENT[d.type]}-brouillon`).replace(/[^\w.-]+/g, "-");
+}
+
 /**
  * Dépose le PDF d'un document dans l'espace privé « documents » de l'équipe (remplace la version
  * précédente) et renvoie un lien court à envoyer au client : <site>/d/<code>, valable 30 jours,
@@ -301,8 +306,7 @@ export const SITE_WEB = "https://factureplus.kareapps.com";
 export async function lienPdfDocument(
   sb: SupabaseClient, d: Pick<Document, "id" | "equipe_id" | "numero" | "type">, contenu: ArrayBuffer | Blob,
 ): Promise<string> {
-  const nom = (d.numero ?? `${LIBELLES_TYPE_DOCUMENT[d.type]}-brouillon`).replace(/[^\w.-]+/g, "-");
-  const chemin = `${d.equipe_id}/${d.id}/${nom}.pdf`;
+  const chemin = `${d.equipe_id}/${d.id}/${nomFichierDocument(d)}.pdf`;
   const depot = await sb.storage.from("documents").upload(chemin, contenu, { contentType: "application/pdf", upsert: true });
   if (depot.error) throw new Error(traduireErreur(depot.error));
   const { data: code, error } = await sb.rpc("lien_court_document", { p_document: d.id, p_chemin: chemin, p_jours: DUREE_LIEN_PDF_JOURS });

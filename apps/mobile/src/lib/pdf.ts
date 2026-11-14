@@ -1,4 +1,5 @@
-import { chargerDocument, htmlDocument, LIBELLES_TYPE_DOCUMENT, lienPdfDocument, messagePartage, numeroWhatsApp, type Parametres } from '@factureplus/core';
+import { chargerDocument, htmlDocument, LIBELLES_TYPE_DOCUMENT, lienPdfDocument, messagePartage, nomFichierDocument, numeroWhatsApp, type Parametres } from '@factureplus/core';
+import { File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { Linking, Platform } from 'react-native';
@@ -11,11 +12,28 @@ async function html(documentId: string, parametres: Parametres) {
   return { document, contenu: htmlDocument({ document, lignes, reglements, parametres }) };
 }
 
+/**
+ * PDF du document nommé par son numéro (FAC-2026-0001.pdf) : expo-print produit un nom aléatoire,
+ * le fichier est déplacé dans le cache sous le bon nom. En cas d'échec, le fichier d'origine est gardé.
+ */
+async function pdfNomme(document: Parameters<typeof nomFichierDocument>[0], contenu: string): Promise<string> {
+  const { uri } = await Print.printToFileAsync({ html: contenu });
+  try {
+    const cible = new File(Paths.cache, `${nomFichierDocument(document)}.pdf`);
+    if (cible.exists) cible.delete();
+    const fichier = new File(uri);
+    await fichier.move(cible);
+    return fichier.uri;
+  } catch {
+    return uri;
+  }
+}
+
 /** Génère le PDF et ouvre la feuille de partage (WhatsApp, e-mail, enregistrement…). */
 export async function partagerPdf(documentId: string, parametres: Parametres) {
   const { document, contenu } = await html(documentId, parametres);
   if (Platform.OS === 'web') return Print.printAsync({ html: contenu });
-  const { uri } = await Print.printToFileAsync({ html: contenu });
+  const uri = await pdfNomme(document, contenu);
   await Sharing.shareAsync(uri, {
     mimeType: 'application/pdf',
     UTI: 'com.adobe.pdf',

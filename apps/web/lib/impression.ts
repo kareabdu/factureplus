@@ -1,4 +1,4 @@
-import { chargerDocument, htmlDocument, type Parametres } from "@factureplus/core";
+import { chargerDocument, htmlDocument, nomFichierDocument, type Parametres } from "@factureplus/core";
 
 import { supabase } from "./supabase";
 
@@ -21,7 +21,11 @@ export async function imprimerDocument(documentId: string, parametres: Parametre
   doc.close();
   // Laisse le temps au logo de se charger avant d'imprimer
   await new Promise((r) => setTimeout(r, 300));
+  // « Enregistrer en PDF » propose le titre de la page comme nom de fichier : le numéro du document
+  const titre = window.document.title;
+  window.document.title = nomFichierDocument(document);
+  doc.title = window.document.title;
   cadre.contentWindow!.focus();
   cadre.contentWindow!.print();
-  setTimeout(() => cadre.remove(), 1000);
+  setTimeout(() => { cadre.remove(); window.document.title = titre; }, 1000);
 }

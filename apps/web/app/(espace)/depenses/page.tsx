@@ -2,12 +2,13 @@
 
 import {
   CATEGORIES_DEPENSE, creerDepense, csvDepenses, envoyerRecu, formaterMontant, LIBELLES_CATEGORIES_DEPENSE, LIBELLES_MOYENS_DEPENSE,
-  LIBELLES_PERIODES, libellePeriode, lienRecu, listerDepenses, modifierDepense, MOYENS_DEPENSE, periodeParDefaut, periodePersonnalisee, periodePredefinie,
-  PERIODES_PREDEFINIES, resumerDepenses, supprimerDepense, type CategorieDepense, type CodePeriode, type Depense, type MoyenDepense,
+  libellePeriode, lienRecu, listerDepenses, modifierDepense, MOYENS_DEPENSE, periodeParDefaut,
+  resumerDepenses, supprimerDepense, type CategorieDepense, type Depense, type MoyenDepense,
   type Periode, type SaisieDepense,
 } from "@factureplus/core";
 import { useDeferredValue, useState, type FormEvent } from "react";
 
+import { FiltresPeriode } from "@/components/filtres-periode";
 import {
   Alerte, Bouton, Carte, Champ, ChampMontant, EnTetePage, Indicateur, Liste, Modale, Recherche, Tableau, Vide, Zone,
 } from "@/components/ui";
@@ -46,8 +47,6 @@ export default function Depenses() {
     }
   }
 
-  const codes: CodePeriode[] = [...PERIODES_PREDEFINIES, "personnalisee"];
-
   return (
     <>
       <EnTetePage titre="Dépenses" description="Loyer, salaires, transport, factures… suivez vos charges."
@@ -56,22 +55,8 @@ export default function Depenses() {
           <Bouton icone="plus" onClick={() => setEdition("nouvelle")}>Nouvelle dépense</Bouton>
         </>} />
 
+      <FiltresPeriode periode={periode} onChange={setPeriode} className="mb-3" />
       <div className="mb-4 flex flex-wrap items-end gap-3">
-        <Liste libelle="Période" value={periode.code}
-          onChange={(e) => {
-            const c = e.target.value as CodePeriode;
-            setPeriode(c === "personnalisee" ? periodePersonnalisee(periode.debut, periode.fin) : periodePredefinie(c));
-          }}>
-          {codes.map((c) => <option key={c} value={c}>{LIBELLES_PERIODES[c]}</option>)}
-        </Liste>
-        {periode.code === "personnalisee" && (
-          <>
-            <Champ libelle="Du" type="date" value={periode.debut} max={periode.fin}
-              onChange={(e) => e.target.value && setPeriode(periodePersonnalisee(e.target.value, periode.fin))} />
-            <Champ libelle="Au" type="date" value={periode.fin} min={periode.debut}
-              onChange={(e) => e.target.value && setPeriode(periodePersonnalisee(periode.debut, e.target.value))} />
-          </>
-        )}
         <Liste libelle="Catégorie" value={categorie} onChange={(e) => setCategorie(e.target.value as CategorieDepense | "")}>
           <option value="">Toutes</option>
           {CATEGORIES_DEPENSE.map((c) => <option key={c.code} value={c.code}>{c.libelle}</option>)}

@@ -1,5 +1,5 @@
 import {
-  chargerResume, formaterMontant, formaterQuantite, joursDePeriode, libellePeriode,
+  barresDePeriode, chargerResume, formaterMontant, formaterQuantite, libellePeriode,
   listerAlertes, periodeParDefaut, type Periode,
 } from '@factureplus/core';
 import { useDonnees } from '@factureplus/core/react';
@@ -40,12 +40,7 @@ export default function Accueil() {
   if (chargement && !donnees) return <ChargementPlein />;
   const [r, alertes] = donnees ?? [null, []];
   // Graphique : une barre par jour jusqu'à 62 jours, sinon une barre par mois
-  const jours = joursDePeriode(periode);
-  const parMois = jours.length > 62;
-  const barres = (parMois ? [...new Set(jours.map((j) => j.slice(0, 7)))] : jours).map((cle) => ({
-    cle,
-    total: (r?.ventes_jours_periode ?? []).filter((v) => (parMois ? v.jour.slice(0, 7) : v.jour) === cle).reduce((t, v) => t + v.total, 0),
-  }));
+  const { parMois, barres } = barresDePeriode(periode, r?.ventes_jours_periode ?? []);
   const maxBarre = Math.max(1, ...barres.map((b) => b.total));
   const derniereVendue = [...barres].reverse().find((b) => b.total > 0)?.cle;
   const barreAffichee = barres.find((b) => b.cle === barreChoisie) ?? barres.find((b) => b.cle === derniereVendue) ?? barres[barres.length - 1];

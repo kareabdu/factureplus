@@ -83,3 +83,20 @@ export function libellePeriode(p: Periode): string {
   const memeAnnee = p.debut.slice(0, 4) === p.fin.slice(0, 4);
   return `${f(p.debut, !memeAnnee)} – ${f(p.fin, true)}`;
 }
+
+/**
+ * Barres du graphique des ventes d'une période : une par jour jusqu'à 62 jours, sinon une par mois
+ * (clé « AAAA-MM-JJ » ou « AAAA-MM »).
+ */
+export function barresDePeriode(
+  p: Pick<Periode, "debut" | "fin">,
+  valeurs: { jour: string; total: number }[],
+): { parMois: boolean; barres: { cle: string; total: number }[] } {
+  const jours = joursDePeriode(p);
+  const parMois = jours.length > 62;
+  const cleDe = (jour: string) => (parMois ? jour.slice(0, 7) : jour);
+  const totaux = new Map<string, number>();
+  for (const v of valeurs) totaux.set(cleDe(v.jour), (totaux.get(cleDe(v.jour)) ?? 0) + v.total);
+  const cles = parMois ? [...new Set(jours.map(cleDe))] : jours;
+  return { parMois, barres: cles.map((cle) => ({ cle, total: totaux.get(cle) ?? 0 })) };
+}

@@ -1,9 +1,12 @@
 "use client";
 
-import { chargerResume, formaterMontant, formaterQuantite, listerAlertes } from "@factureplus/core";
+import {
+  barresDePeriode, chargerResume, formaterMontant, formaterQuantite, libellePeriode, listerAlertes, periodeParDefaut, type Periode,
+} from "@factureplus/core";
 import Link from "next/link";
 import { useState } from "react";
 
+import { FiltresPeriode } from "@/components/filtres-periode";
 import { Alerte, Bouton, Carte, Chargement, EnTetePage, Indicateur, LienBouton, Vide } from "@/components/ui";
 import { useDonnees, useEquipe } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
@@ -12,15 +15,22 @@ export default function TableauDeBord() {
   const { equipeId, parametres } = useEquipe();
   const m = (v: number) => formaterMontant(v, parametres?.symbole_devise);
   const [maintenant] = useState(() => Date.now());
+  const [periode, setPeriode] = useState<Periode>(() => periodeParDefaut());
   const { donnees, erreur, recharger } = useDonnees(
-    () => Promise.all([chargerResume(supabase, equipeId), listerAlertes(supabase, equipeId)]),
-    [equipeId],
+    () => Promise.all([chargerResume(supabase, equipeId, periode.debut, periode.fin), listerAlertes(supabase, equipeId)]),
+    [equipeId, periode.debut, periode.fin],
   );
 
   if (erreur && !donnees) return <div className="flex flex-col gap-3"><Alerte>{erreur}</Alerte><Bouton variante="secondaire" onClick={() => void recharger()}>Réessayer</Bouton></div>;
   if (!donnees) return <Chargement />;
   const [r, alertes] = donnees;
-  const max = Math.max(1, ...r.ventes_par_jour.map((j) => j.total));
+  const lp = libellePeriode(periode);
+  // Graphique : une barre par jour jusqu'à 62 jours, sinon une barre par mois
+  const { parMois, barres } = barresDePeriode(periode, r.ventes_jours_periode);
+  const max = Math.max(1, ...barres.map((b) => b.total));
+  const libelleBarre = (cle: string) => parMois
+    ? new Date(`${cle}-01T00:00:00`).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })
+    : new Date(`${cle}T00:00:00`).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
 
   return (
     <>
@@ -30,30 +40,28 @@ export default function TableauDeBord() {
           <LienBouton href="/produits/editer" variante="secondaire" icone="plus">Produit</LienBouton>
         </>} />
 
+      <FiltresPeriode periode={periode} onChange={setPeriode} className="mb-5" />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Indicateur libelle="Ventes du mois" valeur={m(r.ventes_periode)} detail={`${r.nb_factures_periode} facture(s) · encaissé ${m(r.encaisse_periode)}`} href="/ventes" />
-        <Indicateur libelle="Marge du mois" valeur={m(r.marge_periode)} ton={r.marge_periode < 0 ? "danger" : "succes"} />
+        <Indicateur libelle={`Ventes · ${lp}`} valeur={m(r.ventes_periode)} detail={`${r.nb_factures_periode} facture(s) · encaissé ${m(r.encaisse_periode)}`} href="/ventes" />
+        <Indicateur libelle={`Marge · ${lp}`} valeur={m(r.marge_periode)} ton={r.marge_periode < 0 ? "danger" : "succes"} />
         <Indicateur libelle="Impayés" valeur={m(r.impayes)} ton={r.impayes > 0 ? "attention" : undefined} href="/ventes?vue=impayes" />
         <Indicateur libelle="Valeur du stock" valeur={m(r.valeur_stock_achat)} detail={`${r.nb_produits} produits · prix de vente ${m(r.valeur_stock_vente)}`} href="/produits" />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <Carte titre="Ventes des 30 derniers jours">
-          <div className="flex h-44 items-end gap-1" role="img" aria-label="Histogramme des ventes quotidiennes">
-            {Array.from({ length: 30 }, (_, i) => {
-              const jour = new Date(maintenant - (29 - i) * 86_400_000).toISOString().slice(0, 10);
-              const v = r.ventes_par_jour.find((j) => j.jour === jour)?.total ?? 0;
-              return (
-                <div key={jour} className="group relative flex h-full flex-1 items-end">
-                  <div className={`w-full rounded-t ${v ? "bg-primary" : "bg-border"}`} style={{ height: `${Math.max(2, (v / max) * 100)}%` }} />
-                  <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs text-background group-hover:block">
-                    {new Date(`${jour}T00:00:00`).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} · {m(v)}
-                  </span>
-                </div>
-              );
-            })}
+        <Carte titre={`Ventes ${parMois ? "par mois" : "par jour"} · ${lp}`}>
+          <div className="flex h-44 items-end gap-1" role="img" aria-label={`Histogramme des ventes ${parMois ? "mensuelles" : "quotidiennes"}`}>
+            {barres.map((b) => (
+              <div key={b.cle} className="group relative flex h-full flex-1 items-end">
+                <div className={`w-full rounded-t ${b.total ? "bg-primary" : "bg-border"}`} style={{ height: `${Math.max(2, (b.total / max) * 100)}%` }} />
+                <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs text-background group-hover:block">
+                  {libelleBarre(b.cle)} · {m(b.total)}
+                </span>
+              </div>
+            ))}
           </div>
+          {barres.length === 1 && <p className="mt-2 text-center text-sm text-muted">{libelleBarre(barres[0].cle)} · {m(barres[0].total)}</p>}
         </Carte>
 
         <Carte titre="Stock bas" action={<Link href="/produits?filtre=bas" className="text-sm text-primary hover:underline">Tout voir</Link>} sansMarge>
@@ -73,7 +81,7 @@ export default function TableauDeBord() {
       </div>
 
       {r.meilleurs_produits.length > 0 && (
-        <Carte titre="Meilleures ventes du mois" className="mt-6" sansMarge>
+        <Carte titre={`Meilleures ventes · ${lp}`} className="mt-6" sansMarge>
           <ul className="divide-y divide-border">
             {r.meilleurs_produits.map((p) => (
               <li key={p.produit_id}>

@@ -6,7 +6,7 @@ import { formaterMontant, formaterQuantite, lireMontant, lireQuantite } from "..
 import { calculerTotaux } from "../src/taxe.ts";
 import { formaterNumero } from "../src/numeros.ts";
 import { numeroWhatsApp } from "../src/whatsapp.ts";
-import { joursDePeriode, libellePeriode, periodePersonnalisee, periodePredefinie } from "../src/periodes.ts";
+import { barresDePeriode, joursDePeriode, libellePeriode, periodePersonnalisee, periodePredefinie } from "../src/periodes.ts";
 
 test("montants", () => {
   assert.equal(formaterMontant(1250000), "1 250 000 FCFA");
@@ -63,6 +63,18 @@ test("périodes personnalisées", () => {
   assert.deepEqual(joursDePeriode({ debut: "2026-02-27", fin: "2026-03-02" }), ["2026-02-27", "2026-02-28", "2026-03-01", "2026-03-02"]);
   assert.equal(joursDePeriode(periodePredefinie("cette_annee", new Date(2024, 5, 1))).length, 366);
   assert.match(libellePeriode(periodePersonnalisee("2026-11-01", "2026-11-30")), /^1 nov\.? – 30 nov\.? 2026$/);
+});
+
+test("barres du graphique des ventes", () => {
+  const ventes = [{ jour: "2026-11-02", total: 500 }, { jour: "2026-11-02", total: 100 }, { jour: "2026-12-05", total: 70 }];
+  const semaine = barresDePeriode({ debut: "2026-11-01", fin: "2026-11-07" }, ventes);
+  assert.equal(semaine.parMois, false);
+  assert.equal(semaine.barres.length, 7);
+  assert.deepEqual(semaine.barres[1], { cle: "2026-11-02", total: 600 });
+  const annee = barresDePeriode({ debut: "2026-01-01", fin: "2026-12-31" }, ventes);
+  assert.equal(annee.parMois, true);
+  assert.equal(annee.barres.length, 12);
+  assert.deepEqual(annee.barres.slice(10), [{ cle: "2026-11", total: 600 }, { cle: "2026-12", total: 70 }]);
 });
 
 test("numéro WhatsApp international", () => {

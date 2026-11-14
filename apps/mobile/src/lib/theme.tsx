@@ -31,6 +31,8 @@ export function ThemeApp({ children }: { children: ReactNode }) {
   // Le thème choisi s'impose aussi aux éléments natifs (barre d'onglets en verre d'iOS 26, sélecteurs,
   // alertes) : sans cela, un iPhone en mode sombre les dessine en sombre sous une application claire.
   useLayoutEffect(() => {
+    // Absent sur le web (react-native-web) : rien à imposer, le CSS suit le thème de l'app
+    if (typeof Appearance.setColorScheme !== 'function') return;
     Appearance.setColorScheme(preference === 'auto' ? 'auto' : preference === 'sombre' ? 'dark' : 'light');
   }, [preference]);
 

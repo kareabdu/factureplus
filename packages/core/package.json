@@ -23,6 +23,11 @@
     "react": ">=19"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true }
+    "react": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "fflate": "^0.8.3"
   }
 }

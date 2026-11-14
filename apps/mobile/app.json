@@ -63,7 +63,14 @@
           "contactsPermission": "FacturePlus accède à vos contacts pour créer un client à partir d'un contact choisi."
         }
       ],
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          "color": "#147A2E",
+          "defaultChannel": "stock"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

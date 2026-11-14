@@ -83,5 +83,14 @@ Après chaque modification : commiter et pousser sur `main` sans demander (véri
 - **Liens courts des PDF** (WhatsApp) : `<site>/d/<code>` (redirection dans `next.config.ts`) → fonction Edge
   `lien-pdf` (sans JWT) → lien signé de 5 min. Codes dans `liens_documents` (RPC `lien_court_document`, 30 jours).
   Table technique de partage : volontairement sans `a_exiger_abonnement` (un compte expiré peut envoyer ses documents).
+- **Import / export des produits** (CSV, Excel .xlsx) : lecture/écriture dans `packages/core/src/tableur.ts` (fflate, sans
+  bibliothèque de tableur), colonnes, modèle et analyse ligne par ligne dans `produits-tableur.ts`. RPC `importer_produits`
+  (tout ou rien, quantités par `prive.mouvementer` : entrée « Stock initial » ou ajustement « Import »).
+  Web : boutons de la page Produits ; mobile : Plus › Importer / exporter (`import-export.tsx`).
+- **Notifications push stock** (mobile, expo-notifications) : jetons dans `appareils_push` (RPC `enregistrer_appareil_push` /
+  `retirer_appareil_push`) ; déclencheur sur `alertes_stock` (une notification par niveau « bas » puis « rupture » tant que
+  l'alerte reste active, `niveau_notifie`) → file `notifications_push` → pg_net → fonction Edge `push-stock` (sans JWT,
+  vide la file via `reserver_notifications_push`, rôle service) → API push d'Expo. URL des fonctions dans `prive.configuration`.
+  Mobile : `src/lib/notifications.ts` (réglage dans Plus, proposition automatique, toucher → fiche produit).
 - **Administration de la plateforme** : table `administrateurs_plateforme` (alimentée à la main en SQL, jamais par migration),
   RPC `admin_*` contrôlées par `prive.verifier_admin_plateforme()`.

@@ -7,6 +7,7 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { ChargementPlein } from '@/components/ui';
 import { Fournisseurs, useEquipe, useSession } from '@/lib/espace';
 import { useLienRecuperation } from '@/lib/lien-recuperation';
+import { useNotificationsStock } from '@/lib/notifications';
 import { ThemeApp, useThemeApp } from '@/lib/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -55,11 +56,12 @@ function ThemeNavigation({ children }: { children: ReactNode }) {
  *  - connecté avec entreprise → onglets et écrans de l'application
  */
 function Navigation() {
-  const { session, chargement: chargementSession } = useSession();
+  const { session, userId, chargement: chargementSession } = useSession();
   const { equipe, chargement, erreur } = useEquipe();
   const connecte = !!session;
   const pret = connecte && !!equipe;
   useLienRecuperation(pret);
+  useNotificationsStock(pret, equipe?.id ?? null, userId);
 
   if (chargementSession || (connecte && chargement && !erreur)) return <ChargementPlein />;
 
@@ -98,6 +100,7 @@ function Navigation() {
         <Stack.Screen name="fournisseurs" options={{ headerShown: true, title: 'Fournisseurs' }} />
         <Stack.Screen name="fournisseur/[id]" options={{ headerShown: true, title: 'Fournisseur' }} />
         <Stack.Screen name="categories" options={{ headerShown: true, title: 'Catégories' }} />
+        <Stack.Screen name="import-export" options={{ headerShown: true, title: 'Import / export' }} />
         <Stack.Screen name="parametres" options={{ headerShown: true, title: 'Entreprise' }} />
         <Stack.Screen name="compte" options={{ headerShown: true, title: 'Mon compte' }} />
         <Stack.Screen name="depenses" options={{ headerShown: true, title: 'Dépenses' }} />

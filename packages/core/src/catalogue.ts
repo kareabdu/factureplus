@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { verifier, verifierUnique } from "./erreurs";
+import type { LigneEnvoiImport } from "./produits-tableur";
 import type { Categorie, Client, Fournisseur, Produit, SaisieProduit } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -121,4 +122,26 @@ export async function chargerClient(sb: SupabaseClient, id: string): Promise<Cli
 
 export async function chargerFournisseur(sb: SupabaseClient, id: string): Promise<Fournisseur> {
   return verifierUnique(await sb.from("fournisseurs").select("*").eq("id", id).single());
+}
+
+// ---------------------------------------------------------------------------
+// Import du catalogue (CSV / Excel) : voir produits-tableur.ts pour l'analyse du fichier
+// ---------------------------------------------------------------------------
+
+export interface BilanImportProduits {
+  crees: number;
+  modifies: number;
+  /** Produits dont le stock a été ajusté (mouvement « Import ») */
+  stocks_ajustes: number;
+  categories_creees: number;
+}
+
+/**
+ * Envoie les lignes validées (`lignesAEnvoyer`) : tout ou rien. Les quantités passent par des
+ * mouvements de stock (entrée « Stock initial » ou ajustement « Import »), jamais en écriture directe.
+ */
+export async function importerProduits(
+  sb: SupabaseClient, equipeId: string, lignes: readonly LigneEnvoiImport[],
+): Promise<BilanImportProduits> {
+  return verifier(await sb.rpc("importer_produits", { p_equipe: equipeId, p_lignes: lignes }));
 }

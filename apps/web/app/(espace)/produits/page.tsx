@@ -4,6 +4,7 @@ import { estStockBas, formaterMontant, formaterQuantite, listerCategories, liste
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useDeferredValue, useState } from "react";
 
+import { ExportProduits, ImportProduits } from "@/components/tableur-produits";
 import { Alerte, Badge, Carte, Chargement, EnTetePage, LienBouton, Liste, Recherche, Segments, Tableau, Vide } from "@/components/ui";
 import { useDonnees, useEquipe } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
@@ -22,7 +23,7 @@ function Produits() {
   const r = useDeferredValue(recherche);
   const m = (v: number) => formaterMontant(v, parametres?.symbole_devise);
 
-  const { donnees, chargement, erreur } = useDonnees(
+  const { donnees, chargement, erreur, recharger } = useDonnees(
     () => listerProduits(supabase, equipeId, { recherche: r, stockBas: filtre === "bas", inactifs: filtre === "inactifs", categorieId: categorie || null }),
     [equipeId, r, filtre, categorie],
   );
@@ -33,7 +34,13 @@ function Produits() {
   return (
     <>
       <EnTetePage titre="Produits" description={donnees ? `${produits.length} produit(s) · valeur du stock ${m(Math.round(valeur))}` : undefined}
-        action={<LienBouton href="/produits/editer" icone="plus">Nouveau produit</LienBouton>} />
+        action={
+          <div className="flex flex-wrap gap-2">
+            <ImportProduits equipeId={equipeId} onImporte={() => { void recharger(); void categories.recharger(); }} />
+            <ExportProduits equipeId={equipeId} />
+            <LienBouton href="/produits/editer" icone="plus">Nouveau produit</LienBouton>
+          </div>
+        } />
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Recherche valeur={recherche} onChange={setRecherche} placeholder="Nom, référence, code-barres…" className="min-w-64 flex-1" />
         <Segments options={[{ valeur: "tous", libelle: "Actifs" }, { valeur: "bas", libelle: "Stock bas" }, { valeur: "inactifs", libelle: "Désactivés" }]}

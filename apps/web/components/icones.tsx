@@ -124,6 +124,7 @@ const TRACES = {
     </>
   ),
   telecharger: <path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />,
+  importer: <path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 19.5h14" />,
   recu: (
     <>
       <path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z" />

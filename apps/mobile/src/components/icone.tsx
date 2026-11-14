@@ -41,6 +41,10 @@ export const ICONES = {
   abonnement: { ios: 'crown.fill', android: 'workspace_premium' },
   admin: { ios: 'shield.lefthalf.filled', android: 'admin_panel_settings' },
   recu: { ios: 'doc.text.image', android: 'image' },
+  tableur: { ios: 'tablecells', android: 'table_view' },
+  importer: { ios: 'square.and.arrow.down', android: 'upload_file' },
+  exporter: { ios: 'square.and.arrow.up', android: 'download' },
+  notification: { ios: 'bell.fill', android: 'notifications' },
 } as const satisfies Record<string, { ios: SFSymbol; android: AndroidSymbol }>;
 
 export type NomIcone = keyof typeof ICONES;

@@ -7,7 +7,8 @@ import {
   themeEffectif,
   type PreferenceTheme,
 } from '@factureplus/core';
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
+import { Appearance } from 'react-native';
 
 import { Colors, type Couleurs } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -26,6 +27,12 @@ const ThemeContext = createContext<EtatTheme | null>(null);
 export function ThemeApp({ children }: { children: ReactNode }) {
   const appareil = useColorScheme();
   const [preference, setPreference] = useState<PreferenceTheme>(lirePreferenceTheme);
+
+  // Le thème choisi s'impose aussi aux éléments natifs (barre d'onglets en verre d'iOS 26, sélecteurs,
+  // alertes) : sans cela, un iPhone en mode sombre les dessine en sombre sous une application claire.
+  useLayoutEffect(() => {
+    Appearance.setColorScheme(preference === 'auto' ? 'auto' : preference === 'sombre' ? 'dark' : 'light');
+  }, [preference]);
 
   const valeur = useMemo<EtatTheme>(() => {
     const schema = themeEffectif(preference, appareil === 'dark');

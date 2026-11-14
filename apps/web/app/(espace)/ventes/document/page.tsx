@@ -8,7 +8,8 @@ import {
 } from "@factureplus/core";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState, type FormEvent } from "react";
+import { libelleEnregistrementAuto, useEnregistrementAuto } from "@factureplus/core/react";
+import { Suspense, useRef, useState, type FormEvent } from "react";
 
 import { ChoixProduit, ChoixTiers } from "@/components/choix";
 import { Icone } from "@/components/icones";
@@ -44,6 +45,12 @@ function Aiguillage() {
 type Ligne = LigneDocument & { cle: number; stock?: number };
 let compteur = 0;
 
+/** État d'un document sérialisé (sans les clés d'affichage) pour repérer les modifications. */
+function signatureDocument(entete: EnteteDocument, lignes: Ligne[]): string {
+  return JSON.stringify([entete, lignes.map(({ produit_id, designation, unite, prix_unitaire, quantite, taxable }) =>
+    [produit_id, designation, unite, prix_unitaire, quantite, taxable])]);
+}
+
 function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; document: Document | null; lignesInitiales: LigneDocument[] }) {
   const router = useRouter();
   const { equipeId, parametres } = useEquipe();
@@ -56,12 +63,27 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
   const [erreur, setErreur] = useState<string | null>(null);
   const [action, setAction] = useState<string | null>(null);
   const brouillon = !d || d.statut === "brouillon";
+  // Identifiant du brouillon, créé au premier enregistrement automatique d'un nouveau document
+  const [idBrouillon, setIdBrouillon] = useState<string | null>(d?.id ?? null);
+  const idRef = useRef<string | null>(d?.id ?? null);
   // Un brouillon suit les paramètres actuels ; un document validé garde sa taxe d'origine
   const totaux = calculerTotaux(lignes, d && !brouillon
     ? { taxe_type: d.taxe_type, taxe_nom: d.taxe_nom, taxe_taux: d.taxe_taux, taxe_incluse: d.taxe_incluse }
     : { taxe_type: parametres?.taxe_type ?? "aucune", taxe_nom: parametres?.taxe_nom ?? "TVA", taxe_taux: parametres?.taxe_taux ?? 0, taxe_incluse: parametres?.taxe_incluse ?? false });
   const maj = (cle: number, c: Partial<Ligne>) => setLignes((ls) => ls.map((l) => (l.cle === cle ? { ...l, ...c } : l)));
   const libelle = LIBELLES_TYPE_DOCUMENT[type];
+
+  // Brouillon enregistré automatiquement après chaque modification (dès qu'il a une ligne valide)
+  const auto = useEnregistrementAuto({
+    actif: brouillon && !action && lignes.length > 0 && lignes.every((l) => l.designation.trim() && l.quantite > 0),
+    signature: signatureDocument(entete, lignes),
+    enregistrer: async () => {
+      const id = await enregistrerDocument(supabase, equipeId, type, idRef.current, entete, lignes);
+      idRef.current = id;
+      setIdBrouillon(id);
+    },
+  });
+  const etatAuto = brouillon ? libelleEnregistrementAuto(auto.etat, auto.heure) : null;
 
   async function enregistrer(mode: "brouillon" | "valider" | "enregistrer") {
     if (lignes.some((l) => !l.designation.trim() || !(l.quantite > 0))) return setErreur("Chaque ligne doit avoir une désignation et une quantité.");
@@ -76,8 +98,11 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
     setErreur(null);
     setAction(mode);
     try {
+      await auto.attendre(); // un enregistrement automatique en cours a pu créer le brouillon
       if (enteteFinale !== entete) setEntete(enteteFinale);
-      const id = await enregistrerDocument(supabase, equipeId, type, d?.id ?? null, enteteFinale, lignes);
+      const id = await enregistrerDocument(supabase, equipeId, type, idRef.current, enteteFinale, lignes);
+      idRef.current = id;
+      auto.marquer(signatureDocument(enteteFinale, lignes));
       if (mode === "valider") await validerDocument(supabase, id);
       router.replace(mode === "brouillon" ? `/ventes?type=${type}` : `/ventes/document?id=${id}`);
     } catch (e) {
@@ -91,12 +116,19 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
       <EnTetePage titre={!d ? `Nouvelle ${libelle.toLowerCase()}` : brouillon ? `${libelle} (brouillon)` : `Modifier ${d.numero}`}
         retour={d && !brouillon ? `/ventes/document?id=${d.id}` : `/ventes?type=${type}`}
         action={brouillon ? <>
-          {d && <Bouton variante="danger" icone="supprimer" onClick={async () => {
-            if (window.confirm("Supprimer ce brouillon ?")) { await supprimerBrouillon(supabase, d.id); router.replace(`/ventes?type=${type}`); }
+          {idBrouillon && <Bouton variante="danger" icone="supprimer" disabled={!!action} onClick={async () => {
+            if (!window.confirm("Supprimer ce brouillon ?")) return;
+            setAction("supprimer");
+            await auto.attendre();
+            await supprimerBrouillon(supabase, idRef.current ?? idBrouillon);
+            router.replace(`/ventes?type=${type}`);
           }}>Supprimer</Bouton>}
           <Bouton variante="secondaire" chargement={action === "brouillon"} disabled={!!action} onClick={() => enregistrer("brouillon")}>Enregistrer le brouillon</Bouton>
           <Bouton chargement={action === "valider"} disabled={!!action} onClick={() => enregistrer("valider")}>Valider</Bouton>
         </> : <Bouton chargement={action === "enregistrer"} disabled={!!action} onClick={() => enregistrer("enregistrer")}>Enregistrer les modifications</Bouton>} />
+      {etatAuto && (
+        <p className={`-mt-3 mb-4 text-xs ${auto.etat === "erreur" ? "text-danger" : "text-muted"}`} role="status">{etatAuto}</p>
+      )}
       {erreur && <div className="mb-4"><Alerte>{erreur}</Alerte></div>}
       {!brouillon && type === "facture" && (
         <div className="mb-4"><Alerte type="info">Le numéro est conservé. Les quantités modifiées sont reportées sur le stock à l&apos;enregistrement.</Alerte></div>
@@ -108,7 +140,7 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
             <div className="grid gap-4 sm:grid-cols-2">
               <ChoixTiers type="clients" libelle="Client enregistré" valeur={entete.client_id ?? null}
                 onChange={(c) => setEntete((e) => c ? { ...e, client_id: c.id, client_nom: c.nom, client_telephone: c.telephone, client_adresse: c.adresse } : { ...e, client_id: null })} />
-              <Champ libelle="Nom affiché" placeholder={type === "facture" ? CLIENT_DE_PASSAGE : undefined} value={entete.client_nom ?? ""} onChange={(ev) => setEntete((e) => ({ ...e, client_nom: ev.target.value }))} disabled={!!entete.client_id} />
+              <Champ libelle="Nom affiché" value={entete.client_nom ?? ""} onChange={(ev) => setEntete((e) => ({ ...e, client_nom: ev.target.value }))} disabled={!!entete.client_id} />
               <Champ libelle="Téléphone" value={entete.client_telephone ?? ""} onChange={(ev) => setEntete((e) => ({ ...e, client_telephone: ev.target.value }))} disabled={!!entete.client_id} />
               <Champ libelle="Adresse" value={entete.client_adresse ?? ""} onChange={(ev) => setEntete((e) => ({ ...e, client_adresse: ev.target.value }))} disabled={!!entete.client_id} />
             </div>

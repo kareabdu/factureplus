@@ -3,8 +3,9 @@ import {
   statutAffiche, supprimerBrouillon, totalLigne, validerDocument,
   type Document, type EnteteDocument, type ReglageTaxe, type TypeDocument,
 } from '@factureplus/core';
+import { libelleEnregistrementAuto, useEnregistrementAuto } from '@factureplus/core/react';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ChampDate, versIso } from '@/components/champ-date';
@@ -49,6 +50,22 @@ export default function EditerDocument() {
   const [pret, setPret] = useState(!params.id);
   const [erreur, setErreur] = useState<string | null>(null);
   const [action, setAction] = useState<'brouillon' | 'valider' | 'enregistrer' | null>(null);
+  // Identifiant à jour même entre deux rendus (enregistrement automatique puis action manuelle)
+  const idRef = useRef<string | null>(params.id ?? null);
+
+  const brouillon = !existant || existant.statut === 'brouillon';
+
+  // Brouillon enregistré automatiquement après chaque modification (dès qu'il a un article valide)
+  const auto = useEnregistrementAuto({
+    actif: pret && brouillon && !action && lignes.length > 0 && lignes.every((l) => l.designation.trim() && l.quantite > 0),
+    signature: signatureDocument(entete, lignes),
+    enregistrer: async () => {
+      const nouvelId = await enregistrerDocument(supabase, equipeId, type, idRef.current, entete, lignes);
+      idRef.current = nouvelId;
+      setId(nouvelId);
+    },
+  });
+  const { marquer: marquerEnregistre } = auto;
 
   // Nouvelle facture depuis la fiche d'un client : client pré-rempli
   useEffect(() => {
@@ -69,16 +86,20 @@ export default function EditerDocument() {
       setType(d.type);
       setEntete({ client_id: d.client_id, client_nom: d.client_nom, client_telephone: d.client_telephone, client_adresse: d.client_adresse,
         date: d.date, echeance: d.echeance, conditions: d.conditions, notes: d.notes });
-      setLignes(l.map((x) => ({
+      const charge = { client_id: d.client_id, client_nom: d.client_nom, client_telephone: d.client_telephone, client_adresse: d.client_adresse,
+        date: d.date, echeance: d.echeance, conditions: d.conditions, notes: d.notes };
+      const lignesChargees = l.map((x) => ({
         produit_id: x.produit_id, designation: x.designation, unite: x.unite ?? null, prix_unitaire: x.prix_unitaire,
         quantite: x.quantite, taxable: x.taxable, cle: ++compteur,
-      })));
+      }));
+      setLignes(lignesChargees);
+      // État chargé = déjà enregistré : pas d'enregistrement automatique sans modification
+      marquerEnregistre(signatureDocument(charge, lignesChargees));
       setPret(true);
     }).catch((e: Error) => actif && setErreur(e.message));
     return () => { actif = false; };
-  }, [params.id]);
+  }, [params.id, marquerEnregistre]);
 
-  const brouillon = !existant || existant.statut === 'brouillon';
   // Un brouillon suit les paramètres actuels ; un document validé garde sa taxe d'origine
   const taxe: ReglageTaxe = existant && !brouillon
     ? { taxe_type: existant.taxe_type, taxe_nom: existant.taxe_nom, taxe_taux: existant.taxe_taux, taxe_incluse: existant.taxe_incluse }
@@ -116,9 +137,12 @@ export default function EditerDocument() {
     setErreur(null);
     setAction(mode);
     try {
+      await auto.attendre(); // un enregistrement automatique en cours a pu créer le brouillon
       if (enteteFinale !== entete) setEntete(enteteFinale);
-      const nouvelId = await enregistrerDocument(supabase, equipeId, type, id, enteteFinale, lignes);
+      const nouvelId = await enregistrerDocument(supabase, equipeId, type, idRef.current, enteteFinale, lignes);
+      idRef.current = nouvelId;
       setId(nouvelId);
+      auto.marquer(signatureDocument(enteteFinale, lignes));
       if (mode === 'valider') await validerDocument(supabase, nouvelId);
       vibrerSucces();
       if (mode === 'brouillon') router.back();
@@ -158,6 +182,11 @@ export default function EditerDocument() {
         <Bouton titre="Enregistrer les modifications" onPress={() => enregistrer('enregistrer')} chargement={action === 'enregistrer'} />
       )}>
         {erreur && <Alerte>{erreur}</Alerte>}
+        {brouillon && libelleEnregistrementAuto(auto.etat, auto.heure) && (
+          <ThemedText type="small" themeColor={auto.etat === 'erreur' ? 'danger' : 'textSecondary'} style={{ textAlign: 'center' }}>
+            {libelleEnregistrementAuto(auto.etat, auto.heure)}
+          </ThemedText>
+        )}
         {!brouillon && type === 'facture' && (
           <Alerte type="info">Les quantités modifiées sont reportées sur le stock à l&apos;enregistrement.</Alerte>
         )}
@@ -179,7 +208,7 @@ export default function EditerDocument() {
 
         {/* Client */}
         <Bloc>
-          <LigneAction onPress={client} libelle={entete.client_nom?.trim() ? `À ${entete.client_nom}` : type === 'facture' ? 'Client (de passage par défaut)' : 'Client'}
+          <LigneAction onPress={client} libelle={entete.client_nom?.trim() ? `À ${entete.client_nom}` : 'Client'}
             icone={entete.client_nom?.trim() ? undefined : 'ajouter'} chevron />
           {!!entete.client_nom?.trim() && (
             <View style={[styles.sousBloc, { borderTopColor: theme.border }]}>
@@ -335,3 +364,9 @@ const styles = StyleSheet.create({
   echeance: { gap: Spacing.two, paddingHorizontal: Spacing.one },
   notes: { minHeight: 72, padding: Spacing.three + Spacing.one, fontSize: 16, textAlignVertical: 'top' },
 });
+
+/** État d'un document sérialisé (sans les clés d'affichage) pour repérer les modifications. */
+function signatureDocument(entete: EnteteDocument, lignes: Ligne[]): string {
+  return JSON.stringify([entete, lignes.map(({ produit_id, designation, unite, prix_unitaire, quantite, taxable }) =>
+    [produit_id, designation, unite, prix_unitaire, quantite, taxable])]);
+}

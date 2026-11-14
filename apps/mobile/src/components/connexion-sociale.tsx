@@ -109,28 +109,33 @@ export function ConnexionSociale({ onErreur }: { onErreur: (message: string | nu
 
   return (
     <View style={{ gap: Spacing.three }}>
-      {appleDisponible && (
-        <AppleAuthentication.AppleAuthenticationButton
-          buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-          buttonStyle={schema === 'sombre'
-            ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-            : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-          cornerRadius={Rayons.moyen}
-          style={{ height: 50, opacity: chargement ? 0.6 : 1 }}
-          onPress={() => { if (!chargement) void lancer('apple'); }}
-        />
-      )}
-      <Pressable onPress={() => lancer('google')} disabled={!!chargement} accessibilityRole="button" accessibilityLabel="Continuer avec Google"
-        style={({ pressed }) => ({
-          flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two,
-          minHeight: 50, borderRadius: Rayons.moyen, borderWidth: 1, borderColor: theme.border,
-          backgroundColor: theme.backgroundElement, opacity: pressed || chargement ? 0.7 : 1,
-        })}>
-        {chargement === 'google'
-          ? <ActivityIndicator color={theme.text} />
-          : <Image source={require('@/assets/images/google.png')} style={{ width: 20, height: 20 }} contentFit="contain" />}
-        <ThemedText type="smallBold">Continuer avec Google</ThemedText>
-      </Pressable>
+      {/* Côte à côte ; Google seul (pleine largeur) quand Apple n'est pas disponible (Android) */}
+      <View style={{ flexDirection: 'row', gap: Spacing.two }}>
+        {appleDisponible && (
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+            buttonStyle={schema === 'sombre'
+              ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+              : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={Rayons.moyen}
+            style={{ flex: 1, height: 50, opacity: chargement ? 0.6 : 1 }}
+            onPress={() => { if (!chargement) void lancer('apple'); }}
+          />
+        )}
+        <Pressable onPress={() => lancer('google')} disabled={!!chargement} accessibilityRole="button" accessibilityLabel="Continuer avec Google"
+          style={({ pressed }) => ({
+            flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.two,
+            minHeight: 50, paddingHorizontal: Spacing.two, borderRadius: Rayons.moyen, borderWidth: 1, borderColor: theme.border,
+            backgroundColor: theme.backgroundElement, opacity: pressed || chargement ? 0.7 : 1,
+          })}>
+          {chargement === 'google'
+            ? <ActivityIndicator color={theme.text} />
+            : <Image source={require('@/assets/images/google.png')} style={{ width: 18, height: 18 }} contentFit="contain" />}
+          <ThemedText type="smallBold" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ flexShrink: 1 }}>
+            {appleDisponible ? 'Google' : 'Continuer avec Google'}
+          </ThemedText>
+        </Pressable>
+      </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }} accessibilityRole="none">
         <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
         <ThemedText type="small" themeColor="textSecondary">ou</ThemedText>

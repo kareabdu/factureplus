@@ -1,5 +1,5 @@
 import {
-  calculerTotaux, chargerClient, chargerDocument, enregistrerDocument, formaterMontant, formaterQuantite, LIBELLES_TYPE_DOCUMENT,
+  calculerTotaux, chargerClient, CLIENT_DE_PASSAGE, chargerDocument, enregistrerDocument, formaterMontant, formaterQuantite, LIBELLES_TYPE_DOCUMENT,
   statutAffiche, supprimerBrouillon, totalLigne, validerDocument,
   type Document, type EnteteDocument, type ReglageTaxe, type TypeDocument,
 } from '@factureplus/core';
@@ -106,16 +106,18 @@ export default function EditerDocument() {
 
   async function enregistrer(mode: 'brouillon' | 'valider' | 'enregistrer') {
     if (mode !== 'brouillon' && !lignes.length) return setErreur('Ajoutez au moins un article.');
-    if (mode !== 'brouillon' && !entete.client_nom?.trim()) return setErreur('Indiquez le client.');
+    // Facture sans client : « Client de passage » (même règle que valider_document)
+    const sansClient = !entete.client_nom?.trim();
+    if (mode !== 'brouillon' && sansClient && type !== 'facture') return setErreur('Indiquez le client.');
+    const enteteFinale = mode !== 'brouillon' && sansClient ? { ...entete, client_id: null, client_nom: CLIENT_DE_PASSAGE } : entete;
     if (mode === 'enregistrer' && type === 'facture' && totaux.total < dejaPaye) {
       return setErreur(`Le total ne peut pas être inférieur au montant déjà encaissé (${m(dejaPaye)}).`);
     }
-    if (mode === 'valider' && !(await confirmer(`Valider la ${libelle.toLowerCase()}`,
-      type === 'facture' ? 'Un numéro sera attribué et le stock sera déduit.' : 'Un numéro sera attribué.', 'Valider'))) return;
     setErreur(null);
     setAction(mode);
     try {
-      const nouvelId = await enregistrerDocument(supabase, equipeId, type, id, entete, lignes);
+      if (enteteFinale !== entete) setEntete(enteteFinale);
+      const nouvelId = await enregistrerDocument(supabase, equipeId, type, id, enteteFinale, lignes);
       setId(nouvelId);
       if (mode === 'valider') await validerDocument(supabase, nouvelId);
       vibrerSucces();
@@ -177,7 +179,7 @@ export default function EditerDocument() {
 
         {/* Client */}
         <Bloc>
-          <LigneAction onPress={client} libelle={entete.client_nom?.trim() ? `À ${entete.client_nom}` : 'Client'}
+          <LigneAction onPress={client} libelle={entete.client_nom?.trim() ? `À ${entete.client_nom}` : type === 'facture' ? 'Client (de passage par défaut)' : 'Client'}
             icone={entete.client_nom?.trim() ? undefined : 'ajouter'} chevron />
           {!!entete.client_nom?.trim() && (
             <View style={[styles.sousBloc, { borderTopColor: theme.border }]}>

@@ -2,7 +2,7 @@
 
 import {
   annulerDocument, calculerTotaux, chargerDocument, convertirProforma, creerBonLivraison, enregistrerDocument, enregistrerReglement,
-  formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_TYPE_DOCUMENT, ligneDepuisProduit, lireMontant, lireQuantite,
+  formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_TYPE_DOCUMENT, CLIENT_DE_PASSAGE, ligneDepuisArticleLibre, ligneDepuisProduit, lireMontant, lireQuantite,
   refuserProforma, resteAPayer, statutAffiche, supprimerBrouillon, supprimerReglement, totalLigne, validerDocument,
   type Document, type EnteteDocument, type LigneDocument, type ModePaiement, type Reglement, type TypeDocument,
 } from "@factureplus/core";
@@ -66,17 +66,18 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
   async function enregistrer(mode: "brouillon" | "valider" | "enregistrer") {
     if (lignes.some((l) => !l.designation.trim() || !(l.quantite > 0))) return setErreur("Chaque ligne doit avoir une désignation et une quantité.");
     if (mode !== "brouillon" && !lignes.length) return setErreur("Ajoutez au moins une ligne.");
-    if (mode !== "brouillon" && !entete.client_nom?.trim()) return setErreur("Indiquez le client.");
+    // Facture sans client : « Client de passage » (même règle que valider_document)
+    const sansClient = !entete.client_nom?.trim();
+    if (mode !== "brouillon" && sansClient && type !== "facture") return setErreur("Indiquez le client.");
+    const enteteFinale = mode !== "brouillon" && sansClient ? { ...entete, client_id: null, client_nom: CLIENT_DE_PASSAGE } : entete;
     if (mode === "enregistrer" && d && type === "facture" && totaux.total < d.montant_paye) {
       return setErreur(`Le total ne peut pas être inférieur au montant déjà encaissé (${m(d.montant_paye)}).`);
     }
-    if (mode === "valider" && !window.confirm(type === "facture"
-      ? "Valider la facture ? Un numéro sera attribué et le stock déduit."
-      : `Valider la ${libelle.toLowerCase()} ? Un numéro sera attribué.`)) return;
     setErreur(null);
     setAction(mode);
     try {
-      const id = await enregistrerDocument(supabase, equipeId, type, d?.id ?? null, entete, lignes);
+      if (enteteFinale !== entete) setEntete(enteteFinale);
+      const id = await enregistrerDocument(supabase, equipeId, type, d?.id ?? null, enteteFinale, lignes);
       if (mode === "valider") await validerDocument(supabase, id);
       router.replace(mode === "brouillon" ? `/ventes?type=${type}` : `/ventes/document?id=${id}`);
     } catch (e) {
@@ -107,7 +108,7 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
             <div className="grid gap-4 sm:grid-cols-2">
               <ChoixTiers type="clients" libelle="Client enregistré" valeur={entete.client_id ?? null}
                 onChange={(c) => setEntete((e) => c ? { ...e, client_id: c.id, client_nom: c.nom, client_telephone: c.telephone, client_adresse: c.adresse } : { ...e, client_id: null })} />
-              <Champ libelle="Nom affiché" value={entete.client_nom ?? ""} onChange={(ev) => setEntete((e) => ({ ...e, client_nom: ev.target.value }))} disabled={!!entete.client_id} />
+              <Champ libelle="Nom affiché" placeholder={type === "facture" ? CLIENT_DE_PASSAGE : undefined} value={entete.client_nom ?? ""} onChange={(ev) => setEntete((e) => ({ ...e, client_nom: ev.target.value }))} disabled={!!entete.client_id} />
               <Champ libelle="Téléphone" value={entete.client_telephone ?? ""} onChange={(ev) => setEntete((e) => ({ ...e, client_telephone: ev.target.value }))} disabled={!!entete.client_id} />
               <Champ libelle="Adresse" value={entete.client_adresse ?? ""} onChange={(ev) => setEntete((e) => ({ ...e, client_adresse: ev.target.value }))} disabled={!!entete.client_id} />
             </div>
@@ -115,14 +116,20 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
 
           <Carte titre={`Articles (${lignes.length})`} sansMarge>
             <div className="border-b border-border p-4">
-              <ChoixProduit onChoisir={(p) => setLignes((ls) => {
-                const i = ls.findIndex((l) => l.produit_id === p.id);
-                if (i >= 0) return ls.map((l, j) => (j === i ? { ...l, quantite: l.quantite + 1 } : l));
-                return [...ls, { ...ligneDepuisProduit(p), cle: ++compteur, stock: p.quantite }];
-              })} />
+              <ChoixProduit placeholder="Ajouter un produit ou un article déjà saisi : nom, référence, code-barres…"
+                onChoisir={(p) => setLignes((ls) => {
+                  const i = ls.findIndex((l) => l.produit_id === p.id);
+                  if (i >= 0) return ls.map((l, j) => (j === i ? { ...l, quantite: l.quantite + 1 } : l));
+                  return [...ls, { ...ligneDepuisProduit(p), cle: ++compteur, stock: p.quantite }];
+                })}
+                onChoisirArticle={(a) => setLignes((ls) => {
+                  const i = ls.findIndex((l) => !l.produit_id && l.designation.trim().toLowerCase() === a.designation.toLowerCase());
+                  if (i >= 0) return ls.map((l, j) => (j === i ? { ...l, quantite: l.quantite + 1 } : l));
+                  return [...ls, { ...ligneDepuisArticleLibre(a), cle: ++compteur }];
+                })} />
             </div>
             <Tableau entetes={[{ libelle: "Désignation" }, { libelle: "Quantité", className: "w-28" }, { libelle: "Prix unitaire", className: "w-36" }, { libelle: "Taxable", className: "w-20" }, { libelle: "Montant", droite: true }, { libelle: "" }]}
-              vide={lignes.length === 0 ? <p className="p-5 text-sm text-muted">Recherchez un produit ci-dessus, ou ajoutez une ligne libre.</p> : undefined}>
+              vide={lignes.length === 0 ? <p className="p-5 text-sm text-muted">Recherchez un produit ou un article déjà saisi ci-dessus, ou ajoutez une ligne libre.</p> : undefined}>
               {lignes.map((l) => (
                 <tr key={l.cle}>
                   <td className="px-4 py-2">

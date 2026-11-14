@@ -93,3 +93,30 @@ export async function supprimerReglement(sb: SupabaseClient, reglementId: string
 export function ligneDepuisProduit(p: { id: string; nom: string; unite: string; prix_vente: number }, quantite = 1): LigneDocument {
   return { produit_id: p.id, designation: p.nom, unite: p.unite, prix_unitaire: p.prix_vente, quantite, taxable: true };
 }
+
+/** Nom donné à une facture validée sans client (même règle que valider_document). */
+export const CLIENT_DE_PASSAGE = "Client de passage";
+
+/** Article saisi librement dans un document (ligne sans produit du catalogue). */
+export interface ArticleLibre {
+  designation: string;
+  prix_unitaire: number;
+  unite: string | null;
+  taxable: boolean;
+  utilisations: number;
+  derniere_date: string;
+}
+
+/** Articles saisis librement, sans doublon, de la saisie la plus récente à la plus ancienne (derniers prix). */
+export async function listerArticlesLibres(
+  sb: SupabaseClient, equipeId: string, recherche = "", limite = 30,
+): Promise<ArticleLibre[]> {
+  const lignes = verifier(await sb.rpc("articles_libres", { p_equipe: equipeId, p_recherche: recherche.trim() || null, p_limite: limite })) as
+    { designation: string; prix_unitaire: number | string; unite: string | null; taxable: boolean; utilisations: number | string; derniere_date: string }[];
+  return (lignes ?? []).map((l) => ({ ...l, prix_unitaire: Number(l.prix_unitaire), utilisations: Number(l.utilisations) }));
+}
+
+/** Ligne de document reprenant un article saisi librement. */
+export function ligneDepuisArticleLibre(a: ArticleLibre, quantite = 1): LigneDocument {
+  return { produit_id: null, designation: a.designation, unite: a.unite, prix_unitaire: a.prix_unitaire, quantite, taxable: a.taxable };
+}

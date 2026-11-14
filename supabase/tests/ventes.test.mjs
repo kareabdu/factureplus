@@ -131,4 +131,36 @@ await vrai("total de l'année civile (hors brouillons, annulées et années suiv
 });
 await echoue("B ne lit pas le tableau de bord de A", () => en(B, "select public.resume_tableau_de_bord($1)", [eA]), "Accès refusé");
 
+console.log("Client de passage");
+const sansClient = (await en(A, "select public.enregistrer_document($1,'facture',null,'{}',$2) as id", [eA, lignes(1, 0.5)]))[0].id;
+await vrai("facture validée sans client : « Client de passage »", async () => {
+  await en(A, "select public.valider_document($1)", [sansClient]);
+  const d = await doc(sansClient);
+  return d.client_nom === "Client de passage" && d.statut === "emis" && d.numero !== null;
+});
+const proSansClient = (await en(A, "select public.enregistrer_document($1,'proforma',null,'{}',$2) as id", [eA, lignes(1, 1)]))[0].id;
+await echoue("proforma sans client : toujours refusée", () => en(A, "select public.valider_document($1)", [proSansClient]), "Indiquez le client");
+
+console.log("Articles saisis librement");
+const libre = (designation, prix, extra = {}) => JSON.stringify([{ designation, prix_unitaire: prix, quantite: 1, ...extra }]);
+await en(A, "select public.enregistrer_document($1,'proforma',null,$2,$3)", [eA, JSON.stringify({ client_nom: "Fatou" }),
+  libre("  livraison ", 2500, { unite: "forfait", taxable: false })]);
+await en(A, "select public.enregistrer_document($1,'facture',null,$2,$3)", [eA, JSON.stringify({ client_nom: "Fatou" }),
+  libre("Installation climatiseur", 30000)]);
+const articles = async (u, recherche = null) => en(u, "select * from public.articles_libres($1, $2)", [eA, recherche]);
+await vrai("sans doublon, du plus récent au plus ancien", async () => {
+  const a = await articles(A);
+  return a.length === 2 && a.filter((x) => x.designation.toLowerCase().trim() === "livraison").length === 1;
+});
+await vrai("derniers prix, unité et taxe utilisés ; nombre d'utilisations", async () => {
+  const l = (await articles(A)).find((x) => x.designation.toLowerCase() === "livraison");
+  return Number(l.prix_unitaire) === 2500 && l.unite === "forfait" && l.taxable === false && Number(l.utilisations) > 1;
+});
+await vrai("recherche insensible à la casse", async () => {
+  const a = await articles(A, "CLIMAT");
+  return a.length === 1 && a[0].designation === "Installation climatiseur" && Number(a[0].prix_unitaire) === 30000;
+});
+await vrai("les produits du catalogue n'y figurent pas", async () => !(await articles(A)).some((x) => ["Riz", "Huile"].includes(x.designation)));
+await vrai("B ne voit pas les articles de A", async () => (await articles(B)).length === 0);
+
 process.exit(bilan() ? 1 : 0);

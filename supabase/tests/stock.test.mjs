@@ -8,6 +8,7 @@ const A = await creerUser("awa@exemple.sn");
 const B = await creerUser("bakary@exemple.sn");
 const eA = (await en(A, "select public.creer_equipe('Diop Commerce') as id"))[0].id;
 const eB = (await en(B, "select public.creer_equipe('Bakary Shop') as id"))[0].id;
+await en(A, "update public.parametres set autoriser_stock_negatif=false where equipe_id=$1", [eA]); // contrôle du stock activé
 
 const qte = async (id) => Number((await en(null, "select quantite from public.produits where id=$1", [id]))[0].quantite);
 

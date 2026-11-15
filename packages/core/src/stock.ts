@@ -5,7 +5,7 @@ import type { AlerteStock, Inventaire, LigneInventaire, MouvementStock, TypeMouv
 
 /**
  * Mouvement manuel. Pour un ajustement, `quantite` est la nouvelle quantité en stock.
- * Renvoie la nouvelle quantité. Refusé si le stock deviendrait négatif.
+ * Renvoie la nouvelle quantité. Stock négatif refusé seulement si l'entreprise ne l'autorise pas.
  */
 export async function mouvementerStock(
   sb: SupabaseClient, produitId: string, type: TypeMouvement, quantite: number, motif?: string, reference?: string,

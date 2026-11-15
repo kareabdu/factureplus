@@ -36,7 +36,8 @@ function Formulaire({ p }: { p: Parametres }) {
         nom_entreprise: String(f.get("nom_entreprise")).trim(), adresse: t("adresse"), telephone: t("telephone"), telephone2: t("telephone2"),
         email: t("email"), site_web: t("site_web"), ninea: t("ninea"), rccm: t("rccm"), identifiant_fiscal: t("identifiant_fiscal"),
         prefixe_facture: prefixe, prefixe_proforma: String(f.get("prefixe_proforma")), prefixe_bl: String(f.get("prefixe_bl")), format_numero: format,
-        prefixe_ref_produit: String(f.get("prefixe_ref_produit")), ref_produit_auto: f.get("ref_produit_auto") === "on", unite_defaut: String(f.get("unite_defaut")),
+        prefixe_ref_produit: String(f.get("prefixe_ref_produit")), ref_produit_auto: f.get("ref_produit_auto") === "on",
+        autoriser_stock_negatif: f.get("autoriser_stock_negatif") === "on", unite_defaut: String(f.get("unite_defaut")),
         devise: String(f.get("devise")), symbole_devise: trouverDevise(String(f.get("devise")))?.symbole ?? p.symbole_devise,
         taxe_type: taxe, taxe_nom: String(f.get("taxe_nom") ?? p.taxe_nom), taxe_taux: Number(String(f.get("taxe_taux") ?? "0").replace(",", ".")) || 0,
         taxe_incluse: f.get("taxe_incluse") === "on", conditions_defaut: t("conditions_defaut"), pied_facture: t("pied_facture"),
@@ -94,6 +95,8 @@ function Formulaire({ p }: { p: Parametres }) {
             <ChampUnite libelle="Unité par défaut" name="unite_defaut" defaultValue={p.unite_defaut} />
             <Champ libelle="Préfixe réf. produit" name="prefixe_ref_produit" defaultValue={p.prefixe_ref_produit} />
             <div className="sm:col-span-2 sm:self-end"><Case libelle="Référence produit automatique" name="ref_produit_auto" defaultChecked={p.ref_produit_auto} /></div>
+            <div className="sm:col-span-3"><Case libelle="Autoriser le stock négatif" name="autoriser_stock_negatif" defaultChecked={p.autoriser_stock_negatif ?? true}
+              aide="Vendre même quand le stock est épuisé (la quantité passe sous zéro)." /></div>
           </div>
         </Carte>
         <Carte titre="Taxe">

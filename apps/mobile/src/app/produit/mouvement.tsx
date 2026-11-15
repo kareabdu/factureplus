@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ThemedText } from '@/components/themed-text';
 import { Alerte, Bouton, Carte, Champ, ChampQuantite, ChargementPlein, Ecran, Info, Pastilles } from '@/components/ui';
 import { vibrerSucces } from '@/lib/confirmer';
+import { useEquipe } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
 
 const MOTIFS: Record<TypeMouvement, string[]> = {
@@ -23,6 +24,7 @@ export default function Mouvement() {
   const [reference, setReference] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
+  const { parametres } = useEquipe();
   const { donnees: p } = useDonnees(() => chargerProduit(supabase, params.id), [params.id]);
 
   if (!p) return <ChargementPlein />;
@@ -32,7 +34,7 @@ export default function Mouvement() {
 
   async function valider() {
     if (quantite == null || (type !== 'ajustement' && quantite <= 0)) return setErreur('Saisissez une quantité valide.');
-    if (apres != null && apres < 0) return setErreur(`Stock insuffisant : ${formaterQuantite(p!.quantite)} ${p!.unite} disponibles.`);
+    if (apres != null && apres < 0 && (type === 'ajustement' || parametres?.autoriser_stock_negatif === false)) return setErreur(`Stock insuffisant : ${formaterQuantite(p!.quantite)} ${p!.unite} disponibles.`);
     setErreur(null);
     setChargement(true);
     try {

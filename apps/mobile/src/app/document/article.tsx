@@ -187,7 +187,10 @@ export default function Article() {
         </Bloc>
 
         {controleStock && stock !== undefined && qte > stock && (
-          <Alerte type="attention">Stock disponible : {formaterQuantite(stock)} {unite}. La validation de la facture sera refusée au-delà.</Alerte>
+          <Alerte type="attention">
+            Stock disponible : {formaterQuantite(stock)} {unite}.{' '}
+            {parametres?.autoriser_stock_negatif === false ? 'La validation de la facture sera refusée au-delà.' : 'Le stock passera en négatif.'}
+          </Alerte>
         )}
 
         <Bloc>

@@ -87,6 +87,8 @@ export default function Parametres() {
         <Interrupteur libelle="Référence produit automatique" aide={`Préfixe : ${s.prefixe_ref_produit ?? 'P-'}`}
           valeur={!!s.ref_produit_auto} onChange={(ref_produit_auto) => maj({ ref_produit_auto })} />
         <ChampUnite libelle="Unité par défaut" valeur={texte('unite_defaut')} onChange={(unite_defaut) => maj({ unite_defaut })} />
+        <Interrupteur libelle="Autoriser le stock négatif" aide="Vendre même quand le stock est épuisé (la quantité passe sous zéro)"
+          valeur={s.autoriser_stock_negatif ?? true} onChange={(autoriser_stock_negatif) => maj({ autoriser_stock_negatif })} />
       </Section>
 
       <Section titre="Taxe">

@@ -55,6 +55,8 @@ export interface Parametres {
   /** Signature des factures : dessinée (SVG) ou image / cachet. */
   signature_url: string | null;
   couleur_document: string;
+  /** Vente / sortie au-delà du stock acceptée (quantité négative) ; sinon « Stock insuffisant ». */
+  autoriser_stock_negatif: boolean;
   modele_document: ModeleDocument;
 }
 

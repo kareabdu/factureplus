@@ -1,4 +1,4 @@
-import { LIBELLES_ETATS_ACCES, LIBELLES_THEMES, type PreferenceTheme } from '@factureplus/core';
+import { LIBELLES_ETATS_ACCES, LIBELLES_THEMES, modifierParametres, type PreferenceTheme } from '@factureplus/core';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { View } from 'react-native';
@@ -9,11 +9,12 @@ import { Spacing } from '@/constants/theme';
 import { confirmer, signalerErreur } from '@/lib/confirmer';
 import { useEquipe, useSession } from '@/lib/espace';
 import { oublierAppareilPush, usePreferenceNotifications } from '@/lib/notifications';
+import { supabase } from '@/lib/supabase';
 import { useThemeApp } from '@/lib/theme';
 
 export default function Plus() {
   const { deconnecter, email } = useSession();
-  const { parametres, abonnement, estAdmin } = useEquipe();
+  const { equipeId, parametres, abonnement, estAdmin, rafraichir } = useEquipe();
   const { preference, changerPreference } = useThemeApp();
   const notifications = usePreferenceNotifications();
 
@@ -46,6 +47,11 @@ export default function Plus() {
           onPress={() => router.push('/abonnement')} />
         <LigneListe icone="compte" titre="Mon compte" sousTitre={email} onPress={() => router.push('/compte')} />
         {estAdmin && <LigneListe icone="admin" titre="Administration" sousTitre="Comptes, abonnements, paiements" onPress={() => router.push('/admin')} />}
+        <Interrupteur libelle="Autoriser le stock négatif" aide="Vendre même quand le stock est épuisé (la quantité passe sous zéro)"
+          valeur={parametres?.autoriser_stock_negatif ?? true}
+          onChange={(autoriser_stock_negatif) => {
+            modifierParametres(supabase, equipeId, { autoriser_stock_negatif }).then(rafraichir).catch((e) => signalerErreur(e, 'Stock négatif'));
+          }} />
         {notifications.disponible && (
           <Interrupteur libelle="Notifications de stock" aide="Stock bas et rupture, sur ce téléphone"
             valeur={notifications.actif}

@@ -38,7 +38,7 @@ export default function EditerDocument() {
   const params = useLocalSearchParams<{ id?: string; type?: TypeDocument; client_id?: string }>();
   const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
-  const reveler = useRevelerAuFocus();
+  const revelerEnBas = useRevelerAuFocus(true);
   const symbole = parametres?.symbole_devise ?? 'FCFA';
   const m = (v: number) => formaterMontant(v, symbole);
 
@@ -285,7 +285,7 @@ export default function EditerDocument() {
         <Bloc>
           <TextInput value={entete.notes ?? ''} onChangeText={(notes) => setEntete((e) => ({ ...e, notes }))} multiline
             placeholder="Notes (visibles sur le document)" placeholderTextColor={theme.textSecondary} accessibilityLabel="Notes"
-            onFocus={reveler} style={[styles.notes, { color: theme.text }]} />
+            onFocus={revelerEnBas} style={[styles.notes, { color: theme.text }]} />
           <ImagesNotes images={entete.images_notes ?? []} equipeId={equipeId}
             onChange={(images_notes) => setEntete((e) => ({ ...e, images_notes }))} />
         </Bloc>

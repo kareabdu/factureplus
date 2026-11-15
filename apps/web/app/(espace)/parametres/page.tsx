@@ -62,6 +62,10 @@ function Formulaire({ p }: { p: Parametres }) {
       <EnTetePage titre="Entreprise et factures" description="Ces informations apparaissent sur vos factures, proformas et bons de livraison." />
       <form onSubmit={envoyer} className="flex max-w-3xl flex-col gap-6">
         {message && <Alerte type={message.type}>{message.texte}</Alerte>}
+        <Carte titre="Stock">
+          <Case libelle="Autoriser le stock négatif" name="autoriser_stock_negatif" defaultChecked={p.autoriser_stock_negatif ?? true}
+            aide="Vendre même quand le stock est épuisé (la quantité passe sous zéro). Désactivé : « Stock insuffisant »." />
+        </Carte>
         <Carte titre="Entreprise">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex items-center gap-4 sm:col-span-2">
@@ -95,8 +99,6 @@ function Formulaire({ p }: { p: Parametres }) {
             <ChampUnite libelle="Unité par défaut" name="unite_defaut" defaultValue={p.unite_defaut} />
             <Champ libelle="Préfixe réf. produit" name="prefixe_ref_produit" defaultValue={p.prefixe_ref_produit} />
             <div className="sm:col-span-2 sm:self-end"><Case libelle="Référence produit automatique" name="ref_produit_auto" defaultChecked={p.ref_produit_auto} /></div>
-            <div className="sm:col-span-3"><Case libelle="Autoriser le stock négatif" name="autoriser_stock_negatif" defaultChecked={p.autoriser_stock_negatif ?? true}
-              aide="Vendre même quand le stock est épuisé (la quantité passe sous zéro)." /></div>
           </div>
         </Carte>
         <Carte titre="Taxe">

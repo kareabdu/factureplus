@@ -29,15 +29,15 @@ import { useTheme } from '@/hooks/use-theme';
 
 /** Fourni par Ecran : fait défiler l'écran pour garder le champ touché visible au-dessus du clavier. */
 type Mesurable = { measureInWindow: (rappel: (x: number, y: number, largeur: number, hauteur: number) => void) => void };
-const ContexteEcran = createContext<{ reveler: (champ: Mesurable | null) => void } | null>(null);
+const ContexteEcran = createContext<{ reveler: (champ: Mesurable | null, enBas?: boolean) => void } | null>(null);
 
 /**
  * Pour un TextInput posé directement dans un écran (hors Champ) : à passer en onFocus pour que le champ
  * reste visible au-dessus du clavier.
  */
-export function useRevelerAuFocus(): (e: { currentTarget: unknown }) => void {
+export function useRevelerAuFocus(enBas = false): (e: { currentTarget: unknown }) => void {
   const ecran = useContext(ContexteEcran);
-  return useCallback((e) => ecran?.reveler(e.currentTarget as Mesurable), [ecran]);
+  return useCallback((e) => ecran?.reveler(e.currentTarget as Mesurable, enBas), [ecran, enBas]);
 }
 
 /**
@@ -71,13 +71,16 @@ export function Ecran({
   const defileur = useRef<ComponentRef<typeof ScrollView>>(null);
   const position = useRef(0);
   const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Dernier champ de l'écran (notes) : on défile jusqu'en bas plutôt que de calculer sa position
+  const champEnBas = useRef<Mesurable | null>(null);
   const [recouvert, setRecouvert] = useState(0);
   const bords: Edge[] = [];
   if (!enTete) bords.push('top');
   if (!onglets && !pied) bords.push('bottom');
 
   /** Amène le champ dans la partie visible de la zone de défilement (au-dessus du clavier). */
-  const reveler = useCallback((champ: Mesurable | null) => {
+  const reveler = useCallback((champ: Mesurable | null, enBas = false) => {
+    if (enBas) champEnBas.current = champ;
     // Après l'animation du clavier et la mise en page raccourcie ; une seule demande à la fois
     // (plusieurs événements clavier de suite cumulaient les défilements)
     if (minuterie.current) clearTimeout(minuterie.current);
@@ -85,6 +88,7 @@ export function Ecran({
       minuterie.current = null;
       const vue = defileur.current;
       if (!champ || !vue) return;
+      if (champ === champEnBas.current) return vue.scrollToEnd({ animated: true });
       vue.measureInWindow((_x: number, hautVue: number, _l: number, hauteurVue: number) => {
         champ.measureInWindow((_cx: number, hautChamp: number, _cl: number, hauteurChamp: number) => {
           const marge = 24;

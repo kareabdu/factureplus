@@ -38,6 +38,7 @@ export function Ecran({
   onglets = false,
   rafraichir,
   pied,
+  defilement = true,
 }: {
   children: ReactNode;
   enTete?: boolean;
@@ -46,6 +47,8 @@ export function Ecran({
   rafraichir?: () => Promise<unknown>;
   /** Barre d'actions fixe en bas */
   pied?: ReactNode;
+  /** false : défilement bloqué (pendant un dessin au doigt, par exemple) */
+  defilement?: boolean;
 }) {
   const [enCours, setEnCours] = useState(false);
   // Position réelle de la zone à l'écran : selon la version d'iOS, l'en-tête natif est au-dessus
@@ -65,6 +68,7 @@ export function Ecran({
           <ScrollView
             contentContainerStyle={styles.contenu}
             keyboardShouldPersistTaps="handled"
+            scrollEnabled={defilement}
             contentInsetAdjustmentBehavior="automatic"
             refreshControl={rafraichir ? (
               <RefreshControl refreshing={enCours} onRefresh={() => {

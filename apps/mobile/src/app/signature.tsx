@@ -24,6 +24,7 @@ export default function Signature() {
   const theme = useTheme();
   const [mode, setMode] = useState<'dessin' | 'image'>('dessin');
   const [cle, setCle] = useState(0); // nouvelle clé = pavé vidé
+  const [dessinEnCours, setDessinEnCours] = useState(false); // l'écran ne défile pas sous le doigt
   const [envoi, setEnvoi] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,7 +89,7 @@ export default function Signature() {
   }
 
   return (
-    <Ecran enTete>
+    <Ecran enTete defilement={!dessinEnCours}>
       <Carte>
         <View style={styles.titre}>
           <Icone nom="modifier" taille={20} couleur={theme.primary} />
@@ -118,7 +119,8 @@ export default function Signature() {
         {mode === 'dessin' ? (
           <View style={{ gap: Spacing.two }}>
             <ThemedText type="smallBold">Dessinez votre signature</ThemedText>
-            <PaveSignature key={cle} onFin={programmer} />
+            <PaveSignature key={cle} onDebut={() => setDessinEnCours(true)}
+              onFin={(t) => { setDessinEnCours(false); programmer(t); }} />
             <View style={styles.basPave}>
               <Pressable onPress={() => { if (minuterie.current) clearTimeout(minuterie.current); setCle((c) => c + 1); }} accessibilityRole="button"
                 style={[styles.effacer, { borderColor: theme.border }]}>
@@ -162,22 +164,28 @@ function BoutonMode({ actif, icone, titre, onPress }: { actif: boolean; icone: N
 }
 
 /** Pavé de dessin : chaque trait est une suite de points, affichée par segments. Vidé en changeant sa clé. */
-function PaveSignature({ onFin }: { onFin: (t: Trait[]) => void }) {
+function PaveSignature({ onDebut, onFin }: { onDebut: () => void; onFin: (t: Trait[]) => void }) {
   const theme = useTheme();
   const [traits, setTraits] = useState<Trait[]>([]);
   const traitsRef = useRef<Trait[]>([]);
   const finRef = useRef(onFin);
-  useEffect(() => { finRef.current = onFin; }, [onFin]);
+  const debutRef = useRef(onDebut);
+  useEffect(() => { finRef.current = onFin; debutRef.current = onDebut; }, [onFin, onDebut]);
 
   // Les références ne sont lues que dans les gestionnaires de geste, jamais pendant le rendu
   // eslint-disable-next-line react-hooks/refs
   const [geste] = useState(() => {
     const maj = (t: Trait[]) => { traitsRef.current = t; setTraits(t); };
     return PanResponder.create({
+      // Le pavé prend le geste dès le premier contact, avant le défilement de l'écran
       onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
       onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onShouldBlockNativeResponder: () => true,
       onPanResponderTerminationRequest: () => false, // le défilement de l'écran ne vole pas le geste
       onPanResponderGrant: (e) => {
+        debutRef.current();
         const { locationX: x, locationY: y } = e.nativeEvent;
         maj([...traitsRef.current, [{ x, y }]]);
       },

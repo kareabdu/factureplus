@@ -152,3 +152,11 @@ test("signature dessinée", async () => {
   assert.match(svg, /^<svg xmlns="http:\/\/www.w3.org\/2000\/svg" width="52" height="32"/); // recadrée, marge de 6
   assert.match(svg, /d="M6 6L46 26M26 16L26.1 16"/); // point isolé → petit trait
 });
+
+test("inscription : compte existant", async () => {
+  const { inscriptionCompteExistant } = await import("../src/inscription.ts");
+  assert.equal(inscriptionCompteExistant({ user: { identities: [] } }), true); // e-mail déjà confirmé
+  assert.equal(inscriptionCompteExistant({ user: { identities: [{ id: "x" }] } }), false); // nouveau ou non confirmé
+  assert.equal(inscriptionCompteExistant({ user: null }), false);
+  assert.equal(inscriptionCompteExistant({ user: {} }), false);
+});

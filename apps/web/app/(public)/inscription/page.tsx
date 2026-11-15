@@ -1,6 +1,6 @@
 "use client";
 
-import { traduireErreur } from "@factureplus/core";
+import { inscriptionCompteExistant, MESSAGE_COMPTE_EXISTANT, traduireErreur } from "@factureplus/core";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
@@ -30,6 +30,8 @@ export default function Inscription() {
     });
     setChargement(false);
     if (error) return setErreur(traduireErreur(error));
+    // E-mail déjà utilisé par un compte confirmé : on le dit au lieu d'attendre un code qui n'arrivera pas
+    if (inscriptionCompteExistant(data)) return setErreur(MESSAGE_COMPTE_EXISTANT);
     // Sans session : confirmation de l'e-mail par code
     if (!data.session) setEnvoye(email);
   }

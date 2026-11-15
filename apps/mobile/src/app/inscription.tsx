@@ -1,4 +1,4 @@
-import { traduireErreur } from '@factureplus/core';
+import { inscriptionCompteExistant, MESSAGE_COMPTE_EXISTANT, traduireErreur } from '@factureplus/core';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -30,6 +30,8 @@ export default function Inscription() {
     });
     setChargement(false);
     if (error) return setErreur(traduireErreur(error));
+    // E-mail déjà utilisé par un compte confirmé : on le dit au lieu d'attendre un code qui n'arrivera pas
+    if (inscriptionCompteExistant(data)) return setErreur(MESSAGE_COMPTE_EXISTANT);
     // Confirmation d'e-mail activée : pas de session tant que le code n'est pas saisi
     if (!data.session) setEnvoye(true);
   }

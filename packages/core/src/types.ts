@@ -52,9 +52,8 @@ export interface Parametres {
   pied_facture: string | null;
   conditions_defaut: string | null;
   logo_url: string | null;
+  /** Signature des factures : dessinée (SVG) ou image / cachet. */
   signature_url: string | null;
-  /** Cachet (tampon) de l'entreprise, imprimé avec la signature. */
-  cachet_url?: string | null;
   couleur_document: string;
   modele_document: ModeleDocument;
 }

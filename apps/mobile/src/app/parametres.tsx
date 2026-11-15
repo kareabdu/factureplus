@@ -5,13 +5,12 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { ChoixModele } from '@/components/choix-modele';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Bouton, Champ, ChampUnite, ChargementPlein, ChoixDevise, Ecran, Interrupteur, Pastilles, Section } from '@/components/ui';
+import { Alerte, Bouton, Champ, LigneListe, ChampUnite, ChargementPlein, ChoixDevise, Ecran, Interrupteur, Pastilles, Section } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
@@ -45,6 +44,8 @@ export default function Parametres() {
       const { ...champs } = s;
       delete (champs as Record<string, unknown>).equipe_id;
       delete (champs as Record<string, unknown>).updated_at;
+      // Signature : enregistrée à part (écran Signature), jamais écrasée par ce formulaire
+      delete (champs as Record<string, unknown>).signature_url;
       await modifierParametres(supabase, equipeId, { ...champs, taxe_taux: Number(s.taxe_taux) || 0 });
       await rafraichir();
       vibrerSucces();
@@ -113,14 +114,9 @@ export default function Parametres() {
           parametres={{ ...parametres, ...s } as typeof parametres} onChange={maj} />
       </Section>
 
-      <Section titre="Signature et cachet">
-        <ThemedText type="small" themeColor="textSecondary">
-          Imprimés en bas à droite des factures, proformas et bons de livraison. Photographiez-les sur une feuille blanche.
-        </ThemedText>
-        <View style={{ flexDirection: 'row', gap: Spacing.two }}>
-          <ImageDocument libelle="Signature" url={s.signature_url ?? null} equipeId={equipeId} onChange={(signature_url) => maj({ signature_url })} />
-          <ImageDocument libelle="Cachet" url={s.cachet_url ?? null} equipeId={equipeId} onChange={(cachet_url) => maj({ cachet_url })} />
-        </View>
+      <Section titre="Signature des factures">
+        <LigneListe titre="Signature" icone="modifier" onPress={() => router.push('/signature')}
+          sousTitre={parametres.signature_url ? 'Ajoutée en bas de vos factures' : 'Dessiner ou insérer une image (cachet)'} />
       </Section>
 
       <Section titre="Factures">
@@ -130,54 +126,5 @@ export default function Parametres() {
           placeholder="Ex. Merci pour votre confiance" />
       </Section>
     </Ecran>
-  );
-}
-
-/** Image imprimée sur les documents (signature, cachet) : photo ou galerie, retrait. */
-function ImageDocument({ libelle, url, equipeId, onChange }: {
-  libelle: string; url: string | null; equipeId: string; onChange: (url: string | null) => void;
-}) {
-  const theme = useTheme();
-  const [envoi, setEnvoi] = useState(false);
-
-  async function choisir(source: 'galerie' | 'camera') {
-    try {
-      if (source === 'camera' && !(await ImagePicker.requestCameraPermissionsAsync()).granted) return;
-      const options: ImagePicker.ImagePickerOptions = { mediaTypes: 'images', quality: 0.8, allowsEditing: true };
-      const r = source === 'camera' ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
-      if (r.canceled || !r.assets[0]) return;
-      setEnvoi(true);
-      const contenu = await (await fetch(r.assets[0].uri)).arrayBuffer();
-      onChange(await envoyerImageProduit(supabase, equipeId, contenu, r.assets[0].mimeType ?? 'image/jpeg'));
-    } catch (e) {
-      signalerErreur(e);
-    } finally {
-      setEnvoi(false);
-    }
-  }
-
-  return (
-    <View style={{ flex: 1, gap: Spacing.two }}>
-      <ThemedText type="smallBold">{libelle}</ThemedText>
-      <View style={{ height: 96, borderRadius: Rayons.moyen, borderWidth: 1, borderStyle: 'dashed', borderColor: theme.border,
-        backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', padding: Spacing.one }}>
-        {envoi ? <ActivityIndicator color={theme.primary} />
-          : url ? <Image source={{ uri: url }} style={{ width: '100%', height: '100%' }} contentFit="contain" accessibilityLabel={libelle} />
-          : <ThemedText type="small" style={{ color: '#8A949E' }}>Aucune image</ThemedText>}
-      </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three }}>
-        <Pressable onPress={() => choisir('camera')} disabled={envoi} accessibilityRole="button" accessibilityLabel={`${libelle} : prendre une photo`} hitSlop={6}>
-          <ThemedText type="smallBold" themeColor="primary">Photo</ThemedText>
-        </Pressable>
-        <Pressable onPress={() => choisir('galerie')} disabled={envoi} accessibilityRole="button" accessibilityLabel={`${libelle} : choisir dans la galerie`} hitSlop={6}>
-          <ThemedText type="smallBold" themeColor="primary">Galerie</ThemedText>
-        </Pressable>
-        {url && (
-          <Pressable onPress={() => onChange(null)} accessibilityRole="button" accessibilityLabel={`Retirer : ${libelle}`} hitSlop={6}>
-            <ThemedText type="small" themeColor="textSecondary">Retirer</ThemedText>
-          </Pressable>
-        )}
-      </View>
-    </View>
   );
 }

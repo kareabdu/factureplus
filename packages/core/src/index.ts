@@ -24,3 +24,4 @@ export * from "./whatsapp";
 export * from "./impression";
 export * from "./design";
 export * from "./listes";
+export * from "./signature";

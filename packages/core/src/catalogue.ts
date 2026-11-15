@@ -63,7 +63,7 @@ export async function supprimerProduit(sb: SupabaseClient, id: string) {
 export async function envoyerImageProduit(
   sb: SupabaseClient, equipeId: string, contenu: ArrayBuffer | Blob, typeMime = "image/jpeg",
 ): Promise<string> {
-  const extension = typeMime.split("/")[1] ?? "jpg";
+  const extension = (typeMime.split("/")[1] ?? "jpg").replace("svg+xml", "svg");
   const chemin = `${equipeId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
   verifier(await sb.storage.from("produits").upload(chemin, contenu, { contentType: typeMime, upsert: false }));
   return sb.storage.from("produits").getPublicUrl(chemin).data.publicUrl;

@@ -185,12 +185,12 @@ export function htmlDocument(args: {
     <div class="bloc"><div class="etiquette">Règlements</div>${reglements.map((r) =>
       `<div>${dateFr(r.date)} — ${LIBELLES_MODE_PAIEMENT[r.mode]} — ${m(r.montant)}${r.reference ? ` (${echapper(r.reference)})` : ""}</div>`).join("")}</div>` : "";
 
-  // Bas du document : signature du client (bon de livraison) et signature / cachet de l'entreprise
-  const tampons = p.cachet_url || p.signature_url ? `<div class="signature">Pour ${echapper(p.nom_entreprise)}<div class="tampons">${
-    p.cachet_url ? `<img class="cachet" src="${echapper(p.cachet_url)}" alt="">` : ""}${
-    p.signature_url ? `<img class="${p.cachet_url ? "avec-cachet" : "seule"}" src="${echapper(p.signature_url)}" alt="">` : ""}</div></div>` : "";
-  const signatures = estBL || tampons
-    ? `<div class="signatures">${estBL ? '<div class="signature-client">Signature du client :</div>' : ""}${tampons}</div>` : "";
+  // Bas du document : signature de l'entreprise sur les factures (comme l'ancienne application),
+  // place pour la signature du client sur un bon de livraison
+  const signatureEntreprise = d.type === "facture" && p.signature_url
+    ? `<div class="signature"><img src="${echapper(p.signature_url)}" alt="Signature"><div class="trait"></div><div class="legende">Signature</div></div>` : "";
+  const signatures = estBL || signatureEntreprise
+    ? `<div class="signatures">${estBL ? '<div class="signature-client">Signature du client :</div>' : ""}${signatureEntreprise}</div>` : "";
 
   return `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -241,14 +241,12 @@ export function htmlDocument(args: {
   .bloc { margin-top: 18px; color: #5b6670; }
   .images-notes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
   .images-notes img { max-width: 48%; max-height: 260px; object-fit: contain; border-radius: 6px; }
-  .signatures { margin-top: 28px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; color: #5b6670; break-inside: avoid; }
+  .signatures { margin-top: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; color: #5b6670; break-inside: avoid; }
   .signature-client { min-height: 70px; }
-  .signature { margin-left: auto; text-align: center; min-width: 180px; }
-  .signature .tampons { position: relative; height: 110px; margin-top: 6px; }
-  .signature .tampons img { position: absolute; top: 0; max-height: 110px; max-width: 170px; object-fit: contain; }
-  .signature .tampons .cachet { left: 50%; transform: translateX(-50%) rotate(-6deg); opacity: 0.92; }
-  .signature .tampons .seule { left: 50%; transform: translateX(-50%); }
-  .signature .tampons .avec-cachet { left: 50%; transform: translateX(-42%); max-height: 80px; max-width: 150px; top: 22px; }
+  .signature { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; }
+  .signature img { max-height: 70px; max-width: 220px; object-fit: contain; }
+  .signature .trait { width: 160px; border-top: 1px solid #d0d5da; margin-top: 4px; }
+  .signature .legende { font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.04em; color: #8a949e; margin-top: 2px; }
   .pied { margin-top: 24px; font-size: 9px; color: #8a949e; text-align: center; }
 </style></head>
 <body><div class="page"><div class="contenu">

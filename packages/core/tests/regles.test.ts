@@ -142,3 +142,13 @@ test("devises et unités", async () => {
   assert.equal(filtrerUnites("kg").length, UNITES.length); // unité exacte : liste complète
   assert.equal(filtrerUnites("").length, UNITES.length);
 });
+
+test("signature dessinée", async () => {
+  const { signatureVide, svgSignature } = await import("../src/signature.ts");
+  assert.equal(signatureVide([]), true);
+  assert.equal(signatureVide([[]]), true);
+  assert.equal(svgSignature([]), null);
+  const svg = svgSignature([[{ x: 100, y: 50 }, { x: 140, y: 70 }], [{ x: 120, y: 60 }]])!;
+  assert.match(svg, /^<svg xmlns="http:\/\/www.w3.org\/2000\/svg" width="52" height="32"/); // recadrée, marge de 6
+  assert.match(svg, /d="M6 6L46 26M26 16L26.1 16"/); // point isolé → petit trait
+});

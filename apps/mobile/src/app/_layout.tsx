@@ -102,6 +102,7 @@ function Navigation() {
         <Stack.Screen name="categories" options={{ headerShown: true, title: 'Catégories' }} />
         <Stack.Screen name="import-export" options={{ headerShown: true, title: 'Import / export' }} />
         <Stack.Screen name="parametres" options={{ headerShown: true, title: 'Entreprise' }} />
+        <Stack.Screen name="signature" options={{ headerShown: true, title: 'Signature' }} />
         <Stack.Screen name="compte" options={{ headerShown: true, title: 'Mon compte' }} />
         <Stack.Screen name="depenses" options={{ headerShown: true, title: 'Dépenses' }} />
         <Stack.Screen name="depense/editer" options={{ ...modal, title: 'Dépense' }} />

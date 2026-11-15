@@ -4,7 +4,7 @@ import { envoyerImageProduit, formaterNumero, modifierParametres, trouverDevise,
 import { useState, type FormEvent } from "react";
 
 import { ChoixModele } from "@/components/choix-modele";
-import { Alerte, Bouton, Carte, Case, Champ, ChampUnite, ChoixDevise, Chargement, EnTetePage, Liste, Zone } from "@/components/ui";
+import { Alerte, Bouton, Carte, Case, Champ, LienBouton, ChampUnite, ChoixDevise, Chargement, EnTetePage, Liste, Zone } from "@/components/ui";
 import { useEquipe } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
@@ -20,8 +20,6 @@ function Formulaire({ p }: { p: Parametres }) {
   const [prefixe, setPrefixe] = useState(p.prefixe_facture);
   const [format, setFormat] = useState(p.format_numero);
   const [logo, setLogo] = useState(p.logo_url);
-  const [signature, setSignature] = useState(p.signature_url);
-  const [cachet, setCachet] = useState(p.cachet_url ?? null);
   const [modele, setModele] = useState<ModeleDocument>(p.modele_document ?? "classique");
   const [couleur, setCouleur] = useState(p.couleur_document);
   const [message, setMessage] = useState<{ type: "erreur" | "succes"; texte: string } | null>(null);
@@ -43,7 +41,6 @@ function Formulaire({ p }: { p: Parametres }) {
         taxe_type: taxe, taxe_nom: String(f.get("taxe_nom") ?? p.taxe_nom), taxe_taux: Number(String(f.get("taxe_taux") ?? "0").replace(",", ".")) || 0,
         taxe_incluse: f.get("taxe_incluse") === "on", conditions_defaut: t("conditions_defaut"), pied_facture: t("pied_facture"),
         couleur_document: couleur, modele_document: modele, logo_url: logo,
-        signature_url: signature, cachet_url: cachet,
       });
       await rafraichir();
       setMessage({ type: "succes", texte: "Paramètres enregistrés." });
@@ -112,17 +109,17 @@ function Formulaire({ p }: { p: Parametres }) {
           </div>
         </Carte>
         <Carte titre="Modèle de facture">
-          <ChoixModele modele={modele} couleur={couleur} parametres={{ ...p, logo_url: logo, signature_url: signature, cachet_url: cachet }}
+          <ChoixModele modele={modele} couleur={couleur} parametres={{ ...p, logo_url: logo }}
             onChange={(c) => { if (c.modele) setModele(c.modele); if (c.couleur) setCouleur(c.couleur); }} />
         </Carte>
-        <Carte titre="Signature et cachet">
-          <p className="-mt-1 mb-4 text-sm text-muted">Imprimés en bas à droite des factures, proformas et bons de livraison.
-            Une image sur fond blanc ou transparent (PNG) donne le meilleur rendu.</p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ImageDocument libelle="Signature" url={signature} onChange={setSignature} equipeId={equipeId}
-              onErreur={(texte) => setMessage({ type: "erreur", texte })} />
-            <ImageDocument libelle="Cachet" url={cachet} onChange={setCachet} equipeId={equipeId}
-              onErreur={(texte) => setMessage({ type: "erreur", texte })} />
+        <Carte titre="Signature des factures">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {p.signature_url && <img src={p.signature_url} alt="Signature" className="h-12 max-w-40 rounded-lg border border-border bg-white object-contain p-1" />}
+              <p className="text-sm text-muted">{p.signature_url ? "Ajoutée en bas de vos factures." : "Dessinez votre signature ou insérez une image (cachet)."}</p>
+            </div>
+            <LienBouton href="/parametres/signature" variante="secondaire">{p.signature_url ? "Modifier" : "Ajouter une signature"}</LienBouton>
           </div>
         </Carte>
         <Carte titre="Textes des factures">
@@ -134,36 +131,5 @@ function Formulaire({ p }: { p: Parametres }) {
         <div><Bouton type="submit" chargement={chargement}>Enregistrer</Bouton></div>
       </form>
     </>
-  );
-}
-
-/** Image imprimée sur les documents (signature, cachet) : aperçu, choix du fichier, retrait. */
-function ImageDocument({ libelle, url, onChange, equipeId, onErreur }: {
-  libelle: string; url: string | null; onChange: (url: string | null) => void; equipeId: string; onErreur: (message: string) => void;
-}) {
-  const [envoi, setEnvoi] = useState(false);
-  async function choisir(fichier: File | undefined) {
-    if (!fichier) return;
-    setEnvoi(true);
-    try { onChange(await envoyerImageProduit(supabase, equipeId, fichier, fichier.type || "image/png")); }
-    catch (e) { onErreur((e as Error).message); }
-    finally { setEnvoi(false); }
-  }
-  return (
-    <div className="flex flex-col gap-2 text-sm">
-      <span className="font-medium">{libelle}</span>
-      <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-white p-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {url ? <img src={url} alt={libelle} className="max-h-full max-w-full object-contain" /> : <span className="text-muted">Aucune image</span>}
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="cursor-pointer font-medium text-primary hover:underline">
-          {envoi ? "Envoi…" : url ? "Changer" : "Choisir une image"}
-          <input type="file" accept="image/*" className="sr-only" disabled={envoi}
-            onChange={(e) => { void choisir(e.target.files?.[0]); e.target.value = ""; }} />
-        </label>
-        {url && <button type="button" onClick={() => onChange(null)} className="text-muted hover:text-danger">Retirer</button>}
-      </div>
-    </div>
   );
 }

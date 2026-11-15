@@ -10,11 +10,13 @@ import {
   ScrollView,
   StyleSheet,
   TextInput,
+  TurboModuleRegistry,
   View,
   type StyleProp,
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 import { Icone, type NomIcone } from '@/components/icone';
@@ -28,6 +30,12 @@ import { useTheme } from '@/hooks/use-theme';
 // ---------------------------------------------------------------------------
 
 /** Fourni par Ecran : fait défiler l'écran pour garder le champ touché visible au-dessus du clavier. */
+/**
+ * Gestion native du clavier (react-native-keyboard-controller) présente dans ce build ? Les builds
+ * antérieurs à son ajout gardent la gestion de secours ci-dessous.
+ */
+export const CLAVIER_NATIF = TurboModuleRegistry.get('KeyboardController') != null;
+
 type Mesurable = { measureInWindow: (rappel: (x: number, y: number, largeur: number, hauteur: number) => void) => void };
 const ContexteEcran = createContext<{ reveler: (champ: Mesurable | null, enBas?: boolean) => void } | null>(null);
 
@@ -119,6 +127,41 @@ export function Ecran({
   }, [reveler]);
 
   const contexte = useMemo(() => ({ reveler }), [reveler]);
+  const [hauteurPied, setHauteurPied] = useState(0);
+
+  const actualisation = rafraichir ? (
+    <RefreshControl refreshing={enCours} onRefresh={() => {
+      setEnCours(true);
+      rafraichir().finally(() => setEnCours(false));
+    }} />
+  ) : undefined;
+
+  if (CLAVIER_NATIF) {
+    // Le champ touché (quel qu'il soit) est placé au-dessus du clavier et de la barre d'actions,
+    // qui reste collée au clavier ; mesures faites par le système (justes aussi dans les modales).
+    return (
+      <ThemedView style={styles.flex}>
+        <SafeAreaView style={styles.flex} edges={bords}>
+          <KeyboardAwareScrollView
+            style={styles.flex}
+            contentContainerStyle={styles.contenu}
+            keyboardShouldPersistTaps="handled"
+            scrollEnabled={defilement}
+            bottomOffset={24 + hauteurPied}
+            extraKeyboardSpace={hauteurPied}
+            contentInsetAdjustmentBehavior="automatic"
+            refreshControl={actualisation}>
+            {children}
+          </KeyboardAwareScrollView>
+          {pied && (
+            <KeyboardStickyView onLayout={(e) => setHauteurPied(Math.round(e.nativeEvent.layout.height))}>
+              <PiedActions>{pied}</PiedActions>
+            </KeyboardStickyView>
+          )}
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
 
   return (
     <ContexteEcran.Provider value={contexte}>
@@ -134,12 +177,7 @@ export function Ecran({
                 scrollEventThrottle={16}
                 onScroll={(e) => { position.current = e.nativeEvent.contentOffset.y; }}
                 contentInsetAdjustmentBehavior="automatic"
-                refreshControl={rafraichir ? (
-                  <RefreshControl refreshing={enCours} onRefresh={() => {
-                    setEnCours(true);
-                    rafraichir().finally(() => setEnCours(false));
-                  }} />
-                ) : undefined}>
+                refreshControl={actualisation}>
                 {children}
               </ScrollView>
               {pied && <PiedActions>{pied}</PiedActions>}

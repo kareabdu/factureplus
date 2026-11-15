@@ -2,9 +2,10 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider, type Theme } from 'expo-
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import type { ReactNode } from 'react';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import { ChargementPlein } from '@/components/ui';
+import { CLAVIER_NATIF, ChargementPlein } from '@/components/ui';
 import { Fournisseurs, useEquipe, useSession } from '@/lib/espace';
 import { useLienRecuperation } from '@/lib/lien-recuperation';
 import { useNotificationsStock } from '@/lib/notifications';
@@ -13,7 +14,7 @@ import { ThemeApp, useThemeApp } from '@/lib/theme';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  return (
+  const app = (
     <ThemeApp>
       <ThemeNavigation>
         <Fournisseurs>
@@ -23,6 +24,8 @@ export default function RootLayout() {
       </ThemeNavigation>
     </ThemeApp>
   );
+  // Gestion native du clavier (champs et boutons gardés au-dessus du clavier), si présente dans ce build
+  return CLAVIER_NATIF ? <KeyboardProvider>{app}</KeyboardProvider> : app;
 }
 
 function ThemeNavigation({ children }: { children: ReactNode }) {

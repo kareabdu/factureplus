@@ -39,7 +39,7 @@ function Ventes() {
         <Segments options={[{ valeur: "facture", libelle: "Factures" }, { valeur: "proforma", libelle: "Proformas" }, { valeur: "bl", libelle: "Bons de livraison" }]}
           valeur={type} onChange={(t) => { setType(t); setVue("tout"); }} libelle="Type de document" />
         <Segments options={type === "facture"
-          ? [{ valeur: "tout", libelle: "Toutes" }, { valeur: "impayes", libelle: "À encaisser" }, { valeur: "brouillons", libelle: "Brouillons" }]
+          ? [{ valeur: "tout", libelle: "Toutes" }, { valeur: "impayes", libelle: "Impayées" }, { valeur: "brouillons", libelle: "Brouillons" }]
           : [{ valeur: "tout", libelle: "Tous" }, { valeur: "brouillons", libelle: "Brouillons" }]} valeur={vue} onChange={setVue} libelle="Filtre" />
         <Recherche valeur={recherche} onChange={setRecherche} placeholder="Numéro ou client…" className="min-w-56 flex-1" />
       </div>

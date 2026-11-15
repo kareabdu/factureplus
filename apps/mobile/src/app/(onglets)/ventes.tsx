@@ -42,7 +42,7 @@ export default function Ventes() {
   }, [recharger, rechargerTotal]));
 
   const vues: { code: Vue; libelle: string }[] = type === 'facture'
-    ? [{ code: 'tout', libelle: 'Toutes' }, { code: 'impayes', libelle: 'À encaisser' }, { code: 'brouillons', libelle: 'Brouillons' }]
+    ? [{ code: 'tout', libelle: 'Toutes' }, { code: 'impayes', libelle: 'Impayées' }, { code: 'brouillons', libelle: 'Brouillons' }]
     : [{ code: 'tout', libelle: 'Tous' }, { code: 'brouillons', libelle: 'Brouillons' }];
 
   const total = (donnees ?? []).filter((d) => d.statut === 'emis').reduce((s, d) => s + resteAPayer(d), 0);

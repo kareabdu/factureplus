@@ -13,7 +13,7 @@ import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react
 import { ChampDate, versIso } from '@/components/champ-date';
 import { Icone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Badge, Bouton, BoutonIcone, ChargementPlein, Ecran } from '@/components/ui';
+import { Alerte, Badge, Bouton, BoutonIcone, ChargementPlein, Ecran, useRevelerAuFocus } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { confirmer, signalerErreur, vibrerSucces } from '@/lib/confirmer';
@@ -38,6 +38,7 @@ export default function EditerDocument() {
   const params = useLocalSearchParams<{ id?: string; type?: TypeDocument; client_id?: string }>();
   const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
+  const reveler = useRevelerAuFocus();
   const symbole = parametres?.symbole_devise ?? 'FCFA';
   const m = (v: number) => formaterMontant(v, symbole);
 
@@ -284,7 +285,7 @@ export default function EditerDocument() {
         <Bloc>
           <TextInput value={entete.notes ?? ''} onChangeText={(notes) => setEntete((e) => ({ ...e, notes }))} multiline
             placeholder="Notes (visibles sur le document)" placeholderTextColor={theme.textSecondary} accessibilityLabel="Notes"
-            style={[styles.notes, { color: theme.text }]} />
+            onFocus={reveler} style={[styles.notes, { color: theme.text }]} />
           <ImagesNotes images={entete.images_notes ?? []} equipeId={equipeId}
             onChange={(images_notes) => setEntete((e) => ({ ...e, images_notes }))} />
         </Bloc>
@@ -377,9 +378,10 @@ function Pilule({ valeur, onChange, placeholder, clavier }: {
   valeur: string; onChange: (v: string) => void; placeholder: string; clavier?: 'phone-pad';
 }) {
   const theme = useTheme();
+  const reveler = useRevelerAuFocus();
   return (
     <TextInput value={valeur} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={theme.textSecondary}
-      keyboardType={clavier} accessibilityLabel={placeholder}
+      keyboardType={clavier} accessibilityLabel={placeholder} onFocus={reveler}
       style={[styles.pilule, { color: theme.text, backgroundColor: theme.backgroundSelected }]} />
   );
 }

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Bouton, BoutonIcone, Carte, Champ, ChampMontant, ChargementPlein, Ecran, Info, LigneListe, Pastilles, Section } from '@/components/ui';
+import { Alerte, Bouton, BoutonIcone, Carte, Champ, ChampMontant, ChargementPlein, Ecran, Info, LigneListe, Pastilles, Section, useRevelerAuFocus } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { confirmer, signalerErreur, vibrerSucces } from '@/lib/confirmer';
@@ -24,6 +24,7 @@ export default function EditerAchat() {
   const params = useLocalSearchParams<{ id?: string; produit_id?: string }>();
   const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
+  const reveler = useRevelerAuFocus();
   const symbole = parametres?.symbole_devise ?? 'FCFA';
   const [id, setId] = useState<string | null>(params.id ?? null);
   const [entete, setEntete] = useState<EnteteAchat>({ fournisseur_nom: '', mode_paiement: 'especes', date: new Date().toISOString().slice(0, 10) });
@@ -139,11 +140,11 @@ export default function EditerAchat() {
                 <BoutonIcone icone="supprimer" libelle="Retirer" couleur={theme.danger} onPress={() => setLignes((ls) => ls.filter((_, j) => j !== i))} />
               </View>
               <View style={{ flexDirection: 'row', gap: Spacing.two, alignItems: 'center' }}>
-                <TextInput defaultValue={formaterQuantite(l.quantite)} keyboardType="decimal-pad" selectTextOnFocus accessibilityLabel="Quantité"
+                <TextInput defaultValue={formaterQuantite(l.quantite)} keyboardType="decimal-pad" selectTextOnFocus onFocus={reveler} accessibilityLabel="Quantité"
                   onChangeText={(t) => { const q = lireQuantite(t); if (q) setLignes((ls) => ls.map((x, j) => (j === i ? { ...x, quantite: q } : x))); }}
                   style={[styles.saisie, { width: 80, color: theme.text, borderColor: theme.border }]} />
                 <ThemedText type="small" themeColor="textSecondary">{l.unite} × coût</ThemedText>
-                <TextInput defaultValue={formaterMontant(l.cout_unitaire, null)} keyboardType="number-pad" selectTextOnFocus accessibilityLabel="Coût unitaire"
+                <TextInput defaultValue={formaterMontant(l.cout_unitaire, null)} keyboardType="number-pad" selectTextOnFocus onFocus={reveler} accessibilityLabel="Coût unitaire"
                   onChangeText={(t) => setLignes((ls) => ls.map((x, j) => (j === i ? { ...x, cout_unitaire: lireMontant(t) ?? 0 } : x)))}
                   style={[styles.saisie, { flex: 1, textAlign: 'right', color: theme.text, borderColor: theme.border }]} />
               </View>

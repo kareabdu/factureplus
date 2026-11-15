@@ -28,7 +28,17 @@ import { useTheme } from '@/hooks/use-theme';
 // ---------------------------------------------------------------------------
 
 /** Fourni par Ecran : fait défiler l'écran pour garder le champ touché visible au-dessus du clavier. */
-const ContexteEcran = createContext<{ reveler: (champ: ComponentRef<typeof TextInput> | null) => void } | null>(null);
+type Mesurable = { measureInWindow: (rappel: (x: number, y: number, largeur: number, hauteur: number) => void) => void };
+const ContexteEcran = createContext<{ reveler: (champ: Mesurable | null) => void } | null>(null);
+
+/**
+ * Pour un TextInput posé directement dans un écran (hors Champ) : à passer en onFocus pour que le champ
+ * reste visible au-dessus du clavier.
+ */
+export function useRevelerAuFocus(): (e: { currentTarget: unknown }) => void {
+  const ecran = useContext(ContexteEcran);
+  return useCallback((e) => ecran?.reveler(e.currentTarget as Mesurable), [ecran]);
+}
 
 /**
  * Écran défilant, sûr vis-à-vis du clavier et des encoches.
@@ -60,15 +70,19 @@ export function Ecran({
   const zone = useRef<ComponentRef<typeof View>>(null);
   const defileur = useRef<ComponentRef<typeof ScrollView>>(null);
   const position = useRef(0);
+  const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [recouvert, setRecouvert] = useState(0);
   const bords: Edge[] = [];
   if (!enTete) bords.push('top');
   if (!onglets && !pied) bords.push('bottom');
 
   /** Amène le champ dans la partie visible de la zone de défilement (au-dessus du clavier). */
-  const reveler = useCallback((champ: ComponentRef<typeof TextInput> | null) => {
-    // Après l'animation du clavier et la mise en page raccourcie
-    setTimeout(() => {
+  const reveler = useCallback((champ: Mesurable | null) => {
+    // Après l'animation du clavier et la mise en page raccourcie ; une seule demande à la fois
+    // (plusieurs événements clavier de suite cumulaient les défilements)
+    if (minuterie.current) clearTimeout(minuterie.current);
+    minuterie.current = setTimeout(() => {
+      minuterie.current = null;
       const vue = defileur.current;
       if (!champ || !vue) return;
       vue.measureInWindow((_x: number, hautVue: number, _l: number, hauteurVue: number) => {
@@ -76,6 +90,7 @@ export function Ecran({
           const marge = 24;
           const bas = hautChamp + hauteurChamp + marge - (hautVue + hauteurVue);
           const haut = hautVue + marge - hautChamp;
+          // Défilement seulement si le champ sort de la partie visible
           if (bas > 0) vue.scrollTo({ y: position.current + bas, animated: true });
           else if (haut > 0) vue.scrollTo({ y: Math.max(0, position.current - haut), animated: true });
         });
@@ -90,13 +105,13 @@ export function Ecran({
       const hautClavier = e.endCoordinates.screenY;
       const mesurer = () => zone.current?.measureInWindow((_x: number, y: number, _l: number, h: number) => {
         setRecouvert(Math.max(0, Math.round(y + h - hautClavier)));
-        reveler(TextInput.State.currentlyFocusedInput() as ComponentRef<typeof TextInput> | null);
+        reveler(TextInput.State.currentlyFocusedInput() as Mesurable | null);
       });
       // Android : laisse la fenêtre se redimensionner d'abord (si elle le fait), pour ne pas compter deux fois
       if (Platform.OS === 'android') setTimeout(mesurer, 120); else mesurer();
     });
     const b = Keyboard.addListener(disparition, () => setRecouvert(0));
-    return () => { a.remove(); b.remove(); };
+    return () => { a.remove(); b.remove(); if (minuterie.current) clearTimeout(minuterie.current); };
   }, [reveler]);
 
   const contexte = useMemo(() => ({ reveler }), [reveler]);

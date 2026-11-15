@@ -1,0 +1,13 @@
+<!-- Supabase › Authentication › Emails › « Confirm sign up »
+     Objet : Votre code FacturePlus : {{ .Token }} -->
+<div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; color: #1f2933;">
+  <div style="padding: 24px 0; text-align: center;">
+    <span style="display: inline-block; width: 40px; height: 40px; line-height: 40px; border-radius: 10px; background: #147A2E; color: #fff; font-size: 24px; font-weight: bold;">&#10003;</span>
+    <div style="margin-top: 8px; font-size: 20px; font-weight: bold;">Facture<span style="color: #147A2E;">Plus</span></div>
+  </div>
+  <h1 style="font-size: 20px;">Confirmez votre adresse e-mail</h1>
+  <p>Bienvenue sur FacturePlus ! Saisissez ce code dans l'application pour activer votre compte :</p>
+  <p style="font-size: 32px; font-weight: bold; letter-spacing: 6px; text-align: center; background: #F4F6F4; border-radius: 12px; padding: 16px;">{{ .Token }}</p>
+  <p>Vous pouvez aussi <a href="{{ .ConfirmationURL }}" style="color: #147A2E;">confirmer en cliquant ici</a>.</p>
+  <p style="color: #8a949e; font-size: 13px;">Le code expire dans 1 heure. Si vous n'avez pas créé de compte, ignorez cet e-mail.</p>
+</div>

@@ -1,10 +1,9 @@
 import { DEVISES, filtrerUnites, formaterMontant, lireMontant, lireQuantite, trouverDevise, type Ton } from '@factureplus/core';
 import { Image } from 'expo-image';
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   RefreshControl,
@@ -28,9 +27,16 @@ import { useTheme } from '@/hooks/use-theme';
 // Écrans
 // ---------------------------------------------------------------------------
 
+/** Fourni par Ecran : fait défiler l'écran pour garder le champ touché visible au-dessus du clavier. */
+const ContexteEcran = createContext<{ reveler: (champ: ComponentRef<typeof TextInput> | null) => void } | null>(null);
+
 /**
  * Écran défilant, sûr vis-à-vis du clavier et des encoches.
  * `enTete` : l'écran est sous un en-tête natif (pile) → pas de marge haute.
+ *
+ * Clavier : la zone utile (défilement + barre d'actions du bas) est raccourcie de la partie
+ * réellement recouverte par le clavier, mesurée à l'écran (juste aussi dans les modales et sur
+ * Android bord à bord), et le champ touché est amené au-dessus du clavier.
  */
 export function Ecran({
   children,
@@ -51,38 +57,78 @@ export function Ecran({
   defilement?: boolean;
 }) {
   const [enCours, setEnCours] = useState(false);
-  // Position réelle de la zone à l'écran : selon la version d'iOS, l'en-tête natif est au-dessus
-  // du contenu ou le recouvre (effet translucide). Une valeur fixe laissait un vide sous le clavier.
   const zone = useRef<ComponentRef<typeof View>>(null);
-  const [decalage, setDecalage] = useState(0);
+  const defileur = useRef<ComponentRef<typeof ScrollView>>(null);
+  const position = useRef(0);
+  const [recouvert, setRecouvert] = useState(0);
   const bords: Edge[] = [];
   if (!enTete) bords.push('top');
   if (!onglets && !pied) bords.push('bottom');
+
+  /** Amène le champ dans la partie visible de la zone de défilement (au-dessus du clavier). */
+  const reveler = useCallback((champ: ComponentRef<typeof TextInput> | null) => {
+    // Après l'animation du clavier et la mise en page raccourcie
+    setTimeout(() => {
+      const vue = defileur.current;
+      if (!champ || !vue) return;
+      vue.measureInWindow((_x: number, hautVue: number, _l: number, hauteurVue: number) => {
+        champ.measureInWindow((_cx: number, hautChamp: number, _cl: number, hauteurChamp: number) => {
+          const marge = 24;
+          const bas = hautChamp + hauteurChamp + marge - (hautVue + hauteurVue);
+          const haut = hautVue + marge - hautChamp;
+          if (bas > 0) vue.scrollTo({ y: position.current + bas, animated: true });
+          else if (haut > 0) vue.scrollTo({ y: Math.max(0, position.current - haut), animated: true });
+        });
+      });
+    }, Platform.OS === 'ios' ? 320 : 180);
+  }, []);
+
+  useEffect(() => {
+    const apparition = Platform.OS === 'ios' ? 'keyboardWillChangeFrame' : 'keyboardDidShow';
+    const disparition = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const a = Keyboard.addListener(apparition, (e) => {
+      const hautClavier = e.endCoordinates.screenY;
+      const mesurer = () => zone.current?.measureInWindow((_x: number, y: number, _l: number, h: number) => {
+        setRecouvert(Math.max(0, Math.round(y + h - hautClavier)));
+        reveler(TextInput.State.currentlyFocusedInput() as ComponentRef<typeof TextInput> | null);
+      });
+      // Android : laisse la fenêtre se redimensionner d'abord (si elle le fait), pour ne pas compter deux fois
+      if (Platform.OS === 'android') setTimeout(mesurer, 120); else mesurer();
+    });
+    const b = Keyboard.addListener(disparition, () => setRecouvert(0));
+    return () => { a.remove(); b.remove(); };
+  }, [reveler]);
+
+  const contexte = useMemo(() => ({ reveler }), [reveler]);
+
   return (
-    <ThemedView style={styles.flex}>
-      <SafeAreaView style={styles.flex} edges={bords}>
-        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? decalage : 0}>
-          <View ref={zone} style={styles.flex}
-            onLayout={() => zone.current?.measureInWindow((_x: number, y: number) => setDecalage((d) => (Math.abs(d - y) > 1 ? y : d)))}>
-          <ScrollView
-            contentContainerStyle={styles.contenu}
-            keyboardShouldPersistTaps="handled"
-            scrollEnabled={defilement}
-            contentInsetAdjustmentBehavior="automatic"
-            refreshControl={rafraichir ? (
-              <RefreshControl refreshing={enCours} onRefresh={() => {
-                setEnCours(true);
-                rafraichir().finally(() => setEnCours(false));
-              }} />
-            ) : undefined}>
-            {children}
-          </ScrollView>
+    <ContexteEcran.Provider value={contexte}>
+      <ThemedView style={styles.flex}>
+        <SafeAreaView style={styles.flex} edges={bords}>
+          <View ref={zone} style={styles.flex}>
+            <View style={[styles.flex, { paddingBottom: recouvert }]}>
+              <ScrollView
+                ref={defileur}
+                contentContainerStyle={styles.contenu}
+                keyboardShouldPersistTaps="handled"
+                scrollEnabled={defilement}
+                scrollEventThrottle={16}
+                onScroll={(e) => { position.current = e.nativeEvent.contentOffset.y; }}
+                contentInsetAdjustmentBehavior="automatic"
+                refreshControl={rafraichir ? (
+                  <RefreshControl refreshing={enCours} onRefresh={() => {
+                    setEnCours(true);
+                    rafraichir().finally(() => setEnCours(false));
+                  }} />
+                ) : undefined}>
+                {children}
+              </ScrollView>
+              {pied && <PiedActions>{pied}</PiedActions>}
+            </View>
           </View>
-          {pied && <PiedActions>{pied}</PiedActions>}
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </ThemedView>
+        </SafeAreaView>
+      </ThemedView>
+    </ContexteEcran.Provider>
   );
 }
 
@@ -301,6 +347,7 @@ export function Champ({ libelle, aide, erreur, ...props }: TextInputProps & { li
   const theme = useTheme();
   const [focus, setFocus] = useState(false);
   const entree = useRef<ComponentRef<typeof TextInput>>(null);
+  const ecran = useContext(ContexteEcran);
   return (
     <View style={styles.champ}>
       {/* Toucher le libellé place le curseur dans le champ */}
@@ -312,7 +359,7 @@ export function Champ({ libelle, aide, erreur, ...props }: TextInputProps & { li
         placeholderTextColor={theme.textSecondary}
         accessibilityLabel={libelle}
         {...props}
-        onFocus={(e) => { setFocus(true); props.onFocus?.(e); }}
+        onFocus={(e) => { setFocus(true); ecran?.reveler(entree.current); props.onFocus?.(e); }}
         onBlur={(e) => { setFocus(false); props.onBlur?.(e); }}
         style={[
           styles.input,
@@ -414,6 +461,7 @@ export function ListeOptions({ options, valeur, onChoisir }: {
 /** Unité : saisie libre, avec la liste des unités usuelles (filtrée par la saisie). */
 export function ChampUnite({ libelle = 'Unité', valeur, onChange }: { libelle?: string; valeur: string; onChange: (v: string) => void }) {
   const theme = useTheme();
+  const ecran = useContext(ContexteEcran);
   const [ouvert, setOuvert] = useState(false);
   const [focus, setFocus] = useState(false);
   const entree = useRef<ComponentRef<typeof TextInput>>(null);
@@ -425,7 +473,8 @@ export function ChampUnite({ libelle = 'Unité', valeur, onChange }: { libelle?:
       <View style={[styles.input, styles.combo, { backgroundColor: theme.backgroundElement, borderColor: focus || ouvert ? theme.primary : theme.border }]}>
         <TextInput ref={entree} value={valeur} onChangeText={(t) => { onChange(t); setOuvert(true); }} accessibilityLabel={libelle}
           placeholder="Pcs, kg, carton…" placeholderTextColor={theme.textSecondary} autoCorrect={false}
-          onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} style={[styles.flex, { color: theme.text, fontSize: 16, minHeight: 48 }]} />
+          onFocus={() => { setFocus(true); ecran?.reveler(entree.current); }} onBlur={() => setFocus(false)}
+          style={[styles.flex, { color: theme.text, fontSize: 16, minHeight: 48 }]} />
         <Pressable hitSlop={12} onPress={() => setOuvert((o) => !o)} accessibilityRole="button"
           accessibilityLabel={ouvert ? 'Fermer la liste des unités' : 'Afficher les unités usuelles'}>
           <Icone nom={ouvert ? 'haut' : 'bas'} taille={18} couleur={theme.textSecondary} />

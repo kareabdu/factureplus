@@ -185,6 +185,13 @@ export function htmlDocument(args: {
     <div class="bloc"><div class="etiquette">Règlements</div>${reglements.map((r) =>
       `<div>${dateFr(r.date)} — ${LIBELLES_MODE_PAIEMENT[r.mode]} — ${m(r.montant)}${r.reference ? ` (${echapper(r.reference)})` : ""}</div>`).join("")}</div>` : "";
 
+  // Bas du document : signature du client (bon de livraison) et signature / cachet de l'entreprise
+  const tampons = p.cachet_url || p.signature_url ? `<div class="signature">Pour ${echapper(p.nom_entreprise)}<div class="tampons">${
+    p.cachet_url ? `<img class="cachet" src="${echapper(p.cachet_url)}" alt="">` : ""}${
+    p.signature_url ? `<img class="${p.cachet_url ? "avec-cachet" : "seule"}" src="${echapper(p.signature_url)}" alt="">` : ""}</div></div>` : "";
+  const signatures = estBL || tampons
+    ? `<div class="signatures">${estBL ? '<div class="signature-client">Signature du client :</div>' : ""}${tampons}</div>` : "";
+
   return `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${echapper(titre)} ${echapper(numero)}</title>
@@ -234,8 +241,14 @@ export function htmlDocument(args: {
   .bloc { margin-top: 18px; color: #5b6670; }
   .images-notes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
   .images-notes img { max-width: 48%; max-height: 260px; object-fit: contain; border-radius: 6px; }
-  .signature { margin-top: 28px; text-align: right; color: #5b6670; }
-  .signature img { max-height: 70px; }
+  .signatures { margin-top: 28px; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; color: #5b6670; break-inside: avoid; }
+  .signature-client { min-height: 70px; }
+  .signature { margin-left: auto; text-align: center; min-width: 180px; }
+  .signature .tampons { position: relative; height: 110px; margin-top: 6px; }
+  .signature .tampons img { position: absolute; top: 0; max-height: 110px; max-width: 170px; object-fit: contain; }
+  .signature .tampons .cachet { left: 50%; transform: translateX(-50%) rotate(-6deg); opacity: 0.92; }
+  .signature .tampons .seule { left: 50%; transform: translateX(-50%); }
+  .signature .tampons .avec-cachet { left: 50%; transform: translateX(-42%); max-height: 80px; max-width: 150px; top: 22px; }
   .pied { margin-top: 24px; font-size: 9px; color: #8a949e; text-align: center; }
 </style></head>
 <body><div class="page"><div class="contenu">
@@ -249,8 +262,7 @@ export function htmlDocument(args: {
   ${d.conditions ? `<div class="bloc"><div class="etiquette">Conditions</div>${multiligne(d.conditions)}</div>` : ""}
   ${d.notes || d.images_notes?.length ? `<div class="bloc"><div class="etiquette">Notes</div>${multiligne(d.notes)}${d.images_notes?.length
     ? `<div class="images-notes">${d.images_notes.map((u) => `<img src="${echapper(u)}" alt="">`).join("")}</div>` : ""}</div>` : ""}
-  ${estBL ? '<div class="signature">Signature du client :<br><br><br></div>'
-    : p.signature_url ? `<div class="signature"><img src="${echapper(p.signature_url)}" alt=""></div>` : ""}
+  ${signatures}
 </div>
   ${p.pied_facture || p.site_web ? `<div class="pied">${[multiligne(p.pied_facture), echapper(p.site_web)].filter(Boolean).join("<br>")}</div>` : ""}
 </div></body></html>`;

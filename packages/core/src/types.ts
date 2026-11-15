@@ -53,6 +53,8 @@ export interface Parametres {
   conditions_defaut: string | null;
   logo_url: string | null;
   signature_url: string | null;
+  /** Cachet (tampon) de l'entreprise, imprimé avec la signature. */
+  cachet_url?: string | null;
   couleur_document: string;
   modele_document: ModeleDocument;
 }

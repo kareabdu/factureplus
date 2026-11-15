@@ -59,7 +59,8 @@ Après chaque modification : commiter et pousser sur `main` sans demander (véri
   numéros, règlements, achats, inventaires) uniquement via RPC `security definer set search_path = ''`.
   Les tables simples (catalogue, clients, fournisseurs) sont écrites directement, avec droits par colonne.
 - Tout mouvement de stock passe par `prive.mouvementer(…)` : verrouille le produit, met à jour `produits.quantite`,
-  refuse le stock négatif, synchronise `alertes_stock`, écrit `mouvements_stock` (inaltérable).
+  refuse le stock négatif seulement si `parametres.autoriser_stock_negatif` est désactivé (autorisé par défaut),
+  synchronise `alertes_stock`, écrit `mouvements_stock` (inaltérable).
 - Le stock d'une facture est rapproché par `prive.synchroniser_stock_document` (idempotent :
   delta = requis − déjà déduit par produit, d'après les mouvements liés au document). Requis = lignes si la
   facture est émise ou payée, 0 sinon (annulation = réinjection).

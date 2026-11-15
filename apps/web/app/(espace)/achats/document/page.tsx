@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  annulerAchat, chargerAchat, enregistrerAchat, formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_STATUT_ACHAT, lireMontant,
+  annulerAchat, chargerAchat, chargerProduit, enregistrerAchat, formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_STATUT_ACHAT, lireMontant,
   lireQuantite, receptionnerAchat, supprimerAchatBrouillon, type Achat, type EnteteAchat, type LigneAchat, type ModePaiement,
 } from "@factureplus/core";
 import Link from "next/link";
@@ -19,11 +19,21 @@ export default function PageAchat() {
 }
 
 function Aiguillage() {
-  const id = useSearchParams().get("id");
+  const parametres = useSearchParams();
+  const id = parametres.get("id");
+  // ?produit=<id> : nouvel achat de ce produit (action rapide de la fiche produit)
+  const produitId = id ? null : parametres.get("produit");
   const { donnees, erreur, recharger } = useDonnees(() => (id ? chargerAchat(supabase, id) : Promise.resolve(null)), [id]);
+  const produit = useDonnees(() => (produitId ? chargerProduit(supabase, produitId) : Promise.resolve(null)), [produitId]);
   if (erreur && !donnees) return <Alerte>{erreur}</Alerte>;
   if (id && !donnees) return <Chargement />;
-  if (!donnees || donnees.achat.statut === "brouillon") return <Editeur key={id ?? "nouveau"} achat={donnees?.achat ?? null} lignesInitiales={donnees?.lignes ?? []} />;
+  if (produitId && !produit.donnees && !produit.erreur) return <Chargement />;
+  const lignesProduit: LigneAchat[] = produit.donnees
+    ? [{ produit_id: produit.donnees.id, quantite: 1, cout_unitaire: produit.donnees.prix_achat, produits: { nom: produit.donnees.nom, unite: produit.donnees.unite } }]
+    : [];
+  if (!donnees || donnees.achat.statut === "brouillon") {
+    return <Editeur key={id ?? produitId ?? "nouveau"} achat={donnees?.achat ?? null} lignesInitiales={donnees?.lignes ?? lignesProduit} />;
+  }
   return <Consultation achat={donnees.achat} lignes={donnees.lignes} recharger={recharger} />;
 }
 

@@ -1,5 +1,5 @@
 import {
-  chargerAchat, enregistrerAchat, formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, lireMontant, lireQuantite,
+  chargerAchat, chargerProduit, enregistrerAchat, formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, lireMontant, lireQuantite,
   receptionnerAchat, supprimerAchatBrouillon, type EnteteAchat, type LigneAchat, type ModePaiement,
 } from '@factureplus/core';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -20,7 +20,8 @@ const MODES: ModePaiement[] = ['especes', 'wave', 'orange_money', 'virement', 'c
 
 /** Achat fournisseur en brouillon, puis réception (entrée en stock). */
 export default function EditerAchat() {
-  const params = useLocalSearchParams<{ id?: string }>();
+  // produit_id : nouvel achat de ce produit (action rapide de la fiche produit)
+  const params = useLocalSearchParams<{ id?: string; produit_id?: string }>();
   const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
   const symbole = parametres?.symbole_devise ?? 'FCFA';
@@ -46,6 +47,15 @@ export default function EditerAchat() {
     }).catch((e: Error) => actif && setErreur(e.message));
     return () => { actif = false; };
   }, [params.id]);
+
+  useEffect(() => {
+    if (params.id || !params.produit_id) return;
+    let actif = true;
+    chargerProduit(supabase, params.produit_id).then((p) => {
+      if (actif) setLignes((ls) => ls.length ? ls : [{ produit_id: p.id, nom: p.nom, unite: p.unite, quantite: 1, cout_unitaire: p.prix_achat }]);
+    }).catch(() => { /* produit introuvable : achat vide */ });
+    return () => { actif = false; };
+  }, [params.id, params.produit_id]);
 
   const total = lignes.reduce((s, l) => s + Math.round(l.quantite * l.cout_unitaire), 0);
   const montantPaye = entete.mode_paiement === 'credit' ? (paye ?? 0) : (paye ?? total);

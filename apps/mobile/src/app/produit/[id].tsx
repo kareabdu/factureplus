@@ -86,7 +86,11 @@ export default function FicheProduit() {
             <Bouton titre="Entrée" icone="ajouter" onPress={() => mouvementer('entree')} />
             <Bouton titre="Sortie" icone="retirer" variante="secondaire" onPress={() => mouvementer('sortie')} />
           </View>
-          <Bouton titre="Ajuster le stock" variante="secondaire" onPress={() => mouvementer('ajustement')} />
+          <View style={{ flexDirection: 'row', gap: Spacing.two }}>
+            <Bouton titre="Achat" icone="achats" variante="secondaire"
+              onPress={() => router.push({ pathname: '/achat/editer', params: { produit_id: p.id } })} />
+            <Bouton titre="Ajuster" variante="secondaire" onPress={() => mouvementer('ajustement')} />
+          </View>
         </Carte>
 
         <Carte>

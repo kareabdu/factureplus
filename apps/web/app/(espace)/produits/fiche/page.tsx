@@ -68,6 +68,7 @@ function Fiche() {
               <Bouton icone="plus" onClick={() => setMouvement("entree")}>Entrée</Bouton>
               <Bouton variante="secondaire" icone="moins" onClick={() => setMouvement("sortie")}>Sortie</Bouton>
               <Bouton variante="secondaire" onClick={() => setMouvement("ajustement")}>Ajuster</Bouton>
+              <LienBouton href={`/achats/document?produit=${p.id}`} variante="secondaire" icone="achats">Achat</LienBouton>
             </div>
           </Carte>
           <Carte>

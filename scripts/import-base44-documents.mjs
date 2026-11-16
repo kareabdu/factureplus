@@ -66,6 +66,12 @@ function modeReglement(m) {
 
 const etat = JSON.parse(readFileSync(new URL("../exports/base44/import-etat.json", import.meta.url), "utf8")).faites;
 const documents = lireCsv(join(dossier, "Invoice_export.csv"));
+// Produits base44 → date de création, conservée à l'import initial (created_at) : identifie le bon produit
+// même quand plusieurs produits portent le même nom. Exports d'origine, et nouveaux s'ils sont fournis.
+const creationProduit = new Map();
+for (const chemin of [new URL("../exports/base44/Product_export.csv", import.meta.url), join(dossier, "Product_export.csv")]) {
+  try { for (const p of lireCsv(chemin)) creationProduit.set(p.id, horodatage(p.created_date)?.toISOString() ?? null); } catch { /* absent */ }
+}
 const lignesParDocument = new Map();
 for (const l of lireCsv(join(dossier, "InvoiceItem_export.csv"))) {
   if (!lignesParDocument.has(l.invoice_id)) lignesParDocument.set(l.invoice_id, []);
@@ -97,7 +103,7 @@ for (const d of documents) {
     sousTotal += total;
     const designation = texte(l.product_name, 300) ?? texte(l.description, 300) ?? "Article";
     lignesSql.push({ designation, description: texte(l.description, 1000), unite: texte(l.unit, 20), prix, quantite,
-      taxable: l.taxable !== "false", total });
+      taxable: l.taxable !== "false", total, produit: creationProduit.get(l.product_id) ?? null });
   }
   const total = Math.max(0, entier(d.total_amount)) || sousTotal;
   const paiements = (json(d.payments) ?? []).filter((p) => entier(p?.amount) > 0);
@@ -112,7 +118,9 @@ for (const d of documents) {
     e: equipe.equipe_id, t: type, s: statut, n: numero, d: date, ech: jour(d.due_date), c: cree.toISOString(),
     cn: texte(d.customer_name, 200), ct: texte(d.customer_phone, 30), ca: texte(d.billing_address, 300),
     cond: texte(d.payment_terms, 1000), notes: texte(d.notes, 2000), st: sousTotal, tot: total, p: regle,
-    l: lignesSql.map((l) => [l.designation, l.description, l.unite, l.prix, l.quantite, l.taxable, l.total]),
+    // Stock réellement retiré par l'ancienne app pour cette facture : on le retire aussi ici
+    sd: type === "facture" && (statut === "emis" || statut === "paye") && d.stock_deducted === "true",
+    l: lignesSql.map((l) => [l.designation, l.description, l.unite, l.prix, l.quantite, l.taxable, l.total, l.produit]),
     r: reglements.map((r) => [r.montant, r.mode, r.date]),
   });
   const b = bilan.get(equipe.email) ?? { factures: 0, proformas: 0, bl: 0 };
@@ -130,7 +138,7 @@ on conflict (equipe_id, type, annee) do update set dernier = greatest(prive.comp
 // Bloc SQL de traitement : remplacer __DONNEES__ par le contenu d'un lot JSON (apostrophes doublées)
 const traitement = `do $$
 declare
-  doc jsonb; l jsonb; r jsonb; v_id uuid; v_num text; v_proprio uuid; v_produit uuid; v_pos int; v_e uuid;
+  doc jsonb; l jsonb; r jsonb; v_id uuid; v_num text; v_proprio uuid; v_produit uuid; v_pos int; v_e uuid; v_stock numeric;
   v_inseres int := 0; v_ignores int := 0;
 begin
   for doc in select * from jsonb_array_elements('__DONNEES__'::jsonb) loop
@@ -155,14 +163,22 @@ begin
     returning id into v_id;
     v_pos := 0;
     for l in select * from jsonb_array_elements(doc->'l') loop
-      v_produit := (select id from public.produits where equipe_id = v_e and lower(trim(nom)) = lower(trim(l->>0)) limit 1);
+      -- Produit d'origine (date de création), sinon même nom : le produit actif le mieux approvisionné
+      v_produit := coalesce(
+        (select id from public.produits where equipe_id = v_e and created_at = (l->>7)::timestamptz limit 1),
+        (select id from public.produits where equipe_id = v_e and lower(trim(nom)) = lower(trim(l->>0))
+         order by actif desc, quantite desc limit 1));
       insert into public.document_lignes (document_id, equipe_id, position, produit_id, designation, description, unite,
         prix_unitaire, quantite, taxable, total)
       values (v_id, v_e, v_pos, v_produit, l->>0, l->>1, l->>2, (l->>3)::bigint, (l->>4)::numeric, (l->>5)::boolean, (l->>6)::bigint);
       v_pos := v_pos + 1;
-      -- Facture émise ou payée : sortie de stock
-      if v_produit is not null and doc->>'t' = 'facture' and doc->>'s' in ('emis', 'paye') then
-        perform prive.mouvementer(v_produit, 'sortie', (l->>4)::numeric, 'Facture de l''ancienne application', v_num, v_id);
+      -- Facture dont l'ancienne app avait retiré le stock : même sortie ici, sans descendre sous zéro
+      -- (l'ancienne app ramenait le stock à 0 : on retrouve exactement son stock)
+      if v_produit is not null and (doc->>'sd')::boolean then
+        select quantite into v_stock from public.produits where id = v_produit;
+        if v_stock > 0 then
+          perform prive.mouvementer(v_produit, 'sortie', least(v_stock, (l->>4)::numeric), 'Facture de l''ancienne application', v_num, v_id);
+        end if;
       end if;
     end loop;
     for r in select * from jsonb_array_elements(doc->'r') loop

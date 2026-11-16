@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Pressable, View } from 'react-native';
+import { AppState, Platform, Pressable, View } from 'react-native';
 
 import { Icone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
@@ -25,7 +25,13 @@ const LOGOS_PAIEMENT: Record<MoyenPaiementAbonnement, number> = {
   orange_maxit: require('@/assets/images/paiement-maxit.png'),
 };
 
-/** Abonnement : état de l'accès, choix de la formule et paiement Wave / Max It (Unitech Pay). */
+/**
+ * Paiement de l'abonnement proposé seulement dans la version web : les apps iOS et Android n'affichent
+ * ni prix ni bouton de paiement (règles de l'App Store et de Google Play) ; l'abonnement se règle sur le site.
+ */
+const PAIEMENT_DANS_APP = Platform.OS === 'web';
+
+/** Abonnement : état de l'accès ; sur le web, choix de la formule et paiement Wave / Max It (Unitech Pay). */
 export default function Abonnement() {
   const { paiement: retour } = useLocalSearchParams<{ paiement?: string }>();
   const { userId } = useSession();
@@ -139,12 +145,12 @@ export default function Abonnement() {
         {abonnement.etat === 'essai' && <Info libelle="Essai gratuit jusqu'au" valeur={finTexte ?? '—'} fort />}
         {abonnement.etat === 'expire' && (
           <ThemedText type="small" themeColor="textSecondary">
-            Vos données restent consultables, mais vous ne pouvez plus rien créer ni modifier. Abonnez-vous pour tout débloquer.
+            Vos données restent consultables, mais vous ne pouvez plus rien créer ni modifier.{PAIEMENT_DANS_APP ? ' Abonnez-vous pour tout débloquer.' : ''}
           </ThemedText>
         )}
       </Carte>
 
-      {enCours && (
+      {PAIEMENT_DANS_APP && enCours && (
         <Carte>
           <ThemedText type="smallBold">Paiement en attente de confirmation</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
@@ -154,7 +160,7 @@ export default function Abonnement() {
         </Carte>
       )}
 
-      {qr && (
+      {PAIEMENT_DANS_APP && qr && (
         <Carte>
           <ThemedText type="smallBold">QR code Max It</ThemedText>
           <Image source={{ uri: qr.startsWith('http') || qr.startsWith('data:') ? qr : `data:image/png;base64,${qr}` }}
@@ -162,7 +168,7 @@ export default function Abonnement() {
         </Carte>
       )}
 
-      {abonnement.etat !== 'admin' && (
+      {PAIEMENT_DANS_APP && abonnement.etat !== 'admin' && (
         <Section titre={abonnement.etat === 'actif' ? 'Prolonger mon abonnement' : 'Choisir une formule'}>
           <View style={{ flexDirection: 'row', gap: Spacing.two }}>
             {(Object.keys(PLANS_ABONNEMENT) as PlanAbonnement[]).map((code) => {
@@ -209,7 +215,7 @@ export default function Abonnement() {
         </Section>
       )}
 
-      {paiements.length > 0 && (
+      {PAIEMENT_DANS_APP && paiements.length > 0 && (
         <Section titre="Historique des paiements">
           {paiements.map((p) => (
             <LigneListe key={p.id} titre={`${PLANS_ABONNEMENT[p.plan].libelle} · ${LIBELLES_MOYENS_ABONNEMENT[p.moyen]}`}

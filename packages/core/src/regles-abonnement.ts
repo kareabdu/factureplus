@@ -78,15 +78,16 @@ export function accesActif(profil: ProfilAbonnement, maintenant = new Date()): b
 }
 
 /** Message court pour un bandeau (null si rien à signaler). */
-export function messageAbonnement(e: EtatAbonnement): string | null {
+export function messageAbonnement(e: EtatAbonnement, { neutre = false }: { neutre?: boolean } = {}): string | null {
   if (!e.avertir) return null;
   const date = e.fin?.toLocaleDateString("fr-FR");
-  if (e.etat === "expire") return "Votre accès a expiré : vos données sont en lecture seule. Abonnez-vous pour continuer.";
+  // neutre : apps iOS / Android, sans invitation à payer (règles des stores)
+  if (e.etat === "expire") return `Votre accès a expiré : vos données sont en lecture seule.${neutre ? "" : " Abonnez-vous pour continuer."}`;
   const j = e.joursRestants ?? 0;
   const reste = j <= 1 ? "Dernier jour" : `Plus que ${j} jours`;
   return e.etat === "essai"
     ? `${reste} d'essai gratuit (jusqu'au ${date}).`
-    : `${reste} d'abonnement (jusqu'au ${date}). Pensez à renouveler.`;
+    : `${reste} d'abonnement (jusqu'au ${date}).${neutre ? "" : " Pensez à renouveler."}`;
 }
 
 /**

@@ -29,3 +29,24 @@ export async function imprimerDocument(documentId: string, parametres: Parametre
   cadre.contentWindow!.print();
   setTimeout(() => { cadre.remove(); window.document.title = titre; }, 1000);
 }
+
+/** Imprime (ou enregistre en PDF) un HTML autonome ; `titre` = nom proposé pour le fichier PDF. */
+export async function imprimerHtml(html: string, titre: string) {
+  const cadre = window.document.createElement("iframe");
+  cadre.style.position = "fixed";
+  cadre.style.width = "0";
+  cadre.style.height = "0";
+  cadre.style.border = "0";
+  window.document.body.appendChild(cadre);
+  const doc = cadre.contentDocument!;
+  doc.open();
+  doc.write(html);
+  doc.close();
+  await new Promise((r) => setTimeout(r, 300)); // logo
+  const titrePage = window.document.title;
+  window.document.title = titre;
+  doc.title = titre;
+  cadre.contentWindow!.focus();
+  cadre.contentWindow!.print();
+  setTimeout(() => { cadre.remove(); window.document.title = titrePage; }, 1000);
+}

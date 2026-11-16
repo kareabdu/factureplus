@@ -1,13 +1,15 @@
 "use client";
 
 import {
-  analyserImportProduits, ecrireTableur, importerProduits, lignesAEnvoyer, listerCategories, listerProduits,
-  lireTableur, nomFichierExportProduits, tableauExportProduits, tableauModeleProduits, TYPE_MIME_TABLEUR,
+  analyserImportProduits, ecrireTableur, htmlListeProduits, importerProduits, lignesAEnvoyer, listerCategories, listerProduits,
+  lireTableur, nomFichierExportProduits, nomFichierPdfProduits, tableauExportProduits, tableauModeleProduits, TYPE_MIME_TABLEUR,
   type AnalyseImportProduits, type BilanImportProduits, type FormatTableur, type Tableau,
 } from "@factureplus/core";
 import { useRef, useState } from "react";
 
 import { Alerte, Badge, Bouton, Modale } from "@/components/ui";
+import { useEquipe } from "@/lib/espace";
+import { imprimerHtml } from "@/lib/impression";
 import { supabase } from "@/lib/supabase";
 
 /** Téléchargement d'un fichier généré dans le navigateur. */
@@ -28,15 +30,21 @@ export function ExportProduits({ equipeId }: { equipeId: string }) {
   const [ouvert, setOuvert] = useState(false);
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  const { parametres } = useEquipe();
 
-  async function exporter(format: FormatTableur) {
+  async function exporter(format: FormatTableur | "pdf") {
     setEnCours(true);
     setErreur(null);
     try {
       const [produits, categories] = await Promise.all([
         listerProduits(supabase, equipeId, { inactifs: true }), listerCategories(supabase, equipeId),
       ]);
-      telecharger(format, tableauExportProduits(produits, categories), nomFichierExportProduits());
+      if (format === "pdf") {
+        if (!parametres) throw new Error("Paramètres de l'entreprise indisponibles.");
+        await imprimerHtml(htmlListeProduits({ produits, categories, parametres }), nomFichierPdfProduits());
+      } else {
+        telecharger(format, tableauExportProduits(produits, categories), nomFichierExportProduits());
+      }
       setOuvert(false);
     } catch (e) {
       setErreur((e as Error).message);
@@ -50,12 +58,14 @@ export function ExportProduits({ equipeId }: { equipeId: string }) {
       <Bouton variante="secondaire" icone="telecharger" onClick={() => setOuvert(true)}>Exporter</Bouton>
       <Modale ouverte={ouvert} titre="Exporter les produits" onFermer={() => setOuvert(false)}>
         <p className="mb-4 text-sm text-muted">
-          Tous vos produits (y compris désactivés) avec leur stock actuel. Le fichier peut être modifié puis réimporté.
+          Excel et CSV : tous vos produits (y compris désactivés) avec leur stock actuel, modifiables puis réimportables.
+          PDF : liste des produits actifs avec stock, prix et valeur du stock, à imprimer ou envoyer.
         </p>
         {erreur && <Alerte>{erreur}</Alerte>}
         <div className="flex flex-wrap gap-3">
           <Bouton icone="telecharger" chargement={enCours} onClick={() => exporter("xlsx")}>Excel (.xlsx)</Bouton>
           <Bouton variante="secondaire" icone="telecharger" disabled={enCours} onClick={() => exporter("csv")}>CSV</Bouton>
+          <Bouton variante="secondaire" icone="imprimer" disabled={enCours} onClick={() => exporter("pdf")}>PDF (liste à imprimer)</Bouton>
         </div>
       </Modale>
     </>

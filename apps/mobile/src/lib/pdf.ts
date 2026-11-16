@@ -74,3 +74,18 @@ export async function envoyerSurWhatsApp(documentId: string, parametres: Paramet
 }
 
 export { messagePartage };
+
+/** Convertit un HTML autonome en PDF nommé `nom.pdf` et ouvre la feuille de partage (web : impression). */
+export async function partagerHtmlEnPdf(html: string, nom: string) {
+  if (Platform.OS === 'web') return Print.printAsync({ html });
+  const { uri } = await Print.printToFileAsync({ html });
+  let chemin = uri;
+  try {
+    const cible = new File(Paths.cache, `${nom}.pdf`);
+    if (cible.exists) cible.delete();
+    const fichier = new File(uri);
+    await fichier.move(cible);
+    chemin = fichier.uri;
+  } catch { /* nom aléatoire conservé */ }
+  await Sharing.shareAsync(chemin, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: nom });
+}

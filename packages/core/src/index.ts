@@ -26,3 +26,4 @@ export * from "./design";
 export * from "./listes";
 export * from "./signature";
 export * from "./inscription";
+export * from "./produits-pdf";

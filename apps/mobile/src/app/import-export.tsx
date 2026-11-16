@@ -1,6 +1,6 @@
 import {
-  analyserImportProduits, ecrireTableur, importerProduits, lignesAEnvoyer, listerCategories, listerProduits,
-  lireTableur, nomFichierExportProduits, tableauExportProduits, tableauModeleProduits, TYPE_MIME_TABLEUR,
+  analyserImportProduits, ecrireTableur, htmlListeProduits, importerProduits, lignesAEnvoyer, listerCategories, listerProduits,
+  lireTableur, nomFichierExportProduits, nomFichierPdfProduits, tableauExportProduits, tableauModeleProduits, TYPE_MIME_TABLEUR,
   type AnalyseImportProduits, type BilanImportProduits, type FormatTableur, type Tableau,
 } from '@factureplus/core';
 import * as DocumentPicker from 'expo-document-picker';
@@ -13,6 +13,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Alerte, Badge, Bouton, Carte, Ecran, Interrupteur, LigneListe, Section } from '@/components/ui';
 import { signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe } from '@/lib/espace';
+import { partagerHtmlEnPdf } from '@/lib/pdf';
 import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
 
@@ -39,9 +40,9 @@ async function partagerTableur(format: FormatTableur, tableau: Tableau, nom: str
 
 /** Import et export du catalogue produits (Excel .xlsx ou CSV). */
 export default function ImportExport() {
-  const { equipeId } = useEquipe();
+  const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
-  const [exportEnCours, setExportEnCours] = useState<FormatTableur | null>(null);
+  const [exportEnCours, setExportEnCours] = useState<FormatTableur | 'pdf' | null>(null);
   const [lecture, setLecture] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [fichier, setFichier] = useState<string | null>(null);
@@ -50,13 +51,18 @@ export default function ImportExport() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [erreursSeules, setErreursSeules] = useState(false);
 
-  async function exporter(format: FormatTableur) {
+  async function exporter(format: FormatTableur | 'pdf') {
     setExportEnCours(format);
     try {
       const [produits, categories] = await Promise.all([
         listerProduits(supabase, equipeId, { inactifs: true }), listerCategories(supabase, equipeId),
       ]);
-      await partagerTableur(format, tableauExportProduits(produits, categories), nomFichierExportProduits());
+      if (format === 'pdf') {
+        if (!parametres) throw new Error("Paramètres de l'entreprise indisponibles.");
+        await partagerHtmlEnPdf(htmlListeProduits({ produits, categories, parametres }), nomFichierPdfProduits());
+      } else {
+        await partagerTableur(format, tableauExportProduits(produits, categories), nomFichierExportProduits());
+      }
     } catch (e) {
       signalerErreur(e, 'Export impossible');
     } finally {
@@ -115,7 +121,8 @@ export default function ImportExport() {
     ) : undefined}>
       <Section titre="Exporter">
         <ThemedText type="small" themeColor="textSecondary">
-          Tous vos produits (y compris désactivés) avec leur stock actuel. Le fichier peut être modifié puis réimporté.
+          Excel et CSV : tous vos produits avec leur stock actuel, modifiables puis réimportables. PDF : liste des produits
+          actifs avec stock, prix et valeur du stock.
         </ThemedText>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Bouton titre="Excel" icone="exporter" style={{ flex: 1 }} chargement={exportEnCours === 'xlsx'}
@@ -123,6 +130,8 @@ export default function ImportExport() {
           <Bouton titre="CSV" icone="exporter" variante="secondaire" style={{ flex: 1 }} chargement={exportEnCours === 'csv'}
             desactive={!!exportEnCours} onPress={() => exporter('csv')} />
         </View>
+        <Bouton titre="PDF (liste à imprimer ou envoyer)" icone="document" variante="secondaire" chargement={exportEnCours === 'pdf'}
+          desactive={!!exportEnCours} onPress={() => exporter('pdf')} />
       </Section>
 
       <Section titre="Importer">

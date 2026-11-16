@@ -223,11 +223,14 @@ export default function EditerDocument() {
           )}
         </Bloc>
 
-        {/* Articles */}
+        {/* Articles : « Ajouter un article » en tête, toujours visible même avec beaucoup de lignes */}
         <Bloc>
-          {lignes.map((l) => (
+          <LigneAction onPress={() => article()} libelle="Ajouter un article" icone="ajouter" />
+          {lignes.length > 0 && <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.border }} />}
+          {lignes.map((l, i) => (
             <Pressable key={l.cle} onPress={() => article(l)} accessibilityRole="button" accessibilityLabel={`Modifier ${l.designation}`}
-              style={({ pressed }) => [styles.ligne, { borderBottomColor: theme.border, backgroundColor: pressed ? theme.backgroundSelected : 'transparent' }]}>
+              style={({ pressed }) => [styles.ligne, { borderBottomColor: theme.border, backgroundColor: pressed ? theme.backgroundSelected : 'transparent' },
+                i === lignes.length - 1 && { borderBottomWidth: 0 }]}>
               <View style={{ flex: 1, gap: 2 }}>
                 <ThemedText type="smallBold" style={{ fontSize: 16 }} numberOfLines={2}>{l.designation}</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
@@ -240,7 +243,6 @@ export default function EditerDocument() {
               <ThemedText type="smallBold" style={{ fontSize: 16 }}>{m(totalLigne(l))}</ThemedText>
             </Pressable>
           ))}
-          <LigneAction onPress={() => article()} libelle="Ajouter un article" icone="ajouter" />
         </Bloc>
 
         {/* Totaux */}

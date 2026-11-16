@@ -9,12 +9,19 @@ import { Icone, type NomIcone } from "@/components/icones";
 
 /** Composants d'interface communs (couleurs : globals.css). */
 
-/** Logo : coche blanche sur fond vert (image de l'ancienne application, même dessin que l'icône mobile). */
+/** Logo « F+ » : F blanc et + vert clair sur dégradé vert (même dessin que l'icône de l'app). */
 export function Monogramme({ taille = 32 }: { taille?: number }) {
+  const id = useId();
   return (
-    <svg viewBox="0 0 24 24" width={taille} height={taille} aria-hidden="true">
-      <rect width="24" height="24" rx="5.3" fill="#147A2E" />
-      <path transform="translate(4.8 4.8) scale(0.6)" d="M5 12.5L10 17.5L19 7" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 1024 1024" width={taille} height={taille} aria-hidden="true">
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#178A39" /><stop offset="1" stopColor="#0A4519" /></linearGradient>
+      </defs>
+      <rect width="1024" height="1024" rx="228" fill={`url(#${id})`} />
+      <g transform="translate(51.2 51.2) scale(0.9) translate(-35 0)">
+        <path d="M230 770 V320 a60 60 0 0 1 60 -60 H520 M230 500 H450" fill="none" stroke="#fff" strokeWidth="115" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M745 400 v240 M625 520 h240" stroke="#9BE3AE" strokeWidth="100" strokeLinecap="round" />
+      </g>
     </svg>
   );
 }

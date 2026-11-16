@@ -248,7 +248,7 @@ export function ErreurChargement({ message, reessayer }: { message: string; rees
 // Marque
 // ---------------------------------------------------------------------------
 
-/** Logo FacturePlus : coche blanche sur fond vert (image de l'ancienne application, même dessin que l'icône). */
+/** Logo FacturePlus « F+ » (même image que l'icône et l'écran de démarrage). */
 export function Monogramme({ taille = 36 }: { taille?: number }) {
   return (
     <Image source={require('@/assets/images/splash-icon.png')} style={{ width: taille, height: taille }} contentFit="contain"

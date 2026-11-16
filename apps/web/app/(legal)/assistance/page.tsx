@@ -11,7 +11,7 @@ export default function Assistance() {
     <>
       <header>
         <h1>Assistance FacturePlus</h1>
-        <p className="mt-1 text-muted">Une question, un problème ? Nous répondons en français, en général dans la journée.</p>
+        <p className="mt-1 text-muted">Une question, un problème ? Nous répondons en français, en wolof et en anglais, en général dans la journée.</p>
       </header>
 
       <section>
@@ -26,7 +26,6 @@ export default function Assistance() {
         <h2>Questions fréquentes</h2>
         <p><strong>J&apos;utilisais l&apos;ancienne application.</strong> Vos données ont été reprises. Connectez-vous avec la même
           adresse e-mail : avec Google, ou avec « Mot de passe oublié » pour choisir un mot de passe.</p>
-        <p className="mt-3"><strong>Comment payer mon abonnement ?</strong> Dans <em>Plus → Abonnement</em>, par Wave ou Max It.</p>
         <p className="mt-3"><strong>Comment supprimer mon compte ?</strong> Dans <em>Mon compte → Supprimer mon compte</em>.
           Toutes vos données sont effacées définitivement.</p>
       </section>

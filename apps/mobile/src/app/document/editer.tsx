@@ -7,13 +7,13 @@ import { libelleEnregistrementAuto, useEnregistrementAuto } from '@factureplus/c
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ChampDate, versIso } from '@/components/champ-date';
 import { Icone } from '@/components/icone';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Badge, Bouton, BoutonIcone, ChargementPlein, Ecran, useRevelerAuFocus } from '@/components/ui';
+import { Alerte, Badge, Bouton, BoutonIcone, ChargementPlein, Ecran, useReveler, useRevelerAuFocus } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { confirmer, signalerErreur, vibrerSucces } from '@/lib/confirmer';
@@ -39,6 +39,9 @@ export default function EditerDocument() {
   const { equipeId, parametres } = useEquipe();
   const theme = useTheme();
   const revelerEnBas = useRevelerAuFocus(true);
+  // Dernière ligne et « + Ajouter un article » gardées à l'écran (ouverture, ajout d'un article)
+  const reveler = useReveler();
+  const finArticles = useRef<ComponentRef<typeof View>>(null);
   const symbole = parametres?.symbole_devise ?? 'FCFA';
   const m = (v: number) => formaterMontant(v, symbole);
 
@@ -167,6 +170,10 @@ export default function EditerDocument() {
     }
   }
 
+  useEffect(() => {
+    if (pret && lignes.length > 0) reveler(finArticles.current);
+  }, [pret, lignes.length, reveler]);
+
   if (!pret) return erreur ? <Ecran enTete><Alerte>{erreur}</Alerte></Ecran> : <ChargementPlein />;
   const statut = existant && !brouillon ? statutAffiche(existant) : null;
 
@@ -223,14 +230,11 @@ export default function EditerDocument() {
           )}
         </Bloc>
 
-        {/* Articles : « Ajouter un article » en tête, toujours visible même avec beaucoup de lignes */}
+        {/* Articles */}
         <Bloc>
-          <LigneAction onPress={() => article()} libelle="Ajouter un article" icone="ajouter" />
-          {lignes.length > 0 && <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.border }} />}
-          {lignes.map((l, i) => (
+          {lignes.map((l) => (
             <Pressable key={l.cle} onPress={() => article(l)} accessibilityRole="button" accessibilityLabel={`Modifier ${l.designation}`}
-              style={({ pressed }) => [styles.ligne, { borderBottomColor: theme.border, backgroundColor: pressed ? theme.backgroundSelected : 'transparent' },
-                i === lignes.length - 1 && { borderBottomWidth: 0 }]}>
+              style={({ pressed }) => [styles.ligne, { borderBottomColor: theme.border, backgroundColor: pressed ? theme.backgroundSelected : 'transparent' }]}>
               <View style={{ flex: 1, gap: 2 }}>
                 <ThemedText type="smallBold" style={{ fontSize: 16 }} numberOfLines={2}>{l.designation}</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
@@ -243,6 +247,9 @@ export default function EditerDocument() {
               <ThemedText type="smallBold" style={{ fontSize: 16 }}>{m(totalLigne(l))}</ThemedText>
             </Pressable>
           ))}
+          <View ref={finArticles} collapsable={false}>
+            <LigneAction onPress={() => article()} libelle="Ajouter un article" icone="ajouter" />
+          </View>
         </Bloc>
 
         {/* Totaux */}

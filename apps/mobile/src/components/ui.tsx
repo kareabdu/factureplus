@@ -43,6 +43,12 @@ const ContexteEcran = createContext<{ reveler: (champ: Mesurable | null, enBas?:
  * Pour un TextInput posé directement dans un écran (hors Champ) : à passer en onFocus pour que le champ
  * reste visible au-dessus du clavier.
  */
+/** Fait défiler l'écran pour rendre un élément visible (au-dessus du clavier et de la barre d'actions). */
+export function useReveler(): (element: Mesurable | null) => void {
+  const ecran = useContext(ContexteEcran);
+  return useCallback((element) => ecran?.reveler(element), [ecran]);
+}
+
 export function useRevelerAuFocus(enBas = false): (e: { currentTarget: unknown }) => void {
   const ecran = useContext(ContexteEcran);
   return useCallback((e) => ecran?.reveler(e.currentTarget as Mesurable, enBas), [ecran, enBas]);
@@ -111,6 +117,7 @@ export function Ecran({
   }, []);
 
   useEffect(() => {
+    if (CLAVIER_NATIF) return; // la bibliothèque gère elle-même le clavier
     const apparition = Platform.OS === 'ios' ? 'keyboardWillChangeFrame' : 'keyboardDidShow';
     const disparition = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const a = Keyboard.addListener(apparition, (e) => {
@@ -140,9 +147,13 @@ export function Ecran({
     // Le champ touché (quel qu'il soit) est placé au-dessus du clavier et de la barre d'actions,
     // qui reste collée au clavier ; mesures faites par le système (justes aussi dans les modales).
     return (
+      <ContexteEcran.Provider value={contexte}>
       <ThemedView style={styles.flex}>
         <SafeAreaView style={styles.flex} edges={bords}>
           <KeyboardAwareScrollView
+            ref={(vue) => { defileur.current = vue as unknown as ComponentRef<typeof ScrollView> | null; }}
+            scrollEventThrottle={16}
+            onScroll={(e) => { position.current = e.nativeEvent.contentOffset.y; }}
             style={styles.flex}
             contentContainerStyle={styles.contenu}
             keyboardShouldPersistTaps="handled"
@@ -160,6 +171,7 @@ export function Ecran({
           )}
         </SafeAreaView>
       </ThemedView>
+      </ContexteEcran.Provider>
     );
   }
 

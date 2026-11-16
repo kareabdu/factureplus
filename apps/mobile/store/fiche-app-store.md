@@ -51,10 +51,9 @@ TABLEAU DE BORD
 
 Vos données sont synchronisées entre votre téléphone et l'ordinateur (factureplus.kareapps.com), et protégées : chaque entreprise n'accède qu'à ses propres données.
 
-ABONNEMENT
-7 jours d'essai gratuit, puis 2 900 FCFA par mois ou 29 000 FCFA par an, payable par Wave ou Max It.
+Essai gratuit de 7 jours. FacturePlus fonctionne avec un compte FacturePlus ; l'application ne propose aucun achat.
 
-Assistance en français par WhatsApp.
+Assistance en français, en wolof et en anglais par WhatsApp.
 
 ## Mots-clés (100, séparés par des virgules, sans espace)
 
@@ -63,8 +62,8 @@ facture,stock,inventaire,caisse,proforma,devis,vente,achat,commerce,boutique,wav
 ## Notes pour la vérification d'Apple (App Review)
 
 - Compte de démonstration : à créer et renseigner (e-mail + mot de passe) avec des données d'exemple.
-- L'abonnement est un service professionnel (logiciel de gestion) payé via les opérateurs de paiement mobile
-  locaux (Wave, Orange Money / Max It), utilisés par nos clients au Sénégal.
+- L'application ne contient aucun achat ni lien de paiement : c'est l'application compagnon gratuite d'un
+  service web professionnel (règle 3.1.3(f)) ; les comptes sont gérés sur factureplus.kareapps.com.
 - Suppression du compte : Mon compte → Supprimer mon compte.
 
 ## Captures d'écran

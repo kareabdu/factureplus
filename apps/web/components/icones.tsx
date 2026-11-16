@@ -87,6 +87,7 @@ const TRACES = {
     </>
   ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  points: <><circle cx="12" cy="12" r="9" /><path d="M8 12h.01M12 12h.01M16 12h.01" strokeWidth={2.75} /></>,
   fermer: <path d="M6 6l12 12M18 6 6 18" />,
   plus: <path d="M12 5v14M5 12h14" />,
   moins: <path d="M5 12h14" />,

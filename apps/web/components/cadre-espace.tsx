@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
-import { BarreLaterale } from "@/components/barre-laterale";
+import { BarreLaterale, OngletsMobile } from "@/components/barre-laterale";
 import { Icone } from "@/components/icones";
 import { Alerte, Bouton, Champ, ChoixDevise, Chargement, Logo } from "@/components/ui";
 import { EspaceProvider, useEquipe, useSession } from "@/lib/espace";
@@ -46,12 +46,14 @@ function Cadre({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col md:flex-row">
       <BarreLaterale />
-      <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8 lg:px-10">
+      {/* Téléphone : place pour la barre d'onglets du bas */}
+      <main className="min-w-0 flex-1 px-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] pt-5 md:px-8 md:py-8 lg:px-10">
         <div className="mx-auto max-w-6xl">
           <BandeauAbonnement />
           {children}
         </div>
       </main>
+      <OngletsMobile />
     </div>
   );
 }

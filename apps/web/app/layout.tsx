@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Téléphone : contenu jusqu'aux bords (barre d'onglets au-dessus de la barre d'accueil de l'iPhone)
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f4f6f4" },
     { media: "(prefers-color-scheme: dark)", color: "#0b110c" },

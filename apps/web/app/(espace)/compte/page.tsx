@@ -6,7 +6,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
 
-import { Alerte, Badge, Bouton, Carte, Champ, Chargement, EnTetePage, Info, LienBouton, Modale } from "@/components/ui";
+import { Alerte, Badge, Bouton, Carte, Case, Champ, Chargement, EnTetePage, Info, LienBouton, Modale } from "@/components/ui";
 import { useEquipe, useSession } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
@@ -116,6 +116,14 @@ function MonCompte() {
             <Info libelle={abonnement.etat === "expire" ? "Terminé le" : "Jusqu'au"} valeur={abonnement.fin.toLocaleDateString("fr-FR")} fort />
           )}
           <div className="mt-3"><LienBouton href="/abonnement" variante="secondaire" icone="abonnement">Gérer mon abonnement</LienBouton></div>
+          <div className="mt-4 border-t border-border pt-4">
+            <Case libelle="Rappels par e-mail" aide="Prévenu par e-mail avant la fin de l'essai ou de l'abonnement."
+              checked={profil.rappels_email ?? true}
+              onChange={async (e) => {
+                try { await modifierProfil(supabase, userId!, { rappels_email: e.target.checked }); await rafraichir(); }
+                catch (err) { setMessage({ type: "erreur", texte: (err as Error).message }); }
+              }} />
+          </div>
         </Carte>
         <Carte titre="Profil">
           <form onSubmit={profilEnvoyer} className="flex flex-col gap-4">

@@ -93,5 +93,9 @@ Après chaque modification : commiter et pousser sur `main` sans demander (véri
   l'alerte reste active, `niveau_notifie`) → file `notifications_push` → pg_net → fonction Edge `push-stock` (sans JWT,
   vide la file via `reserver_notifications_push`, rôle service) → API push d'Expo. URL des fonctions dans `prive.configuration`.
   Mobile : `src/lib/notifications.ts` (réglage dans Plus, proposition automatique, toucher → fiche produit).
+- **Rappels d'abonnement par e-mail** (les apps iOS / Android n'affichent aucun paiement) : pg_cron chaque jour à 9 h →
+  fonction Edge `rappels-abonnement` (sans JWT) → `reserver_rappels_abonnement` (rôle service, fin proche à 2 jours ou
+  expiré depuis 2 jours, un rappel par type et échéance dans `rappels_abonnement`) → Resend. Secret `RESEND_API_KEY`.
+  Désactivables par l'utilisateur (`profils.rappels_email`, Mon compte).
 - **Administration de la plateforme** : table `administrateurs_plateforme` (alimentée à la main en SQL, jamais par migration),
   RPC `admin_*` contrôlées par `prive.verifier_admin_plateforme()`.

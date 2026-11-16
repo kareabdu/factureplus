@@ -3,7 +3,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 
-import { Alerte, Bouton, Champ, ChargementPlein, Ecran, Info, LigneListe, Section } from '@/components/ui';
+import { Alerte, Bouton, Champ, ChargementPlein, Ecran, Info, Interrupteur, LigneListe, Section } from '@/components/ui';
 import { confirmer, signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe, useSession } from '@/lib/espace';
 import { supabase } from '@/lib/supabase';
@@ -107,6 +107,11 @@ function MonCompte() {
           sousTitre={abonnement?.etat === 'admin' ? 'Accès permanent' : abonnement?.fin
             ? `${abonnement.etat === 'expire' ? 'Terminé le' : "Jusqu'au"} ${abonnement.fin.toLocaleDateString('fr-FR')}` : undefined}
           onPress={() => router.push('/abonnement')} />
+        <Interrupteur libelle="Rappels par e-mail" aide="Prévenu par e-mail avant la fin de l'essai ou de l'abonnement"
+          valeur={profil.rappels_email ?? true}
+          onChange={(rappels_email) => {
+            modifierProfil(supabase, userId!, { rappels_email }).then(rafraichir).catch((e) => signalerErreur(e));
+          }} />
       </Section>
 
       <Section titre="Profil">

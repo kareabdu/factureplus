@@ -16,6 +16,8 @@ export interface Profil {
   abonnement_statut: "essai" | "en_attente" | "actif" | "expire" | "aucun";
   abonnement_plan: "mensuel" | "annuel" | null;
   abonnement_fin: string | null;
+  /** Rappels par e-mail de fin d'essai / d'abonnement */
+  rappels_email?: boolean;
 }
 
 export interface MonEquipe {

@@ -15,7 +15,7 @@ export async function chargerProfil(sb: SupabaseClient, userId: string): Promise
   return verifier(await sb.from("profils").select("*").eq("id", userId).maybeSingle());
 }
 
-export async function modifierProfil(sb: SupabaseClient, userId: string, champs: Pick<Profil, "nom_complet" | "telephone">) {
+export async function modifierProfil(sb: SupabaseClient, userId: string, champs: Partial<Pick<Profil, "nom_complet" | "telephone" | "rappels_email">>) {
   verifier(await sb.from("profils").update(champs).eq("id", userId));
 }
 

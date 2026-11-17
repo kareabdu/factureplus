@@ -28,7 +28,8 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "FacturePlus"
     },
     "plugins": [
       "expo-router",
@@ -74,7 +75,8 @@
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": true,
+      "baseUrl": "/app"
     },
     "extra": {
       "eas": {

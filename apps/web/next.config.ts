@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
       permanent: false,
     }];
   },
+  // Application mobile compilée pour le navigateur (public/app, une seule page) : toutes ses adresses
+  // renvoient vers sa page d'entrée ; ses fichiers (/app/_expo/…) sont servis directement.
+  async rewrites() {
+    return [
+      { source: "/app", destination: "/app/index.html" },
+      { source: "/app/:chemin*", destination: "/app/index.html" },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {

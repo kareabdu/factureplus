@@ -35,6 +35,7 @@ export const ICONES = {
   ajouterContact: { ios: 'person.badge.plus', android: 'person_add' },
   fermer: { ios: 'xmark', android: 'close' },
   document: { ios: 'doc.plaintext', android: 'description' },
+  ecran: { ios: 'desktopcomputer', android: 'computer' },
   tendance: { ios: 'chart.line.uptrend.xyaxis', android: 'trending_up' },
   compte: { ios: 'person.crop.circle', android: 'person' },
   depense: { ios: 'creditcard.fill', android: 'receipt' },

@@ -1,7 +1,7 @@
 import { LIBELLES_ETATS_ACCES, LIBELLES_THEMES, modifierParametres, type PreferenceTheme } from '@factureplus/core';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Ecran, Interrupteur, LigneListe, Pastilles, Section } from '@/components/ui';
@@ -60,6 +60,15 @@ export default function Plus() {
         <Pastilles libelle="Apparence" options={(Object.keys(LIBELLES_THEMES) as PreferenceTheme[]).map((code) => ({ code, libelle: LIBELLES_THEMES[code] }))}
           valeur={preference} onChange={changerPreference} />
       </Section>
+
+      {Platform.OS === 'web' && (
+        // Navigateur sur téléphone : retour au site complet (version ordinateur), mémorisé
+        <LigneListe icone="ecran" titre="Version ordinateur du site" sousTitre="Tableaux, impressions, import / export"
+          onPress={() => {
+            try { localStorage.setItem('factureplus.version', 'ordinateur'); } catch { /* stockage indisponible */ }
+            window.location.href = '/tableau-de-bord';
+          }} />
+      )}
 
       <LigneListe icone="deconnexion" titre="Se déconnecter" onPress={async () => {
         if (await confirmer('Se déconnecter', 'Voulez-vous vous déconnecter ?', 'Se déconnecter')) {

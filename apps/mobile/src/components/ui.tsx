@@ -34,7 +34,7 @@ import { useTheme } from '@/hooks/use-theme';
  * Gestion native du clavier (react-native-keyboard-controller) présente dans ce build ? Les builds
  * antérieurs à son ajout gardent la gestion de secours ci-dessous.
  */
-export const CLAVIER_NATIF = TurboModuleRegistry.get('KeyboardController') != null;
+export const CLAVIER_NATIF = Platform.OS !== 'web' && TurboModuleRegistry?.get?.('KeyboardController') != null;
 
 type Mesurable = { measureInWindow: (rappel: (x: number, y: number, largeur: number, hauteur: number) => void) => void };
 const ContexteEcran = createContext<{ reveler: (champ: Mesurable | null, enBas?: boolean) => void } | null>(null);

@@ -4,6 +4,7 @@ import { LIBELLES_ETATS_ACCES } from "@factureplus/core";
 import Link from "next/link";
 
 import { SECTION_ADMIN, SECTIONS, THEMES, useThemeWeb } from "@/components/barre-laterale";
+import { CLE_VERSION_SITE } from "@/components/redirection-mobile";
 import { Icone, type NomIcone } from "@/components/icones";
 import { useEquipe, useSession } from "@/lib/espace";
 
@@ -52,6 +53,13 @@ export default function PagePlus() {
           ))}
         </div>
       </section>
+
+      {/* Téléphone : retour à l'application (même présentation que l'app mobile) */}
+      <button type="button" className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5 text-left md:hidden"
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- /app n'est pas une page Next (fichiers statiques)
+        onClick={() => { try { localStorage.removeItem(CLE_VERSION_SITE); } catch { /* indisponible */ } window.location.href = "/app/"; }}>
+        <Icone nom="produits" taille={20} /> Version application (téléphone)
+      </button>
 
       <button type="button" onClick={() => void deconnecter()}
         className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5 text-left text-danger">

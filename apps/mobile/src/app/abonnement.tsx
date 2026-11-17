@@ -94,7 +94,8 @@ export default function Abonnement() {
     setMessage(null);
     setChargement(true);
     try {
-      const r = await lancerPaiementAbonnement(supabase, { plan, moyen });
+      // Navigateur : retour sur le site après le paiement (l'app native revient par factureplus://)
+      const r = await lancerPaiementAbonnement(supabase, { plan, moyen, retour: Platform.OS === 'web' ? window.location.origin : undefined });
       await recharger();
       // Max It : application ouverte en priorité ; repli sur la page de paiement si elle n'est pas installée
       let ouvert = false;

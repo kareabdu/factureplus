@@ -1,0 +1,4 @@
+# Captures sources (données réelles) et visuels d'inspiration (tiers) : non versionnés
+/input/
+/inspiration/
+/.rendu/

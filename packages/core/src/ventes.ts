@@ -5,6 +5,16 @@ import type {
   Document, EnteteDocument, LigneDocument, ModePaiement, Reglement, StatutDocument, TypeDocument,
 } from "./types";
 
+/**
+ * Document encore modifiable ? Non : facture annulée, proforma acceptée ou refusée, bon de livraison validé
+ * (même règle que public.enregistrer_document).
+ */
+export function documentModifiable(d: Pick<Document, "type" | "statut">): boolean {
+  if (d.statut === "brouillon") return true;
+  if (d.type === "bl" || d.statut === "annule") return false;
+  return !(d.type === "proforma" && (d.statut === "accepte" || d.statut === "refuse"));
+}
+
 export interface FiltreDocuments {
   recherche?: string;
   statuts?: StatutDocument[];

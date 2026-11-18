@@ -1,5 +1,5 @@
 import {
-  annulerDocument, chargerDocument, convertirProforma, creerBonLivraison, formaterMontant, formaterQuantite,
+  annulerDocument, chargerDocument, documentModifiable, convertirProforma, creerBonLivraison, formaterMontant, formaterQuantite,
   LIBELLES_MODE_PAIEMENT, LIBELLES_TYPE_DOCUMENT, refuserProforma, resteAPayer, statutAffiche, supprimerReglement,
 } from '@factureplus/core';
 import { useDonnees } from '@factureplus/core/react';
@@ -66,10 +66,10 @@ export default function VoirDocument() {
     <>
       <Stack.Screen options={{
         title: d.numero ?? libelle,
-        headerRight: () => (
+        headerRight: documentModifiable(d) ? () => (
           <BoutonIcone icone="modifier" libelle="Modifier"
             onPress={() => router.push({ pathname: '/document/editer', params: { id: d.id, type: d.type } })} />
-        ),
+        ) : undefined,
       }} />
       <Ecran enTete rafraichir={recharger}>
         <View style={{ gap: 4 }}>
@@ -102,8 +102,10 @@ export default function VoirDocument() {
               onPress={() => executer('pdf', () => partagerPdf(d.id, parametres))} />
             <Bouton titre="Imprimer" icone="imprimer" variante="secondaire" onPress={() => executer('imprimer', () => imprimer(d.id, parametres))} />
           </View>
-          <Bouton titre={`Modifier ${d.type === 'bl' ? 'le bon' : 'la ' + libelle.toLowerCase()}`} icone="modifier" variante="secondaire"
-            onPress={() => router.push({ pathname: '/document/editer', params: { id: d.id, type: d.type } })} />
+          {documentModifiable(d) && (
+            <Bouton titre={`Modifier la ${libelle.toLowerCase()}`} icone="modifier" variante="secondaire"
+              onPress={() => router.push({ pathname: '/document/editer', params: { id: d.id, type: d.type } })} />
+          )}
           {d.client_telephone && (
             <Bouton titre="Envoyer sur WhatsApp" variante="secondaire" chargement={occupe === 'wa'}
               onPress={() => executer('wa', () => envoyerSurWhatsApp(d.id, parametres))} />

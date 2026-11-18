@@ -66,9 +66,8 @@ console.log("Facture annulée");
 await en(A, "select public.annuler_document($1)", [f]);
 await vrai("annulation : riz revenu à 10", async () => (await qte(riz)) === 10);
 await en(A, "select public.supprimer_reglement(id) from public.reglements where document_id=$1", [f]).catch(() => null);
-await enregistrer(f, lignes(3));
-await vrai("modifiée après annulation : reste annulée, stock inchangé", async () =>
-  (await doc(f)).statut === "annule" && (await qte(riz)) === 10);
+await echoue("modification après annulation refusée", () => enregistrer(f, lignes(3)), "Document annulé");
+await vrai("reste annulée, stock inchangé", async () => (await doc(f)).statut === "annule" && (await qte(riz)) === 10);
 
 console.log("Proforma et isolation");
 const p = (await en(A, "select public.enregistrer_document($1,'proforma',null,$2,$3) as id", [eA, entete, lignes(1)]))[0].id;

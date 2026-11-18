@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  annulerDocument, calculerTotaux, chargerDocument, envoyerImageProduit, convertirProforma, creerBonLivraison, enregistrerDocument, enregistrerReglement,
+  annulerDocument, calculerTotaux, chargerDocument, documentModifiable, envoyerImageProduit, convertirProforma, creerBonLivraison, enregistrerDocument, enregistrerReglement,
   formaterMontant, formaterQuantite, LIBELLES_MODE_PAIEMENT, LIBELLES_TYPE_DOCUMENT, CLIENT_DE_PASSAGE, ligneDepuisArticleLibre, ligneDepuisProduit, lireMontant, lireQuantite,
   refuserProforma, resteAPayer, statutAffiche, supprimerBrouillon, supprimerReglement, totalLigne, validerDocument,
   type Document, type EnteteDocument, type LigneDocument, type ModePaiement, type Reglement, type TypeDocument,
@@ -32,7 +32,7 @@ function Aiguillage() {
   const { donnees, erreur, recharger } = useDonnees(() => (id ? chargerDocument(supabase, id) : Promise.resolve(null)), [id, modifier]);
   if (erreur && !donnees) return <Alerte>{erreur}</Alerte>;
   if (id && !donnees) return <Chargement />;
-  if (!donnees || donnees.document.statut === "brouillon" || modifier) {
+  if (!donnees || donnees.document.statut === "brouillon" || (modifier && documentModifiable(donnees.document))) {
     return <Editeur key={id ?? "nouveau"} type={donnees?.document.type ?? type} document={donnees?.document ?? null} lignesInitiales={donnees?.lignes ?? []} />;
   }
   return <Consultation document={donnees.document} lignes={donnees.lignes} reglements={donnees.reglements} recharger={recharger} />;
@@ -254,7 +254,7 @@ function Consultation({ document: d, lignes, reglements, recharger }: {
         description={<span className="flex items-center gap-2">{new Date(`${d.date}T00:00:00`).toLocaleDateString("fr-FR")} <Badge ton={s.ton}>{s.libelle}</Badge></span>}
         action={<>
           {d.type === "facture" && d.statut === "emis" && <Bouton onClick={() => setEncaisser(true)}>Encaisser</Bouton>}
-          <LienBouton href={`/ventes/document?id=${d.id}&modifier=1`} variante="secondaire">Modifier</LienBouton>
+          {documentModifiable(d) && <LienBouton href={`/ventes/document?id=${d.id}&modifier=1`} variante="secondaire">Modifier</LienBouton>}
           <Bouton variante="secondaire" icone="imprimer" chargement={occupe === "imprimer"} onClick={() => executer("imprimer", () => imprimerDocument(d.id, parametres!))}>Imprimer / PDF</Bouton>
           {d.type === "proforma" && d.statut === "emis" && <>
             <Bouton chargement={occupe === "convertir"} onClick={() => executer("convertir", async () => router.push(`/ventes/document?id=${await convertirProforma(supabase, d.id)}`))}>Accepté → facture</Bouton>

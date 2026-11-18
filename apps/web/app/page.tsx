@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { Icone, type NomIcone } from "@/components/icones";
-import { Chargement, LienBouton, Logo } from "@/components/ui";
+import { Chargement, LienBouton } from "@/components/ui";
 import { useSession } from "@/lib/espace";
 
 const ATOUTS: { icone: NomIcone; titre: string; texte: string }[] = [
@@ -31,7 +31,12 @@ export default function Accueil() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-5">
-        <Logo />
+        {/* Même image que le logo de l'écran de consentement Google (/logo.png), associée au nom */}
+        <span className="inline-flex items-center gap-2.5 text-lg font-semibold tracking-tight">
+          {/* eslint-disable-next-line @next/next/no-img-element -- image statique de public/, identique au logo déclaré */}
+          <img src="/logo.png" alt="Logo FacturePlus" width={36} height={36} className="size-9 rounded-[9px]" />
+          <span>Facture<span className="text-primary">Plus</span></span>
+        </span>
         <Link href="/connexion" className="text-sm font-medium text-primary hover:underline">Se connecter</Link>
       </header>
 

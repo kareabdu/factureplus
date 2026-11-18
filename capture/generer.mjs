@@ -1,7 +1,10 @@
-// Visuels de la fiche App Store (1284 × 2778) à partir des captures de capture/input.
-// Usage : node capture/generer.mjs   → PNG dans capture/output
+// Visuels de la fiche App Store à partir des captures :
+//   • iPhone 6,5" (1284 × 2778) : captures de capture/input      → capture/output
+//   • iPad 13"   (2064 × 2752) : captures de capture/input-ipad → capture/output/ipad
+//     (fichiers nommés par numéro d'écran : 01…, 02…, 03…, 05…, 06… ; l'écran 04 n'en a pas besoin)
+// Usage : node capture/generer.mjs
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync, existsSync, rmSync } from "node:fs";
+import { mkdirSync, writeFileSync, existsSync, rmSync, readdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { join } from "node:path";
 
@@ -74,7 +77,7 @@ const decor = `
     }).join("")}
   </svg>`;
 
-const page = (corps) => `<!doctype html><html><head><meta charset="utf-8">
+const page = (corps, L = 1284, H = 2778) => `<!doctype html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=block" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0}
@@ -111,13 +114,20 @@ function carteDocument(style, largeur = 900) {
   </div>`;
 }
 
-/** Notification « Rupture de stock » sortie de la capture, agrandie au-dessus du téléphone. */
+/** Notification push « Stock bas » (texte exact envoyé par l'app), agrandie au-dessus du téléphone. */
 function notification(style) {
-  // bannière : x 26 → 1157, y 166 → 372 dans la capture
-  const l = 1164, s = l / 1131;
-  return `<div style="position:absolute;height:${Math.round(206 * s)}px;border-radius:${Math.round(70 * s)}px;overflow:hidden;
-    box-shadow:0 40px 90px rgba(0,0,0,.6);${style}">
-    <img src="${entree("IMG_5982")}" style="display:block;width:${Math.round(1179 * s)}px;margin:-${Math.round(166 * s)}px 0 0 -${Math.round(26 * s)}px">
+  const logo = pathToFileURL(join(ici, "..", "apps", "web", "public", "logo.png")).href;
+  return `<div style="position:absolute;border-radius:74px;padding:40px 46px;display:flex;gap:30px;align-items:center;
+    background:#565756;border:2px solid rgba(255,255,255,.18);box-shadow:0 40px 90px rgba(0,0,0,.6);
+    font-family:-apple-system,'SF Pro Text','Segoe UI',sans-serif;color:#fff;${style}">
+    <img src="${logo}" style="width:100px;height:100px;border-radius:24px;flex:none">
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:44px;font-weight:600">Stock bas</span>
+        <span style="font-size:36px;color:rgba(255,255,255,.6)">maintenant</span>
+      </div>
+      <div style="font-size:42px;line-height:1.25;margin-top:6px;color:rgba(255,255,255,.92)">Sony WH-XM65 : plus que 3 Pcs en stock (seuil 5).</div>
+    </div>
   </div>`;
 }
 
@@ -198,18 +208,52 @@ const ecrans = [
   },
 ];
 
+function rendre(nom, html, dossier, l, h) {
+  const fichier = join(travail, `${nom}.html`);
+  writeFileSync(fichier, html);
+  const png = join(dossier, `${nom}.png`);
+  execFileSync(CHROME, ["--headless=new", "--disable-gpu", "--hide-scrollbars", "--allow-file-access-from-files",
+    `--window-size=${l},${h}`, "--force-device-scale-factor=1", "--virtual-time-budget=8000",
+    `--screenshot=${png}`, pathToFileURL(fichier).href], { stdio: "ignore" });
+  console.log("✓", png);
+}
+
 if (existsSync(travail)) rmSync(travail, { recursive: true, force: true });
 mkdirSync(travail, { recursive: true });
 mkdirSync(sortie, { recursive: true });
-for (const e of ecrans) {
-  let html = page(e.corps);
-  if (e.apres) html = e.apres(html);
-  const fichier = join(travail, `${e.nom}.html`);
-  writeFileSync(fichier, html);
-  const png = join(sortie, `${e.nom}.png`);
-  execFileSync(CHROME, ["--headless=new", "--disable-gpu", "--hide-scrollbars", "--allow-file-access-from-files",
-    `--window-size=${L},${H}`, "--force-device-scale-factor=1", "--virtual-time-budget=8000",
-    `--screenshot=${png}`, pathToFileURL(fichier).href], { stdio: "ignore" });
-  console.log("✓", png);
+for (const e of ecrans) rendre(e.nom, page(e.corps), sortie, L, H);
+
+// --- iPad 13" ---
+const LI = 2064, HI = 2752;
+const dossierIpad = join(ici, "input-ipad");
+const capturesIpad = existsSync(dossierIpad) ? readdirSync(dossierIpad).filter((f) => /\.(png|jpe?g)$/i.test(f)) : [];
+const captureIpad = (num) => {
+  const f = capturesIpad.find((n) => n.startsWith(num));
+  return f ? pathToFileURL(join(dossierIpad, f)).href : null;
+};
+/** iPad : cadre à bords fins, capture à sa taille d'origine (portrait). */
+const tablette = (src, style) => `<div class="tel" style="border-radius:96px;padding:34px;${style}">
+    <div class="ecran" style="border-radius:64px"><img src="${src}" style="width:1640px;display:block"></div></div>`;
+const titreIpad = (gras, suite) => `<div class="titre" style="top:150px"><b style="font-size:220px">${gras}</b><span style="font-size:118px">${suite}</span></div>`;
+const ecransIpad = [
+  { num: "01", nom: "01-creez-vos-factures", titre: titreIpad("Créez", "vos factures en quelques secondes"), icone: "facture" },
+  { num: "02", nom: "02-pilotez-votre-boutique", titre: titreIpad("Pilotez", "votre boutique d'un coup d'œil"), icone: "graphique" },
+  { num: "03", nom: "03-alertes-de-stock", titre: titreIpad("Soyez alerté", "avant la <em>rupture</em> de stock"), icone: "cloche" },
+  { num: "05", nom: "05-envoyez-sur-whatsapp", titre: titreIpad("Envoyez-les", "à vos clients sur <em>WhatsApp</em>"), icone: "envoyer" },
+  { num: "06", nom: "06-suivez-vos-ventes", titre: titreIpad("Suivez", "chaque facture, payée ou non"), icone: "eclair" },
+];
+if (capturesIpad.length) {
+  const sortieIpad = join(sortie, "ipad");
+  mkdirSync(sortieIpad, { recursive: true });
+  for (const e of ecransIpad) {
+    const src = captureIpad(e.num);
+    if (!src) { console.log(`– iPad ${e.nom} : aucune capture ${e.num}… dans input-ipad`); continue; }
+    rendre(e.nom, page(`${e.titre}${tablette(src, "left:178px;top:720px")}${pastille(e.icone, "left:1640px;top:620px;transform:scale(1.3)")}`, LI, HI), sortieIpad, LI, HI);
+  }
+  // Liste des fonctions : même contenu que sur iPhone, centré
+  const liste = ecrans.find((e) => e.nom.startsWith("04"));
+  rendre(liste.nom, page(`<div style="position:absolute;left:${(LI - L) / 2}px;top:0;width:${L}px;height:${H}px;transform:scale(1.1);transform-origin:50% 0">${liste.corps}</div>`, LI, HI), sortieIpad, LI, HI);
+} else {
+  console.log("iPad : déposez les captures dans capture/input-ipad (01…, 02…, 03…, 05…, 06…)");
 }
 rmSync(travail, { recursive: true, force: true });

@@ -16,6 +16,7 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
+import { HeaderHeightContext } from 'expo-router/react-navigation';
 import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
@@ -170,6 +171,27 @@ export function Ecran({
 
   const contexte = useMemo(() => ({ reveler, amenerEnHaut }), [reveler, amenerEnHaut]);
   const [hauteurPied, setHauteurPied] = useState(0);
+  // Écran fixe sous un en-tête transparent (iOS 26) : sans défilement, aucun retrait automatique →
+  // le contenu est décalé de la partie de l'en-tête qui le recouvre
+  const hauteurEnTete = useContext(HeaderHeightContext) ?? 0;
+  const [decalage, setDecalage] = useState(0);
+
+  if (!defilement) {
+    return (
+      <ContexteEcran.Provider value={contexte}>
+        <ThemedView style={styles.flex}>
+          <SafeAreaView style={styles.flex} edges={bords}>
+            <View ref={zone} style={styles.flex} onLayout={() => zone.current?.measureInWindow((_x: number, y: number) => {
+              setDecalage(Math.max(0, Math.round(hauteurEnTete - y)));
+            })}>
+              <View style={[styles.contenu, { paddingTop: Spacing.three + Spacing.one + decalage }]}>{children}</View>
+            </View>
+            {pied && <PiedActions>{pied}</PiedActions>}
+          </SafeAreaView>
+        </ThemedView>
+      </ContexteEcran.Provider>
+    );
+  }
 
   const actualisation = rafraichir ? (
     <RefreshControl refreshing={enCours} onRefresh={() => {

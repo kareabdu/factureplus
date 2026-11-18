@@ -37,7 +37,10 @@ import { useTheme } from '@/hooks/use-theme';
 export const CLAVIER_NATIF = Platform.OS !== 'web' && TurboModuleRegistry?.get?.('KeyboardController') != null;
 
 type Mesurable = { measureInWindow: (rappel: (x: number, y: number, largeur: number, hauteur: number) => void) => void };
-const ContexteEcran = createContext<{ reveler: (champ: Mesurable | null, enBas?: boolean) => void } | null>(null);
+const ContexteEcran = createContext<{
+  reveler: (champ: Mesurable | null, enBas?: boolean) => void;
+  amenerEnHaut: (element: Mesurable | null) => void;
+} | null>(null);
 
 /**
  * Pour un TextInput posé directement dans un écran (hors Champ) : à passer en onFocus pour que le champ
@@ -47,6 +50,25 @@ const ContexteEcran = createContext<{ reveler: (champ: Mesurable | null, enBas?:
 export function useReveler(): (element: Mesurable | null) => void {
   const ecran = useContext(ContexteEcran);
   return useCallback((element) => ecran?.reveler(element), [ecran]);
+}
+
+/**
+ * Bloc d'un écran (Ecran) vers lequel on défile à l'ouverture quand `actif` (lien direct vers une
+ * section, par exemple « Taxe » depuis l'éditeur de document) : placé en haut de la partie visible.
+ */
+export function Ancre({ actif, children }: { actif: boolean; children: ReactNode }) {
+  const ecran = useContext(ContexteEcran);
+  const vue = useRef<ComponentRef<typeof View>>(null);
+  const fait = useRef(false);
+  return (
+    <View ref={vue} onLayout={() => {
+      if (!actif || fait.current) return;
+      fait.current = true;
+      ecran?.amenerEnHaut(vue.current);
+    }}>
+      {children}
+    </View>
+  );
 }
 
 export function useRevelerAuFocus(enBas = false): (e: { currentTarget: unknown }) => void {
@@ -133,7 +155,20 @@ export function Ecran({
     return () => { a.remove(); b.remove(); if (minuterie.current) clearTimeout(minuterie.current); };
   }, [reveler]);
 
-  const contexte = useMemo(() => ({ reveler }), [reveler]);
+  /** Place l'élément en haut de la partie visible (après la mise en page et l'animation d'ouverture). */
+  const amenerEnHaut = useCallback((element: Mesurable | null) => {
+    setTimeout(() => {
+      const vue = defileur.current;
+      if (!element || !vue) return;
+      vue.measureInWindow((_x: number, hautVue: number) => {
+        element.measureInWindow((_ex: number, hautElement: number) => {
+          vue.scrollTo({ y: Math.max(0, position.current + hautElement - hautVue - Spacing.three), animated: true });
+        });
+      });
+    }, Platform.OS === 'ios' ? 450 : 300);
+  }, []);
+
+  const contexte = useMemo(() => ({ reveler, amenerEnHaut }), [reveler, amenerEnHaut]);
   const [hauteurPied, setHauteurPied] = useState(0);
 
   const actualisation = rafraichir ? (

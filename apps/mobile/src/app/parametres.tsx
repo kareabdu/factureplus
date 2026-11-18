@@ -3,13 +3,13 @@ import {
 } from '@factureplus/core';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
 import { ChoixModele } from '@/components/choix-modele';
 import { ThemedText } from '@/components/themed-text';
-import { Alerte, Bouton, Champ, LigneListe, ChampUnite, ChargementPlein, ChoixDevise, Ecran, Interrupteur, Pastilles, Section } from '@/components/ui';
+import { Alerte, Ancre, Bouton, Champ, LigneListe, ChampUnite, ChargementPlein, ChoixDevise, Ecran, Interrupteur, Pastilles, Section } from '@/components/ui';
 import { Rayons, Spacing } from '@/constants/theme';
 import { signalerErreur, vibrerSucces } from '@/lib/confirmer';
 import { useEquipe } from '@/lib/espace';
@@ -18,6 +18,8 @@ import { supabase } from '@/lib/supabase';
 /** Paramètres de l'entreprise : en-tête des factures, numérotation, taxe. */
 export default function Parametres() {
   const { equipeId, parametres, rafraichir } = useEquipe();
+  // ?section=taxe : ouvert depuis la ligne de taxe d'un document → défile jusqu'à la section Taxe
+  const { section } = useLocalSearchParams<{ section?: string }>();
   const [s, setS] = useState<ParametresModifiables>(() => ({ ...parametres }));
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
@@ -90,6 +92,7 @@ export default function Parametres() {
         <ChampUnite libelle="Unité par défaut" valeur={texte('unite_defaut')} onChange={(unite_defaut) => maj({ unite_defaut })} />
       </Section>
 
+      <Ancre actif={section === 'taxe'}>
       <Section titre="Taxe">
         <Pastilles options={TYPES_TAXE.map((t) => ({ code: t.valeur, libelle: t.libelle }))} valeur={(s.taxe_type ?? 'aucune') as TypeTaxe}
           onChange={(taxe_type) => maj({ taxe_type })} />
@@ -109,6 +112,7 @@ export default function Parametres() {
           </>
         )}
       </Section>
+      </Ancre>
 
       <Section titre="Modèle de facture">
         <ChoixModele modele={(s.modele_document ?? 'classique') as ModeleDocument} couleur={s.couleur_document ?? '#147A2E'}

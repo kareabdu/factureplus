@@ -263,7 +263,7 @@ export default function EditerDocument() {
                 : `${taxe.taxe_nom} ${String(taxe.taxe_taux).replace('.', ',')} %${taxe.taxe_incluse ? ' (incluse)' : ''}${taxe.taxe_type === 'deduction' ? ' (retenue)' : ''}`}
               valeur={m(totaux.montant_taxe)}
               discret
-              onPress={brouillon ? () => router.push('/parametres') : undefined}
+              onPress={brouillon ? () => router.push('/parametres?section=taxe') : undefined}
             />
             <LigneTotal libelle="Total" valeur={m(totaux.total)} discret />
             {type === 'facture' && dejaPaye > 0 && <LigneTotal libelle="Déjà encaissé" valeur={m(dejaPaye)} discret />}

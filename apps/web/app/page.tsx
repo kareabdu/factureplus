@@ -63,6 +63,7 @@ export default function Accueil() {
         <span>© FacturePlus — sur ordinateur et téléphone</span>
         <nav className="flex gap-4">
           <Link href="/confidentialite" className="hover:underline">Règles de confidentialité</Link>
+          <Link href="/conditions" className="hover:underline">Conditions d&apos;utilisation</Link>
           <Link href="/assistance" className="hover:underline">Assistance</Link>
         </nav>
       </footer>

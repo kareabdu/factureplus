@@ -115,7 +115,7 @@ function carteDocument(style, largeur = 900) {
 }
 
 /** Notification push « Stock bas » (texte exact envoyé par l'app), agrandie au-dessus du téléphone. */
-function notification(style) {
+function notification(style, corps = "Sony WH-XM65 : plus que 3 Pcs en stock (seuil 5).") {
   const logo = pathToFileURL(join(ici, "..", "apps", "web", "public", "logo.png")).href;
   return `<div style="position:absolute;border-radius:74px;padding:40px 46px;display:flex;gap:30px;align-items:center;
     background:#565756;border:2px solid rgba(255,255,255,.18);box-shadow:0 40px 90px rgba(0,0,0,.6);
@@ -126,7 +126,7 @@ function notification(style) {
         <span style="font-size:44px;font-weight:600">Stock bas</span>
         <span style="font-size:36px;color:rgba(255,255,255,.6)">maintenant</span>
       </div>
-      <div style="font-size:42px;line-height:1.25;margin-top:6px;color:rgba(255,255,255,.92)">Sony WH-XM65 : plus que 3 Pcs en stock (seuil 5).</div>
+      <div style="font-size:42px;line-height:1.25;margin-top:6px;color:rgba(255,255,255,.92)">${corps}</div>
     </div>
   </div>`;
 }
@@ -232,14 +232,36 @@ const captureIpad = (num) => {
   return f ? pathToFileURL(join(dossierIpad, f)).href : null;
 };
 /** iPad : cadre à bords fins, capture à sa taille d'origine (portrait). */
-const tablette = (src, style) => `<div class="tel" style="border-radius:96px;padding:34px;${style}">
-    <div class="ecran" style="border-radius:64px"><img src="${src}" style="width:1640px;display:block"></div></div>`;
+const tablette = (src, style, retouche = "") => `<div class="tel" style="border-radius:96px;padding:34px;${style}">
+    <div class="ecran" style="border-radius:64px"><img src="${src}" style="width:1640px;display:block">
+      <div style="position:absolute;inset:0;transform:scale(${1640 / 2048});transform-origin:0 0;width:2048px;height:2732px">${barreIpad}${retouche}</div>
+    </div></div>`;
+
+// Retouches des captures iPad (coordonnées de la capture 2048 × 2732) : barre d'état en français,
+// client réel « MCS » remplacé par un client fictif
+const POLICE = "font-family:-apple-system,'SF Pro Text','Segoe UI',sans-serif";
+const cache = (x, y, l, h, fond, contenu) =>
+  `<div style="position:absolute;left:${x}px;top:${y}px;width:${l}px;height:${h}px;background:${fond};${POLICE}">${contenu}</div>`;
+const texte = (x, y, taille, gras, couleur, t) =>
+  `<div style="position:absolute;left:${x}px;top:${y}px;font-size:${taille}px;line-height:1;font-weight:${gras ? 600 : 400};color:${couleur};white-space:nowrap">${t}</div>`;
+const barreIpad = cache(0, 0, 2048, 66, "#F4F6F4", `
+  ${texte(33, 15, 32, true, "#111", "9:41&nbsp;&nbsp;&nbsp;dim. 22 nov.")}
+  <div style="position:absolute;right:30px;top:14px;display:flex;gap:10px;align-items:center;font-size:31px;font-weight:600;color:#111">
+    <svg width="34" height="22" viewBox="0 0 34 22"><g fill="#111"><rect x="0" y="14" width="6" height="8" rx="1.5"/><rect x="9" y="10" width="6" height="12" rx="1.5"/><rect x="18" y="5" width="6" height="17" rx="1.5"/><rect x="27" y="0" width="6" height="22" rx="1.5"/></g></svg>
+    <svg width="30" height="22" viewBox="0 0 30 22"><g fill="#111"><path d="M15 21l-4.2-4.6a6 6 0 0 1 8.4 0z"/><path d="M15 9.5a11.5 11.5 0 0 1 8 3.3l-2.3 2.5a8.2 8.2 0 0 0-11.4 0L7 12.8a11.5 11.5 0 0 1 8-3.3z"/><path d="M15 2.5a18.5 18.5 0 0 1 13 5.3l-2.3 2.5a15 15 0 0 0-21.4 0L2 7.8a18.5 18.5 0 0 1 13-5.3z"/></g></svg>
+    100&nbsp;%
+    <svg width="52" height="24" viewBox="0 0 52 24"><rect x="1" y="1" width="44" height="22" rx="7" fill="none" stroke="#111" stroke-opacity=".4" stroke-width="2"/><rect x="4" y="4" width="38" height="16" rx="4.5" fill="#111"/><path d="M48 8v8c1.6-.5 2.6-2.2 2.6-4s-1-3.5-2.6-4z" fill="#111" fill-opacity=".45"/></svg>
+  </div>`);
+const nomListe = (y) => cache(292, y - 22, 620, 46, "#fff", texte(6, 6, 30, true, "#111", "Awa Fall"));
+const enteteFacture = cache(258, 262, 700, 112, "#F4F6F4",
+  texte(6, 7, 45, true, "#111", "Awa Fall") + texte(6, 70, 29, false, "#5f6b63", "+221 77 000 00 07"));
+const RETOUCHES_IPAD = { "01": nomListe(730), "03": enteteFacture, "05": enteteFacture, "06": nomListe(1000) };
 const titreIpad = (gras, suite) => `<div class="titre" style="top:150px"><b style="font-size:220px">${gras}</b><span style="font-size:118px">${suite}</span></div>`;
 const ecransIpad = [
   { num: "01", nom: "01-creez-vos-factures", titre: titreIpad("Créez", "vos factures en quelques secondes"), icone: "facture" },
   { num: "02", nom: "02-pilotez-votre-boutique", titre: titreIpad("Pilotez", "votre boutique d'un coup d'œil"), icone: "graphique" },
   { num: "03", nom: "03-alertes-de-stock", titre: titreIpad("Soyez alerté", "avant la <em>rupture</em> de stock"), icone: "cloche" },
-  { num: "05", nom: "05-envoyez-sur-whatsapp", titre: titreIpad("Envoyez-les", "à vos clients sur <em>WhatsApp</em>"), icone: "envoyer" },
+  { num: "05", nom: "05-envoyez-sur-whatsapp", titre: titreIpad("Partagez", "vos factures en <em>PDF</em>"), icone: "envoyer" },
   { num: "06", nom: "06-suivez-vos-ventes", titre: titreIpad("Suivez", "chaque facture, payée ou non"), icone: "eclair" },
 ];
 if (capturesIpad.length) {
@@ -248,7 +270,10 @@ if (capturesIpad.length) {
   for (const e of ecransIpad) {
     const src = captureIpad(e.num);
     if (!src) { console.log(`– iPad ${e.nom} : aucune capture ${e.num}… dans input-ipad`); continue; }
-    rendre(e.nom, page(`${e.titre}${tablette(src, "left:178px;top:720px")}${pastille(e.icone, "left:1640px;top:620px;transform:scale(1.3)")}`, LI, HI), sortieIpad, LI, HI);
+    const alerte = e.num === "03"
+      ? notification("left:282px;top:1100px;width:1500px;transform:scale(1.32);transform-origin:50% 0", "Lait en poudre 400 g : plus que 10 Pcs en stock (seuil 10).")
+      : "";
+    rendre(e.nom, page(`${e.titre}${tablette(src, "left:178px;top:720px", RETOUCHES_IPAD[e.num])}${alerte}${pastille(e.icone, "left:1640px;top:620px;transform:scale(1.3)")}`, LI, HI), sortieIpad, LI, HI);
   }
   // Liste des fonctions : même contenu que sur iPhone, centré
   const liste = ecrans.find((e) => e.nom.startsWith("04"));

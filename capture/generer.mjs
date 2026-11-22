@@ -279,19 +279,35 @@ const ecransIpad = [
   { num: "06", nom: "06-suivez-vos-ventes", titre: titreIpad("Suivez", "chaque facture, payée ou non"), icone: "eclair" },
 ];
 if (capturesIpad.length) {
-  const sortieIpad = join(sortie, "ipad");
-  mkdirSync(sortieIpad, { recursive: true });
-  for (const e of ecransIpad) {
-    const src = captureIpad(e.num);
-    if (!src) { console.log(`– iPad ${e.nom} : aucune capture ${e.num}… dans input-ipad`); continue; }
-    const alerte = e.num === "03"
-      ? notification("left:282px;top:1100px;width:1500px;transform:scale(1.32);transform-origin:50% 0", "Lait en poudre 400 g : plus que 10 Pcs en stock (seuil 10).")
-      : "";
-    rendre(e.nom, page(`${e.titre}${tablette(src, "left:178px;top:720px", RETOUCHES_IPAD[e.num])}${alerte}${pastille(e.icone, "left:1640px;top:620px;transform:scale(1.3)")}`, LI, HI), sortieIpad, LI, HI);
+  /** Visuels au format iPad (largeur 2064), sur une hauteur donnée : la tablette est simplement plus visible en bas. */
+  const rendreIpad = (dossier, hauteur) => {
+    mkdirSync(dossier, { recursive: true });
+    for (const e of ecransIpad) {
+      const src = captureIpad(e.num);
+      if (!src) { console.log(`– iPad ${e.nom} : aucune capture ${e.num}… dans input-ipad`); continue; }
+      const alerte = e.num === "03"
+        ? notification("left:282px;top:1100px;width:1500px;transform:scale(1.32);transform-origin:50% 0", "Lait en poudre 400 g : plus que 10 Pcs en stock (seuil 10).")
+        : "";
+      rendre(e.nom, page(`${e.titre}${tablette(src, "left:178px;top:720px", RETOUCHES_IPAD[e.num])}${alerte}${pastille(e.icone, "left:1640px;top:620px;transform:scale(1.3)")}`, LI, hauteur), dossier, LI, hauteur);
+    }
+    // Liste des fonctions : même contenu que sur iPhone, centré
+    const liste = ecrans.find((e) => e.nom.startsWith("04"));
+    rendre(liste.nom, page(`<div style="position:absolute;left:${(LI - L) / 2}px;top:${(hauteur - HI) / 2}px;width:${L}px;height:${H}px;transform:scale(1.1);transform-origin:50% 0">${liste.corps}</div>`, LI, hauteur), dossier, LI, hauteur);
+  };
+  rendreIpad(join(sortie, "ipad"), HI);
+
+  // iPhone Duo (proportions proches de l'iPad) : mise en page iPad un peu plus haute, puis réduite à la taille exacte
+  const TAILLES_DUO = { "duo-interieur": [2007, 2853], "duo-exterieur": [1398, 2034] };
+  for (const [dossier, [l, h]] of Object.entries(TAILLES_DUO)) {
+    const brut = join(travail, dossier);
+    rendreIpad(brut, Math.round((LI * h) / l));
+    mkdirSync(join(sortie, dossier), { recursive: true });
+    for (const f of readdirSync(brut).filter((n) => n.endsWith(".png"))) {
+      const cible = join(sortie, dossier, f);
+      await sharp(join(brut, f)).resize(l, h, { fit: "cover" }).flatten({ background: "#fff" }).png().toFile(cible);
+      console.log("✓", cible);
+    }
   }
-  // Liste des fonctions : même contenu que sur iPhone, centré
-  const liste = ecrans.find((e) => e.nom.startsWith("04"));
-  rendre(liste.nom, page(`<div style="position:absolute;left:${(LI - L) / 2}px;top:0;width:${L}px;height:${H}px;transform:scale(1.1);transform-origin:50% 0">${liste.corps}</div>`, LI, HI), sortieIpad, LI, HI);
 } else {
   console.log("iPad : déposez les captures dans capture/input-ipad (01…, 02…, 03…, 05…, 06…)");
 }

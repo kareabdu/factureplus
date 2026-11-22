@@ -1,8 +1,12 @@
 import { Tabs } from 'expo-router/js-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icone, type NomIcone } from '@/components/icone';
 import { ContexteOngletsBas } from '@/components/onglets-contexte';
 import { useTheme } from '@/hooks/use-theme';
+
+/** Hauteur de la barre, hors zone sûre basse (icône, libellé et marges). */
+const HAUTEUR = 64;
 
 const ONGLETS: { nom: string; titre: string; icone: NomIcone }[] = [
   { nom: 'index', titre: 'Accueil', icone: 'accueil' },
@@ -17,6 +21,7 @@ const ONGLETS: { nom: string; titre: string; icone: NomIcone }[] = [
  */
 export function OngletsBas() {
   const theme = useTheme();
+  const { bottom } = useSafeAreaInsets();
   return (
     <ContexteOngletsBas.Provider value>
     <Tabs
@@ -25,13 +30,20 @@ export function OngletsBas() {
         tabBarPosition: 'bottom',
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textSecondary,
-        tabBarStyle: { backgroundColor: theme.backgroundElement, borderTopColor: theme.border },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        // Hauteur explicite : avec la hauteur par défaut, les libellés étaient coupés dans les navigateurs mobiles
+        tabBarLabelPosition: 'below-icon',
+        tabBarStyle: {
+          backgroundColor: theme.backgroundElement, borderTopColor: theme.border,
+          height: HAUTEUR + bottom, paddingTop: 6, paddingBottom: bottom + 6,
+        },
+        tabBarItemStyle: { height: HAUTEUR - 12 },
+        tabBarIconStyle: { width: 26, height: 26 },
+        tabBarLabelStyle: { fontSize: 12, lineHeight: 16, fontWeight: '600', marginTop: 2 },
       }}>
       {ONGLETS.map((o) => (
         <Tabs.Screen key={o.nom} name={o.nom} options={{
           title: o.titre,
-          tabBarIcon: ({ color, size }) => <Icone nom={o.icone} taille={size} couleur={color} />,
+          tabBarIcon: ({ color }) => <Icone nom={o.icone} taille={24} couleur={color} />,
         }} />
       ))}
     </Tabs>

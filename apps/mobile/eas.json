@@ -18,6 +18,12 @@
         "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_N3h4pcwKtYS2puCMfMfPrw_z2XZ5FQs"
       }
     },
+    "simulateur": {
+      "extends": "preview",
+      "ios": {
+        "simulator": true
+      }
+    },
     "production": {
       "autoIncrement": true,
       "env": {

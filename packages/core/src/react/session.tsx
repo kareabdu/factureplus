@@ -9,6 +9,31 @@ interface EtatSession {
   userId: string | null;
   email: string | null;
   deconnecter: () => Promise<void>;
+  /**
+   * Session ouverte par un lien « Mot de passe oublié » : tant que le nouveau mot de passe n'est pas choisi,
+   * l'application n'affiche que cet écran (le lien ne doit pas donner accès à l'espace).
+   */
+  reinitialisation: boolean;
+  /** Nouveau mot de passe enregistré : l'espace devient accessible. */
+  terminerReinitialisation: () => void;
+}
+
+const CLE_REINITIALISATION = "factureplus.reinitialisation";
+const stockage = () => {
+  try {
+    return (globalThis as { localStorage?: Storage }).localStorage ?? null;
+  } catch {
+    return null;
+  }
+};
+const reinitialisationEnAttente = () => stockage()?.getItem(CLE_REINITIALISATION) === "1";
+
+/**
+ * À appeler dès qu'un lien de réinitialisation est reconnu, avant d'ouvrir sa session : l'écran
+ * « Nouveau mot de passe » reste imposé même si l'application est fermée puis rouverte.
+ */
+export function marquerReinitialisation() {
+  stockage()?.setItem(CLE_REINITIALISATION, "1");
 }
 
 const SessionContext = createContext<EtatSession | null>(null);
@@ -17,16 +42,21 @@ const SessionContext = createContext<EtatSession | null>(null);
 export function SessionProvider({ supabase, children }: { supabase: SupabaseClient; children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [chargement, setChargement] = useState(true);
+  const [reinitialisation, setReinitialisation] = useState(false);
 
   useEffect(() => {
     let actif = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!actif) return;
       setSession(data.session);
+      setReinitialisation(!!data.session && reinitialisationEnAttente());
       setChargement(false);
     });
-    const { data } = supabase.auth.onAuthStateChange((_evenement, s) => {
+    const { data } = supabase.auth.onAuthStateChange((evenement, s) => {
+      if (evenement === "PASSWORD_RECOVERY") marquerReinitialisation();
+      if (!s) stockage()?.removeItem(CLE_REINITIALISATION);
       setSession(s);
+      setReinitialisation(!!s && reinitialisationEnAttente());
       setChargement(false);
     });
     return () => {
@@ -43,7 +73,12 @@ export function SessionProvider({ supabase, children }: { supabase: SupabaseClie
     deconnecter: async () => {
       await supabase.auth.signOut();
     },
-  }), [chargement, session, supabase]);
+    reinitialisation,
+    terminerReinitialisation: () => {
+      stockage()?.removeItem(CLE_REINITIALISATION);
+      setReinitialisation(false);
+    },
+  }), [chargement, session, supabase, reinitialisation]);
 
   return <SessionContext.Provider value={valeur}>{children}</SessionContext.Provider>;
 }

@@ -3,55 +3,15 @@
 import {
   LIBELLES_ETATS_ACCES, modifierProfil, MOT_CONFIRMATION_SUPPRESSION, supprimerMonCompte, TONS_ETATS_ACCES, traduireErreur,
 } from "@factureplus/core";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
 
 import { Alerte, Badge, Bouton, Carte, Case, Champ, Chargement, EnTetePage, Info, LienBouton, Modale } from "@/components/ui";
 import { useEquipe, useSession } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
 
 export default function PageCompte() {
-  return <Suspense fallback={<Chargement />}><Compte /></Suspense>;
-}
-
-function Compte() {
-  // Arrivée par le lien « Mot de passe oublié » : l'utilisateur doit choisir un nouveau mot de passe
-  const reinitialisation = useSearchParams().get("reinitialisation") === "1";
-  return reinitialisation ? <NouveauMotDePasse /> : <MonCompte />;
-}
-
-/** Arrivée par le lien « Mot de passe oublié » : seulement le nouveau mot de passe et sa confirmation. */
-function NouveauMotDePasse() {
-  const router = useRouter();
-  const [erreur, setErreur] = useState<string | null>(null);
-  const [chargement, setChargement] = useState(false);
-
-  async function valider(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const mdp = String(f.get("motDePasse")), confirmation = String(f.get("confirmation"));
-    if (mdp.length < 8) return setErreur("Le mot de passe doit contenir au moins 8 caractères.");
-    if (mdp !== confirmation) return setErreur("Les deux mots de passe ne sont pas identiques.");
-    setErreur(null);
-    setChargement(true);
-    const { error } = await supabase.auth.updateUser({ password: mdp });
-    setChargement(false);
-    if (error) return setErreur(traduireErreur(error));
-    router.replace("/tableau-de-bord");
-  }
-
-  return (
-    <>
-      <EnTetePage titre="Nouveau mot de passe" />
-      <form onSubmit={valider} className="flex max-w-sm flex-col gap-4">
-        {erreur && <Alerte>{erreur}</Alerte>}
-        <Champ libelle="Nouveau mot de passe" name="motDePasse" type="password" autoComplete="new-password" required autoFocus
-          aide="8 caractères minimum" />
-        <Champ libelle="Confirmer le mot de passe" name="confirmation" type="password" autoComplete="new-password" required />
-        <div><Bouton type="submit" chargement={chargement}>Valider</Bouton></div>
-      </form>
-    </>
-  );
+  return <MonCompte />;
 }
 
 function MonCompte() {

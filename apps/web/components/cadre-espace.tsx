@@ -1,6 +1,6 @@
 "use client";
 
-import { creerEquipe, messageAbonnement, trouverDevise } from "@factureplus/core";
+import { creerEquipe, messageAbonnement, traduireErreur, trouverDevise } from "@factureplus/core";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase";
 
 /** Toutes les pages qui demandent d'être connecté. */
 export function CadreEspace({ children }: { children: ReactNode }) {
-  const { session, chargement } = useSession();
+  const { session, chargement, reinitialisation } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -21,6 +21,8 @@ export function CadreEspace({ children }: { children: ReactNode }) {
   }, [chargement, session, router]);
 
   if (chargement || !session) return <Chargement />;
+  // Session ouverte par le lien « Mot de passe oublié » : rien d'autre tant que le mot de passe n'est pas changé
+  if (reinitialisation) return <NouveauMotDePasse />;
 
   return (
     <EspaceProvider>
@@ -72,6 +74,50 @@ function BandeauAbonnement() {
       <span className="flex-1 text-foreground">{message}</span>
       <span className="font-semibold whitespace-nowrap">{expire ? "S'abonner" : "Voir les offres"} →</span>
     </Link>
+  );
+}
+
+/**
+ * Arrivée par le lien « Mot de passe oublié » : seul écran accessible jusqu'au nouveau mot de passe
+ * (ou à la déconnexion), quelle que soit la page demandée.
+ */
+function NouveauMotDePasse() {
+  const { email, deconnecter, terminerReinitialisation } = useSession();
+  const router = useRouter();
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [chargement, setChargement] = useState(false);
+
+  async function valider(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const mdp = String(f.get("motDePasse")), confirmation = String(f.get("confirmation"));
+    if (mdp.length < 8) return setErreur("Le mot de passe doit contenir au moins 8 caractères.");
+    if (mdp !== confirmation) return setErreur("Les deux mots de passe ne sont pas identiques.");
+    setErreur(null);
+    setChargement(true);
+    const { error } = await supabase.auth.updateUser({ password: mdp });
+    if (error) {
+      setChargement(false);
+      return setErreur(traduireErreur(error));
+    }
+    terminerReinitialisation();
+    router.replace("/tableau-de-bord");
+  }
+
+  return (
+    <div className="flex flex-1 flex-col items-center px-4 py-16">
+      <Logo className="mb-8" />
+      <form onSubmit={valider} className="flex w-full max-w-sm flex-col gap-4 rounded-3xl border border-border bg-surface p-6 shadow-carte sm:p-8">
+        <h1 className="text-xl font-semibold tracking-tight">Nouveau mot de passe</h1>
+        <p className="-mt-2 text-sm text-muted">Choisissez le nouveau mot de passe de {email ?? "votre compte"}.</p>
+        {erreur && <Alerte>{erreur}</Alerte>}
+        <Champ libelle="Nouveau mot de passe" name="motDePasse" type="password" autoComplete="new-password" required autoFocus
+          aide="8 caractères minimum" />
+        <Champ libelle="Confirmer le mot de passe" name="confirmation" type="password" autoComplete="new-password" required />
+        <Bouton type="submit" chargement={chargement}>Valider</Bouton>
+        <button type="button" onClick={() => void deconnecter()} className="text-sm text-muted hover:text-foreground">Annuler et se déconnecter</button>
+      </form>
+    </div>
   );
 }
 

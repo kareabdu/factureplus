@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 
 /**
  * Réinitialisation par lien reçu par e-mail : le lien connecte l'utilisateur et l'amène sur
- * « Mon compte » (?reinitialisation=1) pour choisir son nouveau mot de passe.
+ * l'écran « Nouveau mot de passe », seul accessible tant que le mot de passe n'est pas changé (voir CadreEspace).
  */
 export default function MotDePasseOublie() {
   const [email, setEmail] = useState("");

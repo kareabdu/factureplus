@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 
 /**
  * Réinitialisation par lien reçu par e-mail : le lien rouvre l'application (factureplus://),
- * qui ouvre la session puis « Mon compte » pour choisir le nouveau mot de passe (voir lien-recuperation.ts).
+ * qui ouvre la session sur le seul écran « Nouveau mot de passe » (voir lien-recuperation.ts et _layout.tsx).
  */
 export default function MotDePasseOublie() {
   const [email, setEmail] = useState('');

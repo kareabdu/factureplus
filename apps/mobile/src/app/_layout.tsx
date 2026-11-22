@@ -53,17 +53,19 @@ function ThemeNavigation({ children }: { children: ReactNode }) {
 }
 
 /**
- * Trois états :
+ * Quatre états :
  *  - non connecté             → connexion / inscription / mot de passe oublié
+ *  - session ouverte par le lien « Mot de passe oublié » → nouveau mot de passe uniquement
  *  - connecté sans entreprise → création de l'entreprise
  *  - connecté avec entreprise → onglets et écrans de l'application
  */
 function Navigation() {
-  const { session, userId, chargement: chargementSession } = useSession();
+  const { session, userId, chargement: chargementSession, reinitialisation } = useSession();
   const { equipe, chargement, erreur } = useEquipe();
   const connecte = !!session;
-  const pret = connecte && !!equipe;
-  useLienRecuperation(pret);
+  const accesEspace = connecte && !reinitialisation;
+  const pret = accesEspace && !!equipe;
+  useLienRecuperation();
   useNotificationsStock(pret, equipe?.id ?? null, userId);
 
   if (chargementSession || (connecte && chargement && !erreur)) return <ChargementPlein />;
@@ -78,7 +80,11 @@ function Navigation() {
         <Stack.Screen name="mot-de-passe-oublie" />
       </Stack.Protected>
 
-      <Stack.Protected guard={connecte && !equipe}>
+      <Stack.Protected guard={connecte && reinitialisation}>
+        <Stack.Screen name="nouveau-mot-de-passe" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={accesEspace && !equipe}>
         <Stack.Screen name="bienvenue" />
       </Stack.Protected>
 

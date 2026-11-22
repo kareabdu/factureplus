@@ -82,13 +82,15 @@ export default function FicheProduit() {
             {p.quantite === 0 ? <Badge libelle="Rupture" ton="danger" /> : estStockBas(p) ? <Badge libelle="Stock bas" ton="attention" /> : null}
           </View>
           {p.seuil_alerte > 0 && <ThemedText type="small" themeColor="textSecondary">Alerte à {formaterQuantite(p.seuil_alerte)} {p.unite}</ThemedText>}
-          <View style={{ flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.two }}>
-            <Bouton titre="Entrée" icone="ajouter" onPress={() => mouvementer('entree')} />
-            <Bouton titre="Sortie" icone="retirer" variante="secondaire" onPress={() => mouvementer('sortie')} />
+          {/* Action principale : réapprovisionner par un achat (coût d'achat et stock mis à jour ensemble) */}
+          <View style={{ marginTop: Spacing.two }}>
+            <Bouton titre="Nouvel achat" icone="achats"
+              onPress={() => router.push({ pathname: '/achat/editer', params: { produit_id: p.id } })} />
           </View>
           <View style={{ flexDirection: 'row', gap: Spacing.two }}>
-            <Bouton titre="Achat" icone="achats" variante="secondaire"
-              onPress={() => router.push({ pathname: '/achat/editer', params: { produit_id: p.id } })} />
+            {/* Trois boutons sur une ligne : sans icône, pour tenir sur les petits écrans */}
+            <Bouton titre="Entrée" variante="secondaire" onPress={() => mouvementer('entree')} />
+            <Bouton titre="Sortie" variante="secondaire" onPress={() => mouvementer('sortie')} />
             <Bouton titre="Ajuster" variante="secondaire" onPress={() => mouvementer('ajustement')} />
           </View>
         </Carte>

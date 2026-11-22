@@ -64,11 +64,12 @@ function Fiche() {
               {formaterQuantite(p.quantite)} <span className="text-base font-normal text-muted">{p.unite}</span>
             </p>
             {p.seuil_alerte > 0 && <p className="mt-1 text-sm text-muted">Alerte à {formaterQuantite(p.seuil_alerte)} {p.unite}</p>}
+            {/* Action principale : réapprovisionner par un achat (coût d'achat et stock mis à jour ensemble) */}
             <div className="mt-4 flex flex-wrap gap-2">
-              <Bouton icone="plus" onClick={() => setMouvement("entree")}>Entrée</Bouton>
+              <LienBouton href={`/achats/document?produit=${p.id}`} icone="achats">Nouvel achat</LienBouton>
+              <Bouton variante="secondaire" icone="plus" onClick={() => setMouvement("entree")}>Entrée</Bouton>
               <Bouton variante="secondaire" icone="moins" onClick={() => setMouvement("sortie")}>Sortie</Bouton>
               <Bouton variante="secondaire" onClick={() => setMouvement("ajustement")}>Ajuster</Bouton>
-              <LienBouton href={`/achats/document?produit=${p.id}`} variante="secondaire" icone="achats">Achat</LienBouton>
             </div>
           </Carte>
           <Carte>

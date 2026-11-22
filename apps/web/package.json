@@ -18,6 +18,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "mobile": "workspace:*",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

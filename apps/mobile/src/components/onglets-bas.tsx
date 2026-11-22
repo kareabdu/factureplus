@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router/js-tabs';
 
 import { Icone, type NomIcone } from '@/components/icone';
+import { ContexteOngletsBas } from '@/components/onglets-contexte';
 import { useTheme } from '@/hooks/use-theme';
 
 const ONGLETS: { nom: string; titre: string; icone: NomIcone }[] = [
@@ -11,12 +12,13 @@ const ONGLETS: { nom: string; titre: string; icone: NomIcone }[] = [
 ];
 
 /**
- * Navigateur (web mobile) : les onglets natifs s'affichent en haut de page ; ici, barre d'onglets en bas
- * comme dans l'application (mêmes onglets, mêmes icônes que _layout.tsx).
+ * Barre d'onglets en bas, dessinée en JavaScript (mêmes onglets et icônes que les onglets natifs).
+ * Utilisée là où la barre native n'est pas en bas : navigateur, iPad (en haut, iOS 18+) et iPhone Duo (verticale à droite).
  */
-export default function LayoutOnglets() {
+export function OngletsBas() {
   const theme = useTheme();
   return (
+    <ContexteOngletsBas.Provider value>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -33,5 +35,6 @@ export default function LayoutOnglets() {
         }} />
       ))}
     </Tabs>
+    </ContexteOngletsBas.Provider>
   );
 }

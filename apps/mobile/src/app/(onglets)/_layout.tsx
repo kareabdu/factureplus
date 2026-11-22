@@ -1,9 +1,24 @@
 import { NativeTabs } from 'expo-router/native-tabs';
+import { Platform, useWindowDimensions } from 'react-native';
 
 import { ICONES } from '@/components/icone';
+import { OngletsBas } from '@/components/onglets-bas';
 import { useTheme } from '@/hooks/use-theme';
 
+/**
+ * La barre d'onglets native n'est en bas que sur un téléphone classique : dans le navigateur et sur iPad (iOS 18+)
+ * elle se place en haut,
+ * sur iPhone Duo (écran large, proportions proches de l'iPad) elle devient verticale à droite et recouvre le
+ * bouton « + ». Ces écrans prennent la barre JavaScript en bas, sans option native pour la déplacer.
+ */
 export default function LayoutOnglets() {
+  const { width, height } = useWindowDimensions();
+  const ecranLarge = Math.min(width, height) / Math.max(width, height) > 0.6;
+  const barreBas = Platform.OS === 'web' || (Platform.OS === 'ios' && (Platform.isPad || ecranLarge));
+  return barreBas ? <OngletsBas /> : <OngletsNatifs />;
+}
+
+function OngletsNatifs() {
   const theme = useTheme();
   return (
     <NativeTabs

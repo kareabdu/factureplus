@@ -21,6 +21,7 @@ import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboa
 import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 import { Icone, type NomIcone } from '@/components/icone';
+import { ContexteOngletsBas } from '@/components/onglets-contexte';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Rayons, Spacing } from '@/constants/theme';
@@ -111,7 +112,8 @@ export function Ecran({
   // Dernier champ de l'écran (notes) : on défile jusqu'en bas plutôt que de calculer sa position
   const champEnBas = useRef<Mesurable | null>(null);
   const [recouvert, setRecouvert] = useState(0);
-  const bords: Edge[] = [];
+  // Côtés toujours protégés : sur iPhone Duo, l'heure et les indicateurs occupent le bord droit
+  const bords: Edge[] = ['left', 'right'];
   if (!enTete) bords.push('top');
   if (!onglets && !pied) bords.push('bottom');
 
@@ -718,16 +720,19 @@ export function BoutonIcone({ icone, onPress, libelle, couleur }: { icone: NomIc
  */
 export function useMargeOnglets(): number {
   const { bottom } = useSafeAreaInsets();
-  return Platform.OS === 'ios' ? bottom + BottomTabInset : 0;
+  // Barre d'onglets JavaScript (iPad, Duo, navigateur) : le contenu s'arrête déjà au-dessus d'elle
+  const ongletsBas = useContext(ContexteOngletsBas);
+  return Platform.OS === 'ios' && !ongletsBas ? bottom + BottomTabInset : 0;
 }
 
 /** Bouton d'action flottant (ajout), placé au-dessus de la barre d'onglets. */
 export function BoutonFlottant({ onPress, libelle, icone = 'ajouter' }: { onPress: () => void; libelle: string; icone?: NomIcone }) {
   const theme = useTheme();
   const marge = useMargeOnglets();
+  const { right } = useSafeAreaInsets();
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={libelle}
-      style={({ pressed }) => [styles.flottant, { bottom: marge + Spacing.four, backgroundColor: theme.primary, transform: [{ scale: pressed ? 0.95 : 1 }] }]}>
+      style={({ pressed }) => [styles.flottant, { bottom: marge + Spacing.four, right: right + Spacing.four, backgroundColor: theme.primary, transform: [{ scale: pressed ? 0.95 : 1 }] }]}>
       <Icone nom={icone} taille={26} couleur={theme.onPrimary} />
     </Pressable>
   );

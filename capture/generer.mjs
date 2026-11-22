@@ -4,6 +4,7 @@
 //     (fichiers nommés par numéro d'écran : 01…, 02…, 03…, 05…, 06… ; l'écran 04 n'en a pas besoin)
 // Usage : node capture/generer.mjs
 import { execFileSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { mkdirSync, writeFileSync, existsSync, rmSync, readdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { join } from "node:path";
@@ -222,6 +223,19 @@ if (existsSync(travail)) rmSync(travail, { recursive: true, force: true });
 mkdirSync(travail, { recursive: true });
 mkdirSync(sortie, { recursive: true });
 for (const e of ecrans) rendre(e.nom, page(e.corps), sortie, L, H);
+
+// Autres tailles iPhone exigées par App Store Connect (redimensionnement des visuels 6,5")
+const TAILLES_IPHONE = { "iphone-6.3": [1206, 2622], "iphone-6.9": [1320, 2868] };
+const pnpm = join(ici, "..", "node_modules", ".pnpm");
+const sharp = createRequire(import.meta.url)(join(pnpm, readdirSync(pnpm).find((d) => d.startsWith("sharp@")), "node_modules", "sharp"));
+for (const [dossier, [l, h]] of Object.entries(TAILLES_IPHONE)) {
+  mkdirSync(join(sortie, dossier), { recursive: true });
+  for (const e of ecrans) {
+    const cible = join(sortie, dossier, `${e.nom}.png`);
+    await sharp(join(sortie, `${e.nom}.png`)).resize(l, h, { fit: "cover" }).png().toFile(cible);
+    console.log("✓", cible);
+  }
+}
 
 // --- iPad 13" ---
 const LI = 2064, HI = 2752;

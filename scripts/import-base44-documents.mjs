@@ -6,7 +6,8 @@
 //   node scripts/import-base44-documents.mjs <dossier-des-exports> [--depuis 2026-11-15]
 // Sans --depuis : documents créés après l'import initial de chaque entreprise.
 //
-// Chaque document n'est inséré que si l'entreprise n'a pas déjà ce type et ce numéro ; produits et clients
+// Chaque document n'est inséré que si l'entreprise ne l'a pas déjà (type, numéro, date de création) ; documents
+// vides (aucune ligne, 0 FCFA) écartés ; produits et clients
 // rattachés par leur nom ; les factures émises ou payées sortent leur stock (prive.mouvementer) ;
 // les compteurs de numérotation sont relevés pour que FacturePlus ne réutilise pas ces numéros.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -114,6 +115,8 @@ for (const d of documents) {
     regle = statut === "paye" ? total : du !== null ? Math.max(0, total - du) : 0;
     if (regle > 0) reglements.push({ montant: regle, mode: modeReglement(d.payment_method), date: jour(d.payment_date) ?? date });
   }
+  // Document vide de l'ancienne app (aucune ligne, 0 FCFA) : écarté (il prendrait le numéro d'une vraie facture)
+  if (!lignesSql.length && total === 0) continue;
   blocs.push({
     e: equipe.equipe_id, t: type, s: statut, n: numero, d: date, ech: jour(d.due_date), c: cree.toISOString(),
     cn: texte(d.customer_name, 200), ct: texte(d.customer_phone, 30), ca: texte(d.billing_address, 300),
@@ -144,9 +147,11 @@ begin
   for doc in select * from jsonb_array_elements('__DONNEES__'::jsonb) loop
     v_e := (doc->>'e')::uuid;
     v_num := doc->>'n';
-    -- Déjà importé (même type, numéro et date de création) : ignoré
+    -- Déjà importé (même type, numéro, éventuellement suffixé « -A », et date de création) : ignoré
     if exists (select 1 from public.documents where equipe_id = v_e and type = (doc->>'t')::public.type_document
-               and numero = v_num and created_at = (doc->>'c')::timestamptz) then v_ignores := v_ignores + 1; continue; end if;
+               and (numero = v_num or numero like v_num || '-A%') and created_at = (doc->>'c')::timestamptz) then
+      v_ignores := v_ignores + 1; continue;
+    end if;
     -- Numéro déjà pris par un document créé dans FacturePlus : suffixe « -A »
     while exists (select 1 from public.documents where equipe_id = v_e and type = (doc->>'t')::public.type_document and numero = v_num) loop
       v_num := v_num || '-A';

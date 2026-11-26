@@ -57,7 +57,7 @@ await en(null, "update public.profils set essai_fin = now() - interval '1 day', 
 await vrai("B est en lecture seule", async () =>
   (await en(null, "select prive.etat_abonnement($1) as e", [B.id]))[0].e === "expire");
 await echoue("B ne peut plus modifier ses données", () =>
-  en(B, "insert into public.clients (equipe_id, nom) values ($1,'Nouveau')", [eB]), "Abonnement expiré");
+  en(B, "insert into public.clients (equipe_id, nom) values ($1,'Nouveau')", [eB]), "accès a expiré");
 await en(B, "select public.supprimer_mon_compte()");
 await vrai("B a pu supprimer son compte malgré l'expiration", async () =>
   (await en(null, "select count(*) as n from auth.users where id=$1", [B.id]))[0].n == 0 && (await lignesEquipe(eB)) === 0);
@@ -66,7 +66,7 @@ await vrai("le contrôle d'abonnement reste actif ensuite", async () => {
   const eC = (await en(C, "select public.creer_equipe('Cheikh') as id"))[0].id;
   await en(null, "update public.profils set essai_fin = now() - interval '1 day', abonnement_fin = null where id=$1", [C.id]);
   try { await en(C, "insert into public.clients (equipe_id, nom) values ($1,'X')", [eC]); return false; }
-  catch (e) { return e.message.includes("Abonnement expiré"); }
+  catch (e) { return e.message.includes("accès a expiré"); }
 });
 
 process.exit(bilan() ? 1 : 0);

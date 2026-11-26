@@ -41,20 +41,20 @@ const client = (await ajouterClient(A, eA))[0].id;
 const produit = (await en(A, `select public.creer_produit($1, '{"nom":"Riz","prix_vente":15000}', 10) as id`, [eA]))[0].id;
 await expirerEssai(A);
 await vrai("essai dépassé : état expiré", async () => (await etat(A)) === "expire");
-await echoue("expiré : ajout de client refusé", () => ajouterClient(A, eA, "Fatou"), "Abonnement expiré");
+await echoue("expiré : ajout de client refusé", () => ajouterClient(A, eA, "Fatou"), "accès a expiré");
 await echoue("expiré : modification de produit refusée", () =>
-  en(A, "update public.produits set prix_vente = 1 where id=$1", [produit]), "Abonnement expiré");
+  en(A, "update public.produits set prix_vente = 1 where id=$1", [produit]), "accès a expiré");
 await echoue("expiré : suppression de client refusée", () =>
-  en(A, "delete from public.clients where id=$1", [client]), "Abonnement expiré");
+  en(A, "delete from public.clients where id=$1", [client]), "accès a expiré");
 await echoue("expiré : création de produit par RPC refusée", () =>
-  en(A, `select public.creer_produit($1, '{"nom":"Huile","prix_vente":7000}', 5)`, [eA]), "Abonnement expiré");
+  en(A, `select public.creer_produit($1, '{"nom":"Huile","prix_vente":7000}', 5)`, [eA]), "accès a expiré");
 await echoue("expiré : facture refusée", () =>
   en(A, "select public.enregistrer_document($1,'facture',null,'{}',$2)",
-    [eA, JSON.stringify([{ designation: "Service", prix_unitaire: 1000, quantite: 1 }])]), "Abonnement expiré");
+    [eA, JSON.stringify([{ designation: "Service", prix_unitaire: 1000, quantite: 1 }])]), "accès a expiré");
 await echoue("expiré : dépense refusée", () =>
-  en(A, "insert into public.depenses (equipe_id, commercant, montant) values ($1, 'Loyer', 50000)", [eA]), "Abonnement expiré");
+  en(A, "insert into public.depenses (equipe_id, commercant, montant) values ($1, 'Loyer', 50000)", [eA]), "accès a expiré");
 await echoue("expiré : paramètres non modifiables", () =>
-  en(A, "update public.parametres set telephone='770000000' where equipe_id=$1", [eA]), "Abonnement expiré");
+  en(A, "update public.parametres set telephone='770000000' where equipe_id=$1", [eA]), "accès a expiré");
 await vrai("expiré : lecture toujours possible", async () =>
   (await en(A, "select * from public.clients")).length === 1 && (await en(A, "select * from public.produits")).length === 1);
 await vrai("expiré : le profil reste modifiable", async () =>
@@ -146,7 +146,7 @@ await vrai("arrêt de l'accès de B : lecture seule", async () => {
   await en(C, "select public.admin_definir_abonnement($1, null)", [B.id]);
   return (await etat(B)) === "expire";
 });
-await echoue("B expiré ne crée plus de client", () => ajouterClient(B, eB, "Ndeye"), "Abonnement expiré");
+await echoue("B expiré ne crée plus de client", () => ajouterClient(B, eB, "Ndeye"), "accès a expiré");
 await vrai("activation manuelle de B (paiement en espèces enregistré)", async () => {
   await en(C, "select public.admin_definir_abonnement($1, 'annuel', current_date + 10, 29000)", [B.id]);
   const paiements = await en(B, "select * from public.paiements_abonnement where moyen='manuel'");

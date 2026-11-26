@@ -86,6 +86,6 @@ await echoue("B ne modifie pas un produit de A depuis son équipe", () =>
 await echoue("abonnement expiré : import refusé", async () => {
   await en(null, "update public.profils set essai_fin = now() - interval '1 day' where id=$1", [A.id]);
   await importer(A, [{ numero: 2, produit_id: null, nom: "Après expiration" }]);
-}, "Abonnement expiré");
+}, "accès a expiré");
 
 process.exit(bilan() ? 1 : 0);

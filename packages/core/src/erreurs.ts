@@ -21,6 +21,8 @@ export function traduireErreur(e: unknown): string {
   if (/Failed to fetch|Network request failed|NetworkError/i.test(message)) {
     return "Pas de connexion internet. Réessayez.";
   }
+  // Message neutre (apps iOS / Android : aucune invitation à payer, règles des stores)
+  if (/Abonnement expiré/i.test(message)) return "Votre accès a expiré : vos données sont en lecture seule.";
   if (/Invalid login credentials/i.test(message)) return "E-mail ou mot de passe incorrect.";
   if (/Email not confirmed/i.test(message)) return "Confirmez d'abord votre e-mail (lien reçu par e-mail).";
   if (/User already registered/i.test(message)) return "Un compte existe déjà avec cet e-mail.";

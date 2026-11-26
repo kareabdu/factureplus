@@ -2,6 +2,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { traduireErreur } from "../src/erreurs.ts";
+
 import { formaterMontant, formaterQuantite, lireMontant, lireQuantite } from "../src/montants.ts";
 import { calculerTotaux } from "../src/taxe.ts";
 import { formaterNumero } from "../src/numeros.ts";
@@ -159,4 +161,10 @@ test("inscription : compte existant", async () => {
   assert.equal(inscriptionCompteExistant({ user: { identities: [{ id: "x" }] } }), false); // nouveau ou non confirmé
   assert.equal(inscriptionCompteExistant({ user: null }), false);
   assert.equal(inscriptionCompteExistant({ user: {} }), false);
+});
+
+test("erreur d'abonnement expiré : message neutre, sans invitation à payer", () => {
+  const m = traduireErreur({ message: "Abonnement expiré : abonnez-vous pour continuer à modifier vos données." });
+  assert.equal(m, "Votre accès a expiré : vos données sont en lecture seule.");
+  assert.doesNotMatch(m, /abonn/i);
 });

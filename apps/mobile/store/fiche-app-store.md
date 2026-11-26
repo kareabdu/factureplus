@@ -24,7 +24,7 @@ Nouveau : FacturePlus remplace StockTracker. Vos données sont conservées : con
 
 ## Description (4000)
 
-FacturePlus est l'outil de gestion des commerçants d'Afrique de l'Ouest : stock, factures, achats et dépenses, dans une seule application, sur iPhone, Android et ordinateur.
+FacturePlus est l'outil de gestion des commerçants d'Afrique de l'Ouest : stock, factures, achats et dépenses, dans une seule application, sur iPhone, iPad et ordinateur.
 
 STOCK EN TEMPS RÉEL
 • Catalogue de produits avec photos, catégories, prix d'achat et de vente
@@ -49,7 +49,7 @@ TABLEAU DE BORD
 • Ventes, marge, encaissements et impayés par période
 • Meilleures ventes, valeur du stock
 
-Vos données sont synchronisées entre votre téléphone et l'ordinateur (factureplus.kareapps.com), et protégées : chaque entreprise n'accède qu'à ses propres données.
+Vos données sont synchronisées entre votre iPhone, votre iPad et l'ordinateur (factureplus.kareapps.com), et protégées : chaque entreprise n'accède qu'à ses propres données.
 
 Essai gratuit de 7 jours. FacturePlus fonctionne avec un compte FacturePlus ; l'application ne propose aucun achat.
 
@@ -61,7 +61,11 @@ facture,stock,inventaire,caisse,proforma,devis,vente,achat,commerce,boutique,wav
 
 ## Notes pour la vérification d'Apple (App Review)
 
-- Compte de démonstration : à créer et renseigner (e-mail + mot de passe) avec des données d'exemple.
+- Description : aucune mention d'Android ni d'une autre plateforme mobile (règle 2.3.10, refus du 26/11/2026).
+- Compte de démonstration actif (données d'exemple) : `applikare+demo@gmail.com`.
+- Compte de démonstration expiré (demandé le 26/11/2026, règle 2.1) : `applikare+expire@gmail.com`,
+  essai terminé, équipe « Boutique Démo » en lecture seule (3 produits, 1 client, 1 facture, 1 proforma).
+  Mots de passe : dans App Store Connect uniquement (non versionnés). Ne jamais réactiver ce compte.
 - L'application ne contient aucun achat ni lien de paiement : c'est l'application compagnon gratuite d'un
   service web professionnel (règle 3.1.3(f)) ; les comptes sont gérés sur factureplus.kareapps.com.
 - Suppression du compte : Mon compte → Supprimer mon compte.

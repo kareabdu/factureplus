@@ -111,6 +111,7 @@ const TRACES = {
   ),
   supprimer: <path d="M4 6.5h16M9.5 6.5V4h5v2.5M6.5 6.5l1 13.5h9l1-13.5M10 10.5v6M14 10.5v6" />,
   fleche: <path d="M5 12h14M13 6l6 6-6 6" />,
+  bas: <path d="M6 9l6 6 6-6" />,
   depenses: (
     <>
       <rect x="3" y="5.5" width="18" height="13" rx="2" />

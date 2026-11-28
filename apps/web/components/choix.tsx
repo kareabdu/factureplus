@@ -3,8 +3,9 @@
 import {
   formaterMontant, formaterQuantite, listerArticlesLibres, listerClients, listerFournisseurs, listerProduits, type ArticleLibre, type Produit,
 } from "@factureplus/core";
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
 
+import { Icone } from "@/components/icones";
 import { Recherche } from "@/components/ui";
 import { useDonnees, useEquipe } from "@/lib/espace";
 import { supabase } from "@/lib/supabase";
@@ -12,21 +13,35 @@ import { supabase } from "@/lib/supabase";
 /**
  * Recherche d'un produit (nom, référence, code-barres — compatible douchette USB) avec liste déroulante.
  * Avec `onChoisirArticle`, propose aussi les articles déjà saisis librement dans les documents (hors catalogue).
+ * La flèche affiche / masque un échantillon des produits sans rien saisir (comme sur mobile) ; la liste reste
+ * ouverte après un choix pour ajouter plusieurs articles à la suite.
  */
 export function ChoixProduit({ onChoisir, onChoisirArticle, placeholder = "Ajouter un produit : nom, référence ou code-barres…" }: {
   onChoisir: (p: Produit) => void; onChoisirArticle?: (a: ArticleLibre) => void; placeholder?: string;
 }) {
   const { equipeId, parametres } = useEquipe();
   const [recherche, setRecherche] = useState("");
+  const [ouvert, setOuvert] = useState(false);
+  const zone = useRef<HTMLDivElement>(null);
+  // Clic en dehors du champ et de la liste : la liste ouverte par la flèche se referme
+  // (pointerdown plutôt que blur : Safari ne donne pas le focus aux boutons cliqués)
+  useEffect(() => {
+    if (!ouvert) return;
+    const fermer = (e: PointerEvent) => { if (!zone.current?.contains(e.target as Node)) setOuvert(false); };
+    document.addEventListener("pointerdown", fermer);
+    return () => document.removeEventListener("pointerdown", fermer);
+  }, [ouvert]);
   const r = useDeferredValue(recherche);
   const avecArticles = !!onChoisirArticle;
+  const visible = ouvert || !!recherche.trim();
   const { donnees } = useDonnees(
-    () => (r.trim()
-      ? Promise.all([listerProduits(supabase, equipeId, { recherche: r }), avecArticles ? listerArticlesLibres(supabase, equipeId, r, 8) : []])
+    () => (visible
+      ? Promise.all([listerProduits(supabase, equipeId, { recherche: r.trim() || undefined }),
+        avecArticles ? listerArticlesLibres(supabase, equipeId, r.trim(), r.trim() ? 8 : 20) : []])
       : Promise.resolve([[], []] as [Produit[], ArticleLibre[]])),
-    [equipeId, r, avecArticles],
+    [equipeId, r, avecArticles, visible],
   );
-  const resultats = (donnees?.[0] ?? []).slice(0, 8);
+  const resultats = (donnees?.[0] ?? []).slice(0, r.trim() ? 8 : 30);
   const articles = donnees?.[1] ?? [];
   const m = (v: number) => formaterMontant(v, parametres?.symbole_devise);
 
@@ -41,8 +56,9 @@ export function ChoixProduit({ onChoisir, onChoisirArticle, placeholder = "Ajout
   }
 
   return (
-    <div className="relative">
-      <div onKeyDown={(e) => {
+    <div ref={zone} className="relative">
+      <div className="relative" onKeyDown={(e) => {
+        if (e.key === "Escape") { setOuvert(false); setRecherche(""); }
         // Douchette : le code exact suivi d'Entrée ajoute directement le produit
         if (e.key === "Enter") {
           e.preventDefault();
@@ -51,9 +67,14 @@ export function ChoixProduit({ onChoisir, onChoisirArticle, placeholder = "Ajout
           else if (!resultats.length && articles.length === 1) reprendre(articles[0]);
         }
       }}>
-        <Recherche valeur={recherche} onChange={setRecherche} placeholder={placeholder} />
+        <Recherche valeur={recherche} onChange={setRecherche} placeholder={placeholder} className="[&_input]:pr-11" />
+        <button type="button" onClick={() => setOuvert((o) => !o)} aria-expanded={visible}
+          aria-label={visible ? "Masquer les produits" : "Afficher les produits"} title={visible ? "Masquer les produits" : "Afficher les produits"}
+          className="absolute inset-y-0 right-1.5 my-auto grid size-8 place-items-center rounded-lg text-muted hover:bg-surface-retrait hover:text-foreground">
+          <Icone nom="bas" taille={18} className={`transition-transform ${visible ? "rotate-180" : ""}`} />
+        </button>
       </div>
-      {recherche.trim() && (
+      {visible && (
         <ul className="absolute z-20 mt-1 max-h-80 w-full overflow-y-auto rounded-xl border border-border bg-surface py-1 shadow-carte" role="listbox">
           {resultats.length === 0 && articles.length === 0 && (
             <li className="px-4 py-3 text-sm text-muted">{avecArticles ? "Aucun produit ni article trouvé." : "Aucun produit trouvé."}</li>

@@ -160,7 +160,8 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
                   return [...ls, { ...ligneDepuisArticleLibre(a), cle: ++compteur }];
                 })} />
             </div>
-            <Tableau entetes={[{ libelle: "Désignation" }, { libelle: "Quantité", className: "w-28" }, { libelle: "Prix unitaire", className: "w-36" }, { libelle: "Taxable", className: "w-20" }, { libelle: "Montant", droite: true }, { libelle: "" }]}
+            {/* Désignation : toute la largeur restante (au moins 14 rem), les colonnes chiffrées au plus juste */}
+            <Tableau entetes={[{ libelle: "Désignation", className: "w-full min-w-56" }, { libelle: "Quantité", className: "w-24" }, { libelle: "Prix unitaire", className: "w-32 whitespace-nowrap" }, { libelle: "Taxable", className: "w-16" }, { libelle: "Montant", droite: true, className: "whitespace-nowrap" }, { libelle: "" }]}
               vide={lignes.length === 0 ? <p className="p-5 text-sm text-muted">Recherchez un produit ou un article déjà saisi ci-dessus, ou ajoutez une ligne libre.</p> : undefined}>
               {lignes.map((l) => (
                 <tr key={l.cle}>
@@ -183,7 +184,7 @@ function Editeur({ type, document: d, lignesInitiales }: { type: TypeDocument; d
                   <td className="px-4 py-2 text-center">
                     <input type="checkbox" checked={l.taxable} onChange={(e) => maj(l.cle, { taxable: e.target.checked })} aria-label="Soumis à la taxe" className="size-4 accent-[var(--primary)]" />
                   </td>
-                  <td className="montant px-4 py-2 text-right font-medium">{m(totalLigne(l))}</td>
+                  <td className="montant whitespace-nowrap px-4 py-2 text-right font-medium">{m(totalLigne(l))}</td>
                   <td className="px-2 py-2">
                     <button type="button" onClick={() => setLignes((ls) => ls.filter((x) => x.cle !== l.cle))} aria-label="Retirer la ligne" className="rounded-lg p-1.5 text-muted hover:bg-danger-soft hover:text-danger">
                       <Icone nom="supprimer" taille={17} />

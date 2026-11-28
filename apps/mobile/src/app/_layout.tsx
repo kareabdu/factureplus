@@ -96,6 +96,7 @@ function Navigation() {
         <Stack.Screen name="document/[id]" options={{ headerShown: true, title: 'Document' }} />
         <Stack.Screen name="document/editer" options={{ headerShown: true, title: 'Document' }} />
         <Stack.Screen name="document/reglement" options={{ ...modal, title: 'Encaisser' }} />
+        <Stack.Screen name="document/livraison" options={{ ...modal, title: 'Bon de livraison' }} />
         <Stack.Screen name="document/article" options={{ headerShown: true, title: 'Article' }} />
         <Stack.Screen name="achats" options={{ headerShown: true, title: 'Achats' }} />
         <Stack.Screen name="achat/[id]" options={{ headerShown: true, title: 'Achat' }} />

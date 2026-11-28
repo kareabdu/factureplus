@@ -1,5 +1,5 @@
 import {
-  annulerDocument, chargerDocument, documentModifiable, convertirProforma, creerBonLivraison, formaterMontant, formaterQuantite,
+  annulerDocument, chargerDocument, documentModifiable, convertirProforma, formaterMontant, formaterQuantite,
   LIBELLES_MODE_PAIEMENT, LIBELLES_TYPE_DOCUMENT, refuserProforma, resteAPayer, statutAffiche, supprimerReglement,
 } from '@factureplus/core';
 import { useDonnees } from '@factureplus/core/react';
@@ -54,12 +54,6 @@ export default function VoirDocument() {
   const convertir = () => executer('convertir', async () => {
     const factureId = await convertirProforma(supabase, d.id);
     router.replace({ pathname: '/document/editer', params: { id: factureId, type: 'facture' } });
-  });
-
-  const bl = () => executer('bl', async () => {
-    const blId = await creerBonLivraison(supabase, d.id);
-    vibrerSucces();
-    router.push(`/document/${blId}`);
   });
 
   return (
@@ -117,7 +111,8 @@ export default function VoirDocument() {
             </View>
           )}
           {d.type === 'facture' && (d.statut === 'emis' || d.statut === 'paye') && (
-            <Bouton titre="Créer le bon de livraison" icone="livraison" variante="secondaire" onPress={bl} chargement={occupe === 'bl'} />
+            <Bouton titre="Créer le bon de livraison" icone="livraison" variante="secondaire"
+              onPress={() => router.push({ pathname: '/document/livraison', params: { id: d.id } })} />
           )}
         </View>
 
@@ -153,6 +148,7 @@ export default function VoirDocument() {
           </Section>
         )}
 
+        {d.type === 'bl' && d.livreur && <Carte><Info libelle="Livreur" valeur={d.livreur} /></Carte>}
         {d.source_id && (
           <LigneListe icone="document" titre={d.type === 'bl' ? 'Facture d’origine' : 'Proforma d’origine'} onPress={() => router.push(`/document/${d.source_id}`)} />
         )}

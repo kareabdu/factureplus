@@ -90,6 +90,7 @@ export function htmlDocument(args: {
       <div class="client-nom">${echapper(d.client_nom)}</div>
       ${d.client_telephone ? `<div>${echapper(d.client_telephone)}</div>` : ""}
       ${d.client_adresse ? `<div>${echapper(d.client_adresse)}</div>` : ""}
+      ${estBL && d.livreur?.trim() ? `<div class="etiquette livreur">Livreur</div><div>${echapper(d.livreur.trim())}</div>` : ""}
     </div>`;
 
   const info = (etiquette: string, valeur: string, classe = "") =>
@@ -239,6 +240,7 @@ export function htmlDocument(args: {
   table.totaux td { padding: 5px 0; text-transform: uppercase; font-size: 10px; }
   table.totaux td.n { text-transform: none; font-size: 11px; }
   .bloc { margin-top: 18px; color: #5b6670; }
+  .etiquette.livreur { margin-top: 10px; }
   .images-notes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
   .images-notes img { max-width: 48%; max-height: 260px; object-fit: contain; border-radius: 6px; }
   .signatures { margin-top: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; color: #5b6670; break-inside: avoid; }

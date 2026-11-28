@@ -201,6 +201,8 @@ export interface Document {
   montant_taxe: number;
   total: number;
   montant_paye: number;
+  /** Bon de livraison : nom du livreur, affiché sur le bon */
+  livreur?: string | null;
   source_id: string | null;
   valide_le: string | null;
   created_at: string;

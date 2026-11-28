@@ -82,9 +82,9 @@ export async function refuserProforma(sb: SupabaseClient, id: string) {
   verifier(await sb.rpc("refuser_proforma", { p_proforma: id }));
 }
 
-/** Bon de livraison depuis une facture validée (renvoie son id). */
-export async function creerBonLivraison(sb: SupabaseClient, factureId: string): Promise<string> {
-  return verifier(await sb.rpc("creer_bl", { p_facture: factureId }));
+/** Bon de livraison depuis une facture validée, avec le nom du livreur affiché sur le bon (renvoie son id). */
+export async function creerBonLivraison(sb: SupabaseClient, factureId: string, livreur?: string | null): Promise<string> {
+  return verifier(await sb.rpc("creer_bl", { p_facture: factureId, p_livreur: livreur?.trim() || null }));
 }
 
 export async function enregistrerReglement(

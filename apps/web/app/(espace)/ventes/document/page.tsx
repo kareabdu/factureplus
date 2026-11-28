@@ -237,6 +237,7 @@ function Consultation({ document: d, lignes, reglements, recharger }: {
   const m = (v: number) => formaterMontant(v, parametres?.symbole_devise);
   const [erreur, setErreur] = useState<string | null>(null);
   const [encaisser, setEncaisser] = useState(false);
+  const [livraison, setLivraison] = useState(false);
   const [occupe, setOccupe] = useState<string | null>(null);
   const s = statutAffiche(d);
   const reste = resteAPayer(d);
@@ -261,7 +262,7 @@ function Consultation({ document: d, lignes, reglements, recharger }: {
             <Bouton variante="secondaire" onClick={() => executer("refuser", async () => { await refuserProforma(supabase, d.id); await recharger(); })}>Refusé</Bouton>
           </>}
           {d.type === "facture" && (d.statut === "emis" || d.statut === "paye") && (
-            <Bouton variante="secondaire" chargement={occupe === "bl"} onClick={() => executer("bl", async () => router.push(`/ventes/document?id=${await creerBonLivraison(supabase, d.id)}`))}>Bon de livraison</Bouton>
+            <Bouton variante="secondaire" onClick={() => setLivraison(true)}>Bon de livraison</Bouton>
           )}
           {["emis", "paye"].includes(d.statut) && (
             <Bouton variante="danger" chargement={occupe === "annuler"} onClick={() => {
@@ -327,9 +328,25 @@ function Consultation({ document: d, lignes, reglements, recharger }: {
               </ul>
             </Carte>
           )}
+          {d.type === "bl" && d.livreur && <Carte titre="Livraison"><Info libelle="Livreur" valeur={d.livreur} /></Carte>}
           {d.source_id && <Link href={`/ventes/document?id=${d.source_id}`} className="text-sm text-primary hover:underline">{d.type === "bl" ? "Voir la facture d'origine" : "Voir la proforma d'origine"} →</Link>}
         </div>
       </div>
+
+      <Modale ouverte={livraison} titre="Bon de livraison" onFermer={() => setLivraison(false)}>
+        <form className="flex flex-col gap-4" onSubmit={(e) => {
+          e.preventDefault();
+          const livreur = String(new FormData(e.currentTarget).get("livreur") ?? "");
+          void executer("bl", async () => { setLivraison(false); router.push(`/ventes/document?id=${await creerBonLivraison(supabase, d.id, livreur)}`); });
+        }}>
+          <Champ libelle="Nom du livreur" name="livreur" maxLength={100} autoFocus placeholder="Ex. Moussa Diack"
+            aide="Affiché sur le bon de livraison. Facultatif." />
+          <div className="flex justify-end gap-2">
+            <Bouton type="button" variante="secondaire" onClick={() => setLivraison(false)}>Annuler</Bouton>
+            <Bouton type="submit" chargement={occupe === "bl"}>Créer le bon</Bouton>
+          </div>
+        </form>
+      </Modale>
 
       <Modale ouverte={encaisser} titre="Encaisser un règlement" onFermer={() => setEncaisser(false)}>
         <FormReglement document={d} reste={reste} onFait={async () => { setEncaisser(false); await recharger(); }} />
